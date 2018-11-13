@@ -93,7 +93,7 @@ clear
 
 echo -e "   ----====Installation Menu====----\n   ${Bold}Guacamole Remote Desktop Gateway" && tput sgr0
 echo -e "   ${Bold}OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}\n" && tput sgr0
-echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUACA_GIT_VER}\n" && tput sgr0
+echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}\n" && tput sgr0
 
 while true; do
 	read -p "${Green} Pick the desired source to install from (enter 'stable' or 'git', default is 'stable'): ${Yellow}" GUACA_SOURCE
