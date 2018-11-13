@@ -2,7 +2,7 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2018_11_09" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2018_11_13" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -30,13 +30,13 @@ JKSTORE_PASSWD_DEF="guacamole" # Default Java Keystore password
 
 # ONLY CAHNGE IF NOT WORKING #
 # URLS
-MYSQ_CON_URL="http://dev.mysql.com/get/Downloads/Connector-J/" #Direct URL for download
+MYSQL_CON_URL="http://dev.mysql.com/get/Downloads/Connector-J/" #Direct URL for download
 LIBJPEG_URL="http://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_VER}/" #libjpeg download path
 
 # Dirs and File Names
 LIB_DIR="/var/lib/guacamole/"
 GUAC_CONF="guacamole.properties"
-MYSQL_CONNECTOR="mysql-connector-java-${MYSQL_CON_VER}"
+MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
 LIBJPEG_TURBO="libjpeg-turbo-official-${LIBJPEG_VER}"
 
 # Misc
@@ -93,7 +93,7 @@ clear
 
 echo -e "   ----====Installation Menu====----\n   ${Bold}Guacamole Remote Desktop Gateway" && tput sgr0
 echo -e "   ${Bold}OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}\n" && tput sgr0
-echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUACA_GIT_VER}\n" && tput sgr0
+echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}\n" && tput sgr0
 
 while true; do
 	read -p "${Green} Pick the desired source to install from (enter 'stable' or 'git', default is 'stable'): ${Yellow}" GUACA_SOURCE
@@ -449,7 +449,7 @@ baseinstall
 
 #####    INSTALL BASE PACKAGES    ########################################
 baseinstall () {
-sleep 1 | echo -e "\nInstalling Dependencies..."; echo -e "\nInstalling Dependencies..." >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Installing Dependencies..."; echo -e "\nInstalling Dependencies..." >> $logfile  2>&1
 
 # Install libjpeg
 rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} | tee -a $logfile
@@ -503,12 +503,15 @@ createdirs
 
 #####    CREATE DIRS    ########################################
 createdirs () {
-sleep 1 | echo -e "\nCreating Directories..." | pv -qL 25; echo -e "\nCreating Directories..." >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Creating Directories..." | pv -qL 25; echo -e "\nCreating Directories..." >> $logfile  2>&1
 rm -fr ${INSTALL_DIR} | tee -a $logfile
 mkdir -v /etc/guacamole >> $logfile  2>&1
 mkdir -vp ${INSTALL_DIR}{client,selinux} >> $logfile 2>&1 && cd ${INSTALL_DIR}
 mkdir -vp ${LIB_DIR}{extensions,lib} >> $logfile  2>&1
 mkdir -v /usr/share/tomcat/.guacamole/ >> $logfile  2>&1
+
+pwd >> $logfile  2>&1
+ls >> $logfile  2>&1
 
 downloadguac
 }
@@ -516,31 +519,40 @@ downloadguac
 #####    DOWNLOAD GUAC    ########################################
 downloadguac () {
 if [ $GUAC_SOURCE == "git" ]; then
-	sleep 1 | echo -e "\nCloning Guacamole packages from git for installation..." | pv -qL 25; echo -e "\nCloning Guacamole packages from git for installation..." >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Cloning Guacamole packages from git for installation..." | pv -qL 25; echo -e "\nCloning Guacamole packages from git for installation..." >> $logfile  2>&1
 	git clone ${GUAC_URL}${GUAC_SERVER} >> $logfile  2>&1
 	git clone ${GUAC_URL}${GUAC_CLINET} >> $logfile  2>&1
 else
-	sleep 1 | echo -e "\nDownloading Guacamole packages for installation..." | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation..." >> $logfile  2>&1
-	wget ${GUAC_URL}source/${GUAC_SERVER}.tar.gz >> $logfile  2>&1
-	wget ${GUAC_URL}binary/${GUAC_CLIENT}.war -O ${INSTALL_DIR}client/guacamole.war >> $logfile  2>&1
-	wget ${GUACA_URL}extensions/${GUACA_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Downloading Guacamole packages for installation..." | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation..." >> $logfile  2>&1
+	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz >> $logfile  2>&1
+	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war >> $logfile  2>&1
+	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
 	
-	# Decompress Guacamole Packages
-	sleep 1 | echo -e "\nDecompressing Guacamole Server Source..." | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source..." >> $logfile  2>&1
-	tar xzf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
-	mv ${GUAC_SERVER} server >> $logfile 2>&1
+	pwd >> $logfile  2>&1
+	ls >> $logfile  2>&1
 
-	sleep 1 | echo -e "Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
-	tar xzf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
-	mv ${GUAC_JDBC} extension >> $logfile 2>&1
+	# Decompress Guacamole Packages
+	sleep 1 | echo -e "\n${Bold}Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source..." >> $logfile  2>&1
+	tar xzvf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
+	mv -v ${GUAC_SERVER} server >> $logfile 2>&1
+
+	pwd >> $logfile  2>&1
+
+	sleep 1 | echo -e "${Bold}Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
+	tar xzvf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
+	#mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
+
+	pwd >> $logfile  2>&1
+	ls >> $logfile  2>&1
+
 fi
 
 # MySQL Connector
-sleep 1 | echo -e "\nDownloading MySQL Connector package for installation..." | pv -qL 25; echo -e "\nDownloading MySQL Connector package for installation..." >> $logfile  2>&1
-wget ${MYSQ_CONNECTOR_URL}${MYSQL_CONNECTOR}.tar.gz 2>&1 >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Downloading MySQL Connector package for installation..." | pv -qL 25; echo -e "\nDownloading MySQL Connector package for installation..." >> $logfile  2>&1
+wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz 2>&1 >> $logfile  2>&1
 
-sleep 1 | echo -e "Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
-tar xzf ${MYSQL_CONNECTOR}.tar.gz >> $logfile 2>&1 && rm -f ${MYSQL_CONNECTOR}.tar.gz >> $logfile 2>&1
+sleep 1 | echo -e "${Bold}Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
+tar xzvf ${MYSQL_CON}.tar.gz >> $logfile 2>&1 && rm -f ${MYSQL_CON}.tar.gz >> $logfile 2>&1
 
 installguacserver
 }
@@ -551,20 +563,27 @@ if [ $GUAC_SOURCE == "git" ]; then
 	cd guacamole-server/
 	autoreconf -fi >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Guacamole Server Compile Prep...    " | pv -qL 25; echo -ne "\nGuacamole Server Compile Prep...    " >> $logfile 2>&1 | spinner
+	
+	# Compile Guacamole Server
+	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
+	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 else
 	cd server
-fi
 
-# Compile Guacamole Server
-./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1...    " >> $logfile 2>&1 | spinner
+	# Compile Guacamole Server
+	./configure --with-init-dir=/etc/init.d >> $logfile 2>&1 &
+	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+fi
+# Continue Compiling Server
 make >> $logfile 2>&1 &
-sleep 1 | echo -ne "Compiling Guacamole Server Stage 2...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && make install >> $logfile 2>&1 &
-sleep 1 | echo -ne "Compiling Guacamole Server Stage 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && ldconfig >> $logfile 2>&1 &
-sleep 1 | echo -ne "Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
 cd ..
+
+pwd >> $logfile  2>&1
 
 installguacclient
 }
@@ -612,22 +631,22 @@ ln -vfs ${LIB_DIR}extensions/ /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 ||
 ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp >> $logfile  2>&1 || exit 1
 
 # Install Default Extensions
+sleep 1 | echo -e "\n${Bold}Copying Guacamole JDBC Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir..." >> $logfile  2>&1
+
+pwd >> $logfile  2>&1
+ls >> $logfile  2>&1
+
 if [ $GUAC_SOURCE == "git" ]; then
 	# Get JDBC from compiled client
-	sleep 1 | echo -e "Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
 	find ./guacamole-client/extensions -name "${GUAC_JDBC}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
-
-	# Copy MySQL Connector
-	sleep 1 | echo -e "${Bold}Copying MySQL Connector to Lib Dir..." | pv -qL 25; echo -e "Copying MySQL Connector to Lib Dir..." >> $logfile  2>&1
-	mv ${MYSQL_CONNECTOR}/${MYSQL_CONNECTOR}.jar ${LIB_DIR}lib/ >> $logfile  2>&1 || exit 1
 else
-	# Copy Extensions
-	sleep 1 | echo -e "\n${Bold}Copying Guacamole JDBC Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir..." >> $logfile  2>&1
-	mv -v extension/mysql/${GUAC_JDBC}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
-
-	sleep 1 | echo -e "${Bold}Copying MySQL Connector to Lib Dir..." | pv -qL 25; echo -e "Copying MySQL Connector to Lib Dir..." >> $logfile  2>&1
-	mv -v ${MYSQL_CONNECTOR}/${MYSQL_CONNECTOR}.jar ${LIB_DIR}lib/ >> $logfile  2>&1 || exit 1
+	# Copy JDBC from download
+	mv -v ./${GUAC_JDBC}/mysql/${GUAC_JDBC}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 fi
+
+# Copy MySQL Connector
+sleep 1 | echo -e "${Bold}Copying MySQL Connector to Lib Dir..." | pv -qL 25; echo -e "Copying MySQL Connector to Lib Dir..." >> $logfile  2>&1
+mv -v ./${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ >> $logfile  2>&1 || exit 1
 
 appconfigs
 }
@@ -729,11 +748,11 @@ if [ $GUAC_SOURCE == "git" ]; then
 else
 	# Download LDAP Extension
 	sleep 1 | echo -e "\n${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "\nDownloading LDAP Extension..." >> $logfile  2>&1
-	wget ${GUAC_URL}extensions/${GUAC_LDAP}.tar.gz >> $logfile  2>&1
+	wget "${GUAC_URL}extensions/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 
 	# Decompress LDAP Extension
 	sleep 1 | echo -e "${Bold}Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
-	tar xzf ${GUAC_LDAP}.tar.gz >> $logfile  2>&1 && rm -f ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
+	tar xzvf ${GUAC_LDAP}.tar.gz >> $logfile  2>&1 && rm -f ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 	mv ${GUAC_LDAP} extension >> $logfile  2>&1
 
 	# Copy LDAP Extension to Extensions Directory
