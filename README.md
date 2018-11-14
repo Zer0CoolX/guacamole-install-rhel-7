@@ -4,7 +4,7 @@ The `guac-install.sh` script is intended to allow easily installing a complete A
 
 The script run in interactive mode will prompt for a handful of user input. The input allows selecting from a "Stable" version of Guacamole or to build it from git. It installs, by default, the extensions `guacamole-auth-jdbc-mysql-*` and `mysql-connector-java-*` to allow user credentials to be stored in a MariaDB/MySQL database. Nginx is used as the HTTP/Reverse proxy. Additional options within the script allow for connecting to and using LDAP for authentication, securing HTTPS/SSL, installing a custom extension and more. For more information on what options are provided check the wiki.
 
-The goal for the script when complete is to require no further configuration on the server itself for Guacamole to function. This doesnt account for special configurations regarding networking, hardware firewalls, ISP restrictions, etc.
+The goal for the script when complete is to require no further configuration on the server itself for Guacamole to function. This doesn't account for special configurations regarding networking, hardware firewalls, ISP restrictions, etc.
 
 ## Requirements to Run the Script Successfully
 - Install RHEL/CentOS minimal 7.x or up (minimal will work as well as other options like Server with GUI).
@@ -19,7 +19,7 @@ Download the `guac-install.sh` script from this repo:
 ```
 wget https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/guac-install.sh
 ```
-If installing a custom extension download it as well and take note of its file name and path
+If installing a custom extension, download it as well and take note of its file name and path.
 
 Make the `guac-install.sh` script executable:
 ```
