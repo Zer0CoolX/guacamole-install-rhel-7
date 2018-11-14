@@ -108,20 +108,21 @@ echo -e "   ${Bold}OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}\n" && tp
 echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}\n" && tput sgr0
 
 while true; do
-	read -p "${Green} Pick the desired source to install from (enter 'stable' or 'git', default is 'stable'): ${Yellow}" GUACA_SOURCE
+	read -p "${Green} Pick the desired source to install from (enter 'stable' or 'git', default is 'stable'): ${Yellow}" GUAC_SOURCE
 	case $GUAC_SOURCE in
-    	Stable|stable|"") GUAC_SOURCE="stable"; break;;
-		Git|git|GIT) GUAC_SOURCE="git"; break;;
+    	[Ss]table|"" ) GUAC_SOURCE="Stable"; break;;
+		[Gg][Ii][Tt] ) GUAC_SOURCE="Git"; break;;
 		* ) echo "${Green} Please enter 'stable' or 'git' to select source/version (without quotes)";;
   	esac
 done
-
+echo -e "Source (src_menu): ${GUAC_SOURCE}" >> /home/srlab/mylog.txt  2>&1
 tput sgr0
 }
 
 #####      SOURCE VARIABLES       ###################################
 src_vars () {
-if [ $GUAC_SOURCE == "git" ]; then
+echo -e "Source (src_vars): ${GUAC_SOURCE}" >> /home/srlab/mylog.txt  2>&1
+if [ $GUAC_SOURCE == "Git" ]; then
 	GUAC_VER=${GUAC_GIT_VER}
 	GUAC_URL="git://github.com/apache/"
 	GUAC_SERVER="guacamole-server.git"
@@ -498,13 +499,13 @@ sleep 1 | echo -ne "\n${Bold}Installing Required Packages...    "; echo -ne "\nI
 RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
 
 # Packages required by git
-if [ $GUAC_SOURCE == "git" ]; then
+if [ $GUAC_SOURCE == "Git" ]; then
 	yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Installing Required Packages for git...    "; echo -ne "\nInstalling Required Packages for git...    " >> $logfile 2>&1 | spinner
 	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC for git is: $RETVAL" >> $logfile  2>&1
 
 	#Install Maven
-	sleep 1 | echo -ne "\n${Bold}Download and setup Apache Maven for git..."; echo -ne "\nDownload and setup Apache Maven for git..." >> $logfile 2>&1
+	sleep 1 | echo -e "\n${Bold}Download and setup Apache Maven for git..."; echo -e "\nDownload and setup Apache Maven for git..." >> $logfile 2>&1
 	cd /opt
 	wget ${MAVEN_URL}${MAVEN_BIN} >> $logfile  2>&1
 	tar -xvzf ${MAVEN_BIN} >> $logfile  2>&1
@@ -531,10 +532,10 @@ downloadguac
 
 #####    DOWNLOAD GUAC    ########################################
 downloadguac () {
-if [ $GUAC_SOURCE == "git" ]; then
+if [ $GUAC_SOURCE == "Git" ]; then
 	sleep 1 | echo -e "\n${Bold}Cloning Guacamole packages from git for installation..." | pv -qL 25; echo -e "\nCloning Guacamole packages from git for installation..." >> $logfile  2>&1
 	git clone ${GUAC_URL}${GUAC_SERVER} >> $logfile  2>&1
-	git clone ${GUAC_URL}${GUAC_CLINET} >> $logfile  2>&1
+	git clone ${GUAC_URL}${GUAC_CLIENT} >> $logfile  2>&1
 else
 	sleep 1 | echo -e "\n${Bold}Downloading Guacamole packages for installation..." | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation..." >> $logfile  2>&1
 	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz >> $logfile  2>&1
@@ -563,7 +564,7 @@ installguacserver
 
 #####    INSTALL GUAC SERVER    ########################################
 installguacserver () {
-if [ $GUAC_SOURCE == "git" ]; then
+if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
 	autoreconf -fi >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Guacamole Server Compile Prep...    " | pv -qL 25; echo -ne "\nGuacamole Server Compile Prep...    " >> $logfile 2>&1 | spinner
@@ -592,10 +593,10 @@ installguacclient
 
 #####    INSTALL GUAC CLIENT    ########################################
 installguacclient () {
-if [ $GUAC_SOURCE == "git" ]; then
+if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
 	mvn package >> $logfile 2>&1 &
-	sleep 1 | echo -e "\n${Bold}Compiling Guacamole Client..." | pv -qL 25; echo -e "\nCompiling Guacamole Client..." >> $logfile  2>&1 | spinner
+	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Client...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Client...    " >> $logfile  2>&1 | spinner
 	sleep 1 | echo -e "\n${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "\nCopying Guacamole Client..." >> $logfile  2>&1
 	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
 	cd ..
@@ -635,9 +636,9 @@ ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp >> $logfile  2>&1 |
 # Install Default Extensions
 sleep 1 | echo -e "\n${Bold}Copying Guacamole JDBC Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir..." >> $logfile  2>&1
 
-if [ $GUAC_SOURCE == "git" ]; then
+if [ $GUAC_SOURCE == "Git" ]; then
 	# Get JDBC from compiled client
-	find ./guacamole-client/extensions -name "${GUAC_JDBC}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
+	find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
 else
 	# Copy JDBC from download
 	mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
@@ -686,8 +687,13 @@ mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NA
 mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" >> $logfile  2>&1 || exit 1
 
 # Create Guacamole Table
-sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
-cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
+if [ $GUAC_SOURCE == "Git" ]; then
+	sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
+	cat guacamole-client/extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
+else
+	sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
+	cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
+fi
 
 # Setup Tomcat
 sleep 1 | echo -e "\n${Bold}Setup Tomcat Server..." | pv -qL 25; echo -e "\nSetup Tomcat Server..." >> $logfile  2>&1
@@ -740,7 +746,7 @@ ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
 ldap-username-attribute: ${LDAP_UNAME_ATTR}" >> /etc/guacamole/${GUAC_CONF}
 
-if [ $GUAC_SOURCE == "git" ]; then
+if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
 	sleep 1 | echo -e "${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
 	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
@@ -861,16 +867,16 @@ if [ $LETSENCRYPT_CERT = "yes" ]; then
 	wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
 	sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
 	chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
-	sleep 1 | echo -e "\n${Bold}Generating a ${certype} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${certype} SSL Certificate...\n" >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
 	certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
 else # Use a Self-Signed Cert
 	if [ $INSTALL_MODE = "silent" ]; then
-		sleep 1 | echo -e "\n${Bold}Generating a ${certype} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${certype} SSL Certificate...\n" >> $logfile  2>&1
+		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
 		subj="-subj /C=XX/ST=/L=City/O=Company/CN=/"
 	else
-		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${certype} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${certype} SSL Certificate..." >> $logfile  2>&1
+		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${CERTYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
 	fi
 	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
 fi
@@ -893,8 +899,8 @@ semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}guacamole.war" >> $logfile  2>&
 restorecon -v "${LIB_DIR}guacamole.war" >> $logfile  2>&1
 
 # Guacamole JDBC Extension Context
-semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_JDBC}.jar" >> $logfile  2>&1
-restorecon -v "${LIB_DIR}extensions/${GUAC_JDBC}.jar" >> $logfile  2>&1
+semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" >> $logfile  2>&1
+restorecon -v "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" >> $logfile  2>&1
 
 # Guacamole LDAP Extension Context (If selected)
 if [ $INSTALL_LDAP = "yes" ]; then
@@ -909,8 +915,8 @@ if [ $INSTALL_CUST = "yes" ]; then
 fi
 
 # MySQL Connector Extension Context
-semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}lib/${MYSQL_CONNECTOR}.jar" >> $logfile  2>&1
-restorecon -v "${LIB_DIR}lib/${MYSQL_CONNECTOR}.jar" >> $logfile  2>&1
+semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}lib/${MYSQL_CON}.jar" >> $logfile  2>&1
+restorecon -v "${LIB_DIR}lib/${MYSQL_CON}.jar" >> $logfile  2>&1
 
 sestatus >> $logfile 2>&1
 }
@@ -1027,7 +1033,7 @@ fi
 sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
 sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}Contact ${GUAC_POC} with any questions or concerns regarding this script\n"; echo -e "\nContact ${GUAC_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Contact ${ADM_POC} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
 tput sgr0
 }
 
