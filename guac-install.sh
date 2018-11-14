@@ -1,8 +1,20 @@
 #!/bin/env bash
+#####    NOTES             ###################################
+# Project Page: https://github.com/Zer0CoolX/guacamole-install-rhel
+# Licence (GPL-3.0): https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/LICENSE
+# Report Issues: https://github.com/Zer0CoolX/guacamole-install-rhel/issues
+# Wiki: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki
+#
+# WARNING: For use on RHEL/CentOS 7.x and up only.
+#	-Use at your own risk!  
+#	-Use only for new installations of Guacamole!
+# 	-Read all documentation prior to using this script!
+#	-Test prior to deploying on a production system!
+#
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2018_11_13" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2018_11_14" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -293,10 +305,14 @@ echo -n "${Green} Enter the LDAP Username-Attribute (default sAMAccountName): ${
 
 #####    CUSTOM EXTENSION MENU    ########################################
 custmenu () {
+# Set Defaults
+CUST_FN="myextension.jar"
+CUST_FULL="xNULLx"
+
 while [ ! -f ${CUST_FULL} ]; do
 	echo -n "${Green} Enter a valid filename of the .jar extension file (Ex: myextension.jar): ${Yellow}"
 		read CUST_FN
-		CUST_FN=${CUST_FN:-myextension.jar}
+		CUST_FN=${CUST_FN:-${CUST_FN}}
 	echo -n "${Green} Enter the full path of the dir containing the .jar extension file (must end with / Ex: /home/me/): ${Yellow}"
 		read CUST_DIR
 		CUST_DIR=${CUST_DIR:-/home/}
@@ -510,9 +526,6 @@ mkdir -vp ${INSTALL_DIR}{client,selinux} >> $logfile 2>&1 && cd ${INSTALL_DIR}
 mkdir -vp ${LIB_DIR}{extensions,lib} >> $logfile  2>&1
 mkdir -v /usr/share/tomcat/.guacamole/ >> $logfile  2>&1
 
-pwd >> $logfile  2>&1
-ls >> $logfile  2>&1
-
 downloadguac
 }
 
@@ -528,23 +541,14 @@ else
 	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war >> $logfile  2>&1
 	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
 	
-	pwd >> $logfile  2>&1
-	ls >> $logfile  2>&1
-
 	# Decompress Guacamole Packages
 	sleep 1 | echo -e "\n${Bold}Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source..." >> $logfile  2>&1
 	tar xzvf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_SERVER} server >> $logfile 2>&1
 
-	pwd >> $logfile  2>&1
-
 	sleep 1 | echo -e "${Bold}Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
 	tar xzvf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
-	#mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
-
-	pwd >> $logfile  2>&1
-	ls >> $logfile  2>&1
-
+	mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
 fi
 
 # MySQL Connector
@@ -582,8 +586,6 @@ sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 3 of 3...    " | pv 
 sleep 1 && ldconfig >> $logfile 2>&1 &
 sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
 cd ..
-
-pwd >> $logfile  2>&1
 
 installguacclient
 }
@@ -633,20 +635,17 @@ ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp >> $logfile  2>&1 |
 # Install Default Extensions
 sleep 1 | echo -e "\n${Bold}Copying Guacamole JDBC Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir..." >> $logfile  2>&1
 
-pwd >> $logfile  2>&1
-ls >> $logfile  2>&1
-
 if [ $GUAC_SOURCE == "git" ]; then
 	# Get JDBC from compiled client
 	find ./guacamole-client/extensions -name "${GUAC_JDBC}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
 else
 	# Copy JDBC from download
-	mv -v ./${GUAC_JDBC}/mysql/${GUAC_JDBC}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
+	mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 fi
 
 # Copy MySQL Connector
 sleep 1 | echo -e "${Bold}Copying MySQL Connector to Lib Dir..." | pv -qL 25; echo -e "Copying MySQL Connector to Lib Dir..." >> $logfile  2>&1
-mv -v ./${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ >> $logfile  2>&1 || exit 1
+mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ >> $logfile  2>&1 || exit 1
 
 appconfigs
 }
@@ -729,7 +728,7 @@ fi
 ldapsetup () {
 
 # Append LDAP configuration lines to guacamole.properties
-sleep 1 | echo -e "${Bold}Updateing Guacamole configuration file for LDAP..." | pv -qL 25; echo -e "Updating Guacamole configuration file for LDAP..." >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Updateing Guacamole configuration file for LDAP..." | pv -qL 25; echo -e "\nUpdating Guacamole configuration file for LDAP..." >> $logfile  2>&1
 echo "
 # LDAP properties
 ldap-hostname: ${LDAP_HOSTNAME}
@@ -747,8 +746,8 @@ if [ $GUAC_SOURCE == "git" ]; then
 	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
 else
 	# Download LDAP Extension
-	sleep 1 | echo -e "\n${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "\nDownloading LDAP Extension..." >> $logfile  2>&1
-	wget "${GUAC_URL}extensions/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
+	sleep 1 | echo -e "${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "Downloading LDAP Extension..." >> $logfile  2>&1
+	wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 
 	# Decompress LDAP Extension
 	sleep 1 | echo -e "${Bold}Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
@@ -765,7 +764,7 @@ fi
 custsetup () {
 # Copy Custom Extension to Extensions Directory
 sleep 1 | echo -e "\n${Bold}Copying Custom Guacamole Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Custom Guacamole Extension to Extensions Dir..." >> $logfile  2>&1
-cp -v ${CUST_FULL} ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
+mv -v ${CUST_FULL} ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 }
 
 #####    NGINX INSTALL    ########################################
@@ -788,7 +787,7 @@ sleep 1 | echo -e "${Reset}-Making Nginx Config Backup..." | pv -qL 25; echo -e 
 mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp >> $logfile  2>&1
 
 # Generate Nginx Conf's
-sleep 1 | echo -e "${Bold}Generating Nginx Configurations..." | pv -qL 25; echo -e "Generating Nginx Configurations..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; echo -e "-Generating Nginx Configurations..." >> $logfile  2>&1
 
 # HTTP Nginx Conf
 echo "server {
@@ -876,7 +875,7 @@ else # Use a Self-Signed Cert
 	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
 fi
 
-sleep 1 | echo -e "${Reset}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
+sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
 }
 
 #####    SELINUX SETTINGS    ########################################
