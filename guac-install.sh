@@ -25,7 +25,7 @@ MAVEN_VER="3.6.0"
 
 # Ports
 GUAC_PORT="4822"
-MYSQL_CON_PORT="3306"
+MYSQL_PORT="3306"
 
 # Key Sizes
 JKSTORE_KEY_SIZE_DEF="4096" # Default Java Keystore key-size
@@ -612,11 +612,11 @@ finishguac () {
 # Generate Guacamole Configuration File
 sleep 1 | echo -e "\n${Bold}Generating Guacamole configuration file..." | pv -qL 25; echo -e "\nGenerating Guacamole configuration file..." >> $logfile  2>&1
 echo "# Hostname and port of guacamole proxy
-guacd-hostname: ${SERVER_HOSTNAME}
-guacd-port:     ${GUACA_PORT}
+guacd-hostname: ${GUACSERVER_HOSTNAME}
+guacd-port:     ${GUAC_PORT}
 
 # MySQL properties
-mysql-hostname: ${SERVER_HOSTNAME}
+mysql-hostname: ${GUACSERVER_HOSTNAME}
 mysql-port: ${MYSQL_PORT}
 mysql-database: ${DB_NAME}
 mysql-username: ${DB_USER}
@@ -875,7 +875,7 @@ else # Use a Self-Signed Cert
 	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
 fi
 
-sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
+sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
 }
 
 #####    SELINUX SETTINGS    ########################################
@@ -1020,9 +1020,9 @@ sleep 1 | echo -e "\n${Bold}Finished Successfully" | pv -qL 25; echo -e "\nFinis
 sleep 1 | echo -e "${Reset}You can check the log file at ${logfile}" | pv -qL 25; echo -e "You can check the log file at ${logfile}" >> $logfile  2>&1
 sleep 1 | echo -e "${Reset}Your firewall backup file at ${fwbkpfile}"; echo -e "Your firewall backup file at ${fwbkpfile}" >> $logfile  2>&1
 if [ $INSTALL_NGINX = "yes" ]; then
-	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUACASERVER_HOSTNAME}${GUACAMOLE_URIPATH} or https://${GUACASERVER_HOSTNAME}${GUACAMOLE_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${GUACASERVER_HOSTNAME}${GUACAMOLE_URIPATH} or https://${GUACASERVER_HOSTNAME}${GUACAMOLE_URIPATH}" >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}" >> $logfile  2>&1
 else
-	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://<IP>:8080${GUACAMOLE_URIPATH} or https://<IP>:8443${GUACAMOLE_URIPATH}"; echo -e "\nTo manage Guacamole go to http://<IP>:8080${GUACAMOLE_URIPATH} or https://<IP>:8443${GUACAMOLE_URIPATH}" >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://<IP>:8080${GUAC_URIPATH} or https://<IP>:8443${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://<IP>:8080${GUAC_URIPATH} or https://<IP>:8443${GUAC_URIPATH}" >> $logfile  2>&1
 fi
 sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
 sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
