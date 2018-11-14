@@ -15,14 +15,14 @@ The goal for the script when complete is to require no further configuration on 
 - No prior Guacamole installation/configuration.
 
 ## Downloading and Running the Script
-### Download the `guac-install.sh` script from this repo:
+Download the `guac-install.sh` script from this repo:
 `wget https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/guac-install.sh`
-### If installing a custom extension download it as well and take note of its file name and path
-### Make the `guac-install.sh` script executable:
+If installing a custom extension download it as well and take note of its file name and path
+Make the `guac-install.sh` script executable:
 `chmod +x guac-install.sh`
-### Run the script as sudo/root:
+Run the script as sudo/root:
 `./guac-install.sh`
-### Proceed with the prompts provided by the installer, see wiki for more details.
+Proceed with the prompts provided by the installer, see wiki for more details.
 
 ## Script information
 I have based this script on multiple other projects with similar goals. There are too many sources to provide credit to.
