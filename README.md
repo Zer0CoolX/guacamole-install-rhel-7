@@ -12,7 +12,7 @@ The goal for the script when complete is to require no further configuration on 
 - The server must have internet access to download the script and files required for installation by the script.
 - Sudo or root access on the server.
 - If using RHEL, an activated subscription.
-- No prior Guacamole installation/configuration.
+- No prior Guacamole installation/configuration (or its major dependant packages like Nginx, Tomcat, MariaDB, etc.).
 
 ## Downloading and Running the Script
 Download the `guac-install.sh` script from this repo:
