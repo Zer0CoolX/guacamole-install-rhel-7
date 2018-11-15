@@ -14,6 +14,13 @@ The goal for the script when complete is to require no further configuration on 
 - If using RHEL, an activated subscription.
 - No prior Guacamole installation/configuration (or its major dependant packages like Nginx, Tomcat, MariaDB, etc.).
 
+## "Required" Reading
+It is recommended to read/review all the documentation for the script prior to using it including the README and the Wiki, however I highly recommend reading at least the following:
+
+- [Installation Process](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Installation-Process,-Prompts-and-Options)
+- [Installation Assumptions](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Installation-Assumptions)
+- [Script Review](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Script-Review)
+
 ## Downloading and Running the Script
 Download the `guac-install.sh` script from this repo:
 ```
