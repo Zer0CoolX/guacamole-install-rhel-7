@@ -22,6 +22,9 @@ It is recommended to read/review all the documentation for the script prior to u
 - [Script Review](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Script-Review)
 
 ## Downloading and Running the Script
+
+**WARNING: It is highly recommended to test this script in a dev environment prior to using it in a production setting!**
+
 Download the `guac-install.sh` script from this repo:
 ```
 wget https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/guac-install.sh
