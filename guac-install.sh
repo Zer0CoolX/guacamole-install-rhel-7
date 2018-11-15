@@ -40,6 +40,10 @@ DB_USER_DEF="guac_adm" # Defualt database user name
 DB_PASSWD_DEF="guacamole" # Defualt database password
 JKSTORE_PASSWD_DEF="guacamole" # Default Java Keystore password
 
+# Misc
+GUAC_URIPATH_DEF="/"
+GUACSERVER_HOSTNAME_DEF="localhost"
+
 # ONLY CAHNGE IF NOT WORKING #
 # URLS
 MYSQL_CON_URL="http://dev.mysql.com/get/Downloads/Connector-J/" #Direct URL for download
@@ -50,10 +54,6 @@ LIB_DIR="/var/lib/guacamole/"
 GUAC_CONF="guacamole.properties"
 MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
 LIBJPEG_TURBO="libjpeg-turbo-official-${LIBJPEG_VER}"
-
-# Misc
-GUAC_URIPATH_DEF="/"
-GUACSERVER_HOSTNAME_DEF="localhost"
 
 # Formats
 Black=`tput setaf 0`   #${Black}
