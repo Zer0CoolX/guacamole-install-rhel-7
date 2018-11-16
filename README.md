@@ -2,11 +2,11 @@
 ## Introduction
 The `guac-install.sh` script is intended to allow easily installing a complete Apache Guacamole server on RHEL/CentOS 7.x and up. The wiki will cover more in-depth what exactly the script includes and how it configures settings. Before using the script read all the documentation and review the script (especially the variables). Test the script in a test environment/server and ensure it functions exactly as desired before attempting to utilize it on a production system.
 
-The script run in interactive mode will prompt for a handful of user input. The input allows selecting from a "Stable" version of Guacamole or to build it from git. It installs, by default, the extensions `guacamole-auth-jdbc-mysql-*` and `mysql-connector-java-*` to allow user credentials to be stored in a MariaDB/MySQL database. Nginx is used as the HTTP/Reverse proxy. Additional options within the script allow for connecting to and using LDAP for authentication, securing HTTPS/SSL, installing a custom extension and more. For more information on what options are provided check the wiki.
+The Guacamole install script runs an interactive mode that will prompt for a handful of user input. The input allows selecting from a "Stable" version of Guacamole or to build it from git. It installs, by default, the extensions `guacamole-auth-jdbc-mysql-*` and `mysql-connector-java-*` to allow user credentials to be stored in a MariaDB/MySQL database. Nginx is used as the HTTP/Reverse proxy. Additional options within the script allow for connecting to and using LDAP for authentication, securing HTTPS/SSL, installing a custom extension and more. For more information on what options are provided check the wiki.
 
 The goal for the script when complete is to require no further configuration on the server itself for Guacamole to function. This doesn't account for special configurations regarding networking, hardware firewalls, ISP restrictions, etc.
 
-## Requirements to Run the Script Successfully
+## Requirements to Run the Guacamole Install Script Successfully
 - Install RHEL/CentOS minimal 7.x or up (minimal will work as well as other options like Server with GUI).
 - `wget` installed.
 - The server must have internet access to download the script and files required for installation by the script.
@@ -21,7 +21,7 @@ It is recommended to read/review all the documentation for the script prior to u
 - [Installation Assumptions](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Installation-Assumptions)
 - [Script Review](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Script-Review)
 
-## Downloading and Running the Script
+## Downloading and Running the Guacamole Install Script
 
 **WARNING: It is highly recommended to test this script in a dev environment prior to using it in a production setting!**
 
@@ -29,7 +29,7 @@ Download the `guac-install.sh` script from this repo:
 ```
 wget https://raw.githubusercontent.com/Zer0CoolX/guacamole-install-rhel/master/guac-install.sh
 ```
-If installing a custom extension, download it as well and take note of its file name and path.
+If installing a custom Guacamole extension, download it as well and take note of its file name and path.
 
 Make the `guac-install.sh` script executable:
 ```
@@ -42,7 +42,7 @@ Run the script as sudo/root:
 Proceed with the prompts provided by the installer, see wiki for more details.
 
 ## Script information
-I have based this script on multiple other projects with similar goals. There are too many sources to provide credit to.
+I have based this Apache Guacamole install script on multiple other projects with similar goals. There are too many sources to provide credit to.
 
 The script versioning, for now, will be based on the date of the last commit in the format "yyyy_mm_dd".
 
