@@ -29,7 +29,7 @@ Download the `guac-install.sh` script from this repo:
 ```
 wget https://raw.githubusercontent.com/Zer0CoolX/guacamole-install-rhel/master/guac-install.sh
 ```
-If installing a custom Guacamole extension, download it as well and take note of its file name and path.
+If installing a custom Guacamole extension, download it as well and take note of its file name and path. See [here](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) for more details
 
 Make the `guac-install.sh` script executable:
 ```
@@ -40,6 +40,9 @@ Run the script as sudo/root:
 ./guac-install.sh
 ```
 Proceed with the prompts provided by the installer, see wiki for more details.
+
+## Customizing the Apache Guacamole login screen
+See this wiki post regarding [Customizing the Apache Guacamole Login Screen](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) for details on another repo of mine to accomplish this.
 
 ## Apache Guacamole install script menus and options example.
 This shows all menu options set by a user with the only exception being getting an SSL cert using LetsEncrypt.
