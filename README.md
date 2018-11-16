@@ -27,7 +27,7 @@ It is recommended to read/review all the documentation for the script prior to u
 
 Download the `guac-install.sh` script from this repo:
 ```
-wget https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/guac-install.sh
+wget https://raw.githubusercontent.com/Zer0CoolX/guacamole-install-rhel/master/guac-install.sh
 ```
 If installing a custom extension, download it as well and take note of its file name and path.
 
