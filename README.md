@@ -41,7 +41,7 @@ Run the script as sudo/root:
 ```
 Proceed with the prompts provided by the installer, see wiki for more details.
 
-### Apache Guacamole install script menus and options example.
+## Apache Guacamole install script menus and options example.
 This shows all menu options set by a user with the only exception being getting an SSL cert using LetsEncrypt.
 
 ![guac-install-menues.gif](https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/demo-resources/guac-install-menues.gif)
