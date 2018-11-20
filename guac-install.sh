@@ -72,6 +72,9 @@ Reset=`tput sgr0`      #${Reset}
 INSTALL_MODE="interactive"
 ##### END UNIVERSAL VARS   ###################################
 
+##### CHECK FOR SUDO or ROOT ################################## 
+if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
+
 #####    INITIALIZE COMMON VARS    ###################################
 # ONLY CAHNGE IF NOT WORKING #
 init_vars () {
