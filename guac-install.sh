@@ -20,7 +20,7 @@ ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server a
 # Versions
 GUAC_STBL_VER="0.9.14"
 MYSQL_CON_VER="8.0.13"
-LIBJPEG_VER="2.0.0"
+LIBJPEG_VER="2.0.1"
 MAVEN_VER="3.6.0"
 
 # Ports
