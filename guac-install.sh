@@ -46,8 +46,8 @@ GUACSERVER_HOSTNAME_DEF="localhost"
 
 # ONLY CAHNGE IF NOT WORKING #
 # URLS
-MYSQL_CON_URL="http://dev.mysql.com/get/Downloads/Connector-J/" #Direct URL for download
-LIBJPEG_URL="http://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_VER}/" #libjpeg download path
+MYSQL_CON_URL="https://dev.mysql.com/get/Downloads/Connector-J/" #Direct URL for download
+LIBJPEG_URL="https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_VER}/" #libjpeg download path
 
 # Dirs and File Names
 LIB_DIR="/var/lib/guacamole/"
@@ -96,7 +96,7 @@ OS_NAME_L="$(echo $OS_NAME | tr '[:upper:]' '[:lower:]')" # Set lower case rhel 
 MACHINE_ARCH=`uname -m`
 if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; then MACHINE_ARCH="i386"; else ARCH=""; fi
 
-NGINX_URL=http://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
+NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
 
 #Set SQL package names
 if [ $MAJOR_VER -ge 7 ]; then MySQL_Packages="mariadb mariadb-server"; Menu_SQL="MariaDB"; else MySQL_Packages="mysql mysql-server"; Menu_SQL="MySQL"; fi
@@ -136,7 +136,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	MAVEN_BIN="${MAVEN_FN}-bin.tar.gz"
 else
 	GUAC_VER=${GUAC_STBL_VER}
-	GUAC_URL="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/"
+	GUAC_URL="https://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/"
 	GUAC_SERVER="guacamole-server-${GUAC_VER}"
 	GUAC_CLIENT="guacamole-${GUAC_VER}"
 fi
