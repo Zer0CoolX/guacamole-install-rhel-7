@@ -14,7 +14,7 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2018_11_20" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2018_11_26" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -937,73 +937,34 @@ RETVALsf=$?
 
 if [ $RETVALsf -eq 0 ]; then
 	sleep 1 | echo -e "${Reset}-firewalld is installed and started on the system" | pv -qL 25; echo -e "...firewalld is installed and started on the system" >> $logfile  2>&1
-	firewallD
 elif [ $RETVALqaf -eq 0 ]; then
 	sleep 1 | echo -e "${Reset}-firewalld is installed but not enabled or started on the system" | pv -qL 25; echo -e "-firewalld is installed but not enabled or started on the system" >> $logfile  2>&1
-	firewallD
-else # May remove this under the presumption firewalld is in use
-	sleep 1 | echo -e "${Reset}-firewalld is not installed on the system" | pv -qL 25; echo -e "-firewalld is not installed on the system" >> $logfile  2>&1
-	echo -e "Checking Firewall RC..." >> $logfile  2>&1
-	rpm -qa | grep iptables-services >> $logfile  2>&1
-	RETVALqai=$?
-	service iptables status >> $logfile  2>&1
-	RETVALsi=$?
-
-	if [ $RETVALsi -eq 0 ]; then
-		sleep 1 | echo -e "${Reset}-iptables service is installed and started on the system\n" | pv -qL 25; echo -e "...iptables service is installed and started on the system\n" >> $logfile  2>&1
-		Iptables
-	elif [ $RETVALqaf -eq 0 ]; then
-		sleep 1 | echo -e "${Reset}-iptables is installed but not enabled or started on the system\n" | pv -qL 25; echo -e "...iptables is installed but not enabled or started on the system\n" >> $logfile  2>&1
-		Iptables
-	else
-		sleep 1 | echo -e "${Reset}-iptables service is not installed on the system\n" | pv -qL 25; echo -e "-iptables service is not installed on the system\n" >> $logfile  2>&1
-		sleep 1 | echo -e "${Red}Please check and configure your firewall...\nIn order to Guacamole work properly open the ports tcp 8080 and 8443.${Reset}" | pv -qL 25; echo -e "Please check and configure you firewall...\nIn order to Guacamole work properly open the ports tcp 80, 443, 8080 and 8443." >> $logfile  2>&1
-	fi
+     systemctl enable firewalld
+     systemctl start firewalld
 fi
+firewallD
 }
 
 #####    FIREWALLD    ########################################
 firewallD () {
-	echo -e "\nMaking Firewall Backup...\ncp /etc/firewalld/zones/public.xml $fwbkpfile" >> $logfile  2>&1
-	cp /etc/firewalld/zones/public.xml $fwbkpfile >> $logfile 2>&1
-	if [ $INSTALL_NGINX = "yes" ]; then
-		sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
-		echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http" >> $logfile  2>&1
-		firewall-cmd --permanent --zone=public --add-service=http >> $logfile  2>&1
-		echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https" >> $logfile  2>&1
-		firewall-cmd --permanent --zone=public --add-service=https >> $logfile  2>&1
-	fi
-    if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
-	sleep 1 | echo -e "${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
-		echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
-		firewall-cmd --permanent --zone=public --add-port=8080/tcp >> $logfile  2>&1
-		echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp" >> $logfile  2>&1
-		firewall-cmd --permanent --zone=public --add-port=8443/tcp >> $logfile  2>&1
-		echo -e "Reload firewall...\nfirewall-cmd --reload\n" >> $logfile  2>&1
-	fi
-	firewall-cmd --reload >> $logfile  2>&1
-}
-
-#####    IPTABLES    ########################################
-Iptables () {
-	echo -e "Making Firewall Backup...\niptables-save >> $fwbkpfile" >> $logfile  2>&1
-	iptables-save >> $fwbkpfile  2>&1
-	if [ $INSTALL_NGINX = "yes" ]; then
-		sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
-		echo -e "Add new rule...\niptables -I INPUT -m tcp -p tcp --dport 80 -m state --state NEW -j ACCEPT" >> $logfile  2>&1
-		iptables -I INPUT -m tcp -p tcp --dport 80 -m state --state NEW -j ACCEPT >> $logfile  2>&1
-		echo -e "Add new rule...\niptables -I INPUT -m tcp -p tcp --dport 443 -m state --state NEW -j ACCEPT" >> $logfile  2>&1
-		iptables -I INPUT -m tcp -p tcp --dport 443 -m state --state NEW -j ACCEPT >> $logfile  2>&1
-	fi
-    if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
-		sleep 1 | echo -e "$${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
-		echo -e "Add new rule...\niptables -I INPUT -m tcp -p tcp --dport 8080 -m state --state NEW -j ACCEPT" >> $logfile  2>&1
-		iptables -I INPUT -m tcp -p tcp --dport 8080 -m state --state NEW -j ACCEPT >> $logfile  2>&1
-		echo -e "Add new rule...\niptables -I INPUT -m tcp -p tcp --dport 8443 -m state --state NEW -j ACCEPT" >> $logfile  2>&1
-		iptables -I INPUT -m tcp -p tcp --dport 8443 -m state --state NEW -j ACCEPT >> $logfile  2>&1
-    fi
-	echo -e "Save new rules\nservice iptables save\n" >> $logfile  2>&1
-	service iptables save >> $logfile  2>&1
+echo -e "\nMaking Firewall Backup...\ncp /etc/firewalld/zones/public.xml $fwbkpfile" >> $logfile  2>&1
+cp /etc/firewalld/zones/public.xml $fwbkpfile >> $logfile 2>&1
+if [ $INSTALL_NGINX = "yes" ]; then
+	sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
+	echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http" >> $logfile  2>&1
+	firewall-cmd --permanent --zone=public --add-service=http >> $logfile  2>&1
+	echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https" >> $logfile  2>&1
+	firewall-cmd --permanent --zone=public --add-service=https >> $logfile  2>&1
+fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
+    sleep 1 | echo -e "${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
+     echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
+    firewall-cmd --permanent --zone=public --add-port=8080/tcp >> $logfile  2>&1
+    echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp" >> $logfile  2>&1
+    firewall-cmd --permanent --zone=public --add-port=8443/tcp >> $logfile  2>&1
+    echo -e "Reload firewall...\nfirewall-cmd --reload\n" >> $logfile  2>&1
+fi
+firewall-cmd --reload >> $logfile  2>&1
 }
 
 #####    COMPLETION MESSAGES    ########################################
