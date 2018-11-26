@@ -97,9 +97,6 @@ MACHINE_ARCH=`uname -m`
 if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; then MACHINE_ARCH="i386"; else ARCH=""; fi
 
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
-
-#Set SQL package names
-if [ $MAJOR_VER -ge 7 ]; then MySQL_Packages="mariadb mariadb-server"; Menu_SQL="MariaDB"; else MySQL_Packages="mysql mysql-server"; Menu_SQL="MySQL"; fi
 }
 
 #####      SOURCE MENU       ###################################
@@ -157,7 +154,7 @@ clear
 echo -e "   ----====Installation Menu====----\n   ${Bold}Guacamole Remote Desktop Gateway \n   Source/Version: ${Yellow}${GUAC_SOURCE} ${GUAC_VER}" && tput sgr0
 echo -e "   ${Bold}OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}\n" && tput sgr0
 
-echo -n "${Green} Enter the root password for ${Menu_SQL}: ${Yellow}"
+echo -n "${Green} Enter the root password for MariaDB: ${Yellow}"
   	read MYSQL_PASSWD
   	MYSQL_PASSWD=${MYSQL_PASSWD:-${MYSQL_PASSWD_DEF}}
 echo -n "${Green} Enter the Guacamole DB name (default ${DB_NAME_DEF}): ${Yellow}"
@@ -355,7 +352,7 @@ echo "${Bold}Usage:${Reset}"
 echo "  $SCRIPT [options] -s		install Guacamole Silently"
 echo -e "  $SCRIPT [options] -p [yes|no]	install Proxy feature"\\n
 echo "${Bold}Options:${Reset}"
-echo " -${Rev}a${Reset}, <string>	--Sets the root password for ${Menu_SQL}. Default is ${Bold}${MYSQL_PASSWD}${Reset}."
+echo " -${Rev}a${Reset}, <string>	--Sets the root password for MariaDB. Default is ${Bold}${MYSQL_PASSWD}${Reset}."
 echo " -${Rev}b${Reset}, <string>	--Sets the Guacamole DB name. Default is ${Bold}${DB_NAME}${Reset}."
 echo " -${Rev}c${Reset}, <string>	--Sets the Guacamole DB username. Default is ${Bold}{DB_USER}${Reset}."
 echo " -${Rev}d${Reset}, <string>	--Sets the Guacamole DB password. Default is ${Bold}${DB_PASSWD}${Reset}."
@@ -497,7 +494,7 @@ else
 fi
 
 # Install Required Packages
-yum install -y wget pv dialog gcc cairo-devel libpng-devel uuid-devel ffmpeg-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts ${MySQL_Packages} policycoreutils-python setroubleshoot >> $logfile 2>&1 &
+yum install -y wget pv dialog gcc cairo-devel libpng-devel uuid-devel ffmpeg-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot >> $logfile 2>&1 &
 sleep 1 | echo -ne "\n${Bold}Installing Required Packages...    "; echo -ne "\nInstalling Required Packages...    " >> $logfile 2>&1 | spinner
 RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
 
@@ -657,17 +654,10 @@ appconfigs
 #####    DATABASE/TOMCAT/JKS SETUP    ########################################
 appconfigs () {
 # Enable/Start MariaDB/MySQL Service
-if [ $MAJOR_VER -ge 7 ]; then
-	sleep 1 | echo -e "\n${Bold}Enable & Start MariaDB Service..." | pv -qL 25; echo -e "\nEnable & Start MariaDB Service..." >> $logfile  2>&1
-	systemctl enable mariadb.service >> $logfile  2>&1
-	systemctl restart mariadb.service >> $logfile  2>&1
-	sleep 1 | echo -e "\n${Bold}Setting Root Password for MariaDB..." | pv -qL 25; echo -e "\nSetting Root Password for MariaDB..." >> $logfile  2>&1
-else
-	sleep 1 | echo -e "\n${Bold}Enable & Start MySQL Service..." | pv -qL 25; echo -e "\nEnable & Start MySQL Service..." >> $logfile  2>&1
-	chkconfig mysqld on >> $logfile  2>&1
-	service mysqld start >> $logfile  2>&1
-	sleep 1 | echo -e "\n${Bold}Setting Root Password for MySQL..." | pv -qL 25; echo -e "\nSetting Root Password for MySQL..." >> $logfile  2>&1
-fi
+sleep 1 | echo -e "\n${Bold}Enable & Start MariaDB Service..." | pv -qL 25; echo -e "\nEnable & Start MariaDB Service..." >> $logfile  2>&1
+systemctl enable mariadb.service >> $logfile  2>&1
+systemctl restart mariadb.service >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Setting Root Password for MariaDB..." | pv -qL 25; echo -e "\nSetting Root Password for MariaDB..." >> $logfile  2>&1
 
 # Set MariaDB/MySQL Root Password
 mysqladmin -u root password ${MYSQL_PASSWD} | tee -a $logfile || exit 1
@@ -958,7 +948,7 @@ if [ $INSTALL_NGINX = "yes" ]; then
 fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
     sleep 1 | echo -e "${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
-     echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
+    echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
     firewall-cmd --permanent --zone=public --add-port=8080/tcp >> $logfile  2>&1
     echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp" >> $logfile  2>&1
     firewall-cmd --permanent --zone=public --add-port=8443/tcp >> $logfile  2>&1
@@ -971,13 +961,8 @@ firewall-cmd --reload >> $logfile  2>&1
 showmessages () {
 # Enable/Start Nginx Service
 sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
-if [ $MAJOR_VER -ge 7 ]; then
-	systemctl enable nginx.service >> $logfile 2>&1 || exit 1
-	systemctl start nginx.service >> $logfile 2>&1 || exit 1
-else
-	chkconfig nginx on >> $logfile 2>&1
-	service nginx start >> $logfile 2>&1
-fi
+systemctl enable nginx.service >> $logfile 2>&1 || exit 1
+systemctl start nginx.service >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "\n${Bold}Restarting all services" | pv -qL 25; echo -e "\nRestarting all services" >> $logfile  2>&1
 
