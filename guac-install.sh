@@ -710,17 +710,10 @@ keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keyst
 
 # Enable/Start Tomcat and Guacamole Services
 sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Service..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Service..." >> $logfile  2>&1
-if [ $MAJOR_VER -ge 7 ]; then
-	systemctl enable tomcat >> $logfile  2>&1
-	systemctl start tomcat >> $logfile  2>&1
-	systemctl enable guacd >> $logfile  2>&1
-	systemctl start guacd >> $logfile  2>&1
-else
-	chkconfig tomcat on
-	service tomcat start >> $logfile  2>&1
-	chkconfig guacd on >> $logfile  2>&1
-	service guacd start >> $logfile  2>&1
-fi
+systemctl enable tomcat >> $logfile  2>&1
+systemctl start tomcat >> $logfile  2>&1
+systemctl enable guacd >> $logfile  2>&1
+systemctl start guacd >> $logfile  2>&1
 }
 
 #####    LDAP SETUP    ########################################
