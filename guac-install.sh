@@ -14,7 +14,7 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2018_11_26" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2018_11_27" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
