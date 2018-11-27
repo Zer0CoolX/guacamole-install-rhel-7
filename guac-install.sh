@@ -764,7 +764,7 @@ ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF}
 if [ $SECURE_LDAP == "yes" ]; then
 	sleep 1 | echo -e "\n${Bold}Updateing Guacamole configuration file for LDAPS..." | pv -qL 25; echo -e "\nUpdating Guacamole configuration file for LDAPS..." >> $logfile  2>&1
 	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
-	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass CA_PASSWD -file ${LDAPS_CERT_FULL} >> $logfile  2>&1
+	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${CA_PASSWD} -file ${LDAPS_CERT_FULL} >> $logfile  2>&1
 
 	echo "
 	ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
