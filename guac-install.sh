@@ -301,7 +301,7 @@ if [ $SECURE_LDAP == "yes" ]; then
 	LDAPS_CERT_FN="mycert.cer"
 	LDAPS_CERT_FULL="xNULLx"
 
-	while [ ! -f ${LDAPS_CERT__FULL} ]; do
+	while [ ! -f ${LDAPS_CERT_FULL} ]; do
 		echo -n "${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
 			read LDAPS_CERT_FN
 			LDAPS_CERT_FN=${LDAPS_CERT_FN:-${LDAPS_CERT_FN}}
