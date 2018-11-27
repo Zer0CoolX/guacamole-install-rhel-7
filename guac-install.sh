@@ -766,12 +766,10 @@ if [ $SECURE_LDAP == "yes" ]; then
 	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${CA_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt >> $logfile  2>&1 &
 	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
 
-	echo "
-	ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
+	echo "ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
 fi
 
-echo "
-ldap-user-base-dn: ${LDAP_BASE_DN}
+echo "ldap-user-base-dn: ${LDAP_BASE_DN}
 ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
 ldap-username-attribute: ${LDAP_UNAME_ATTR}" >> /etc/guacamole/${GUAC_CONF}
