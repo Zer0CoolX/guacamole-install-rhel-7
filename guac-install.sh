@@ -292,7 +292,7 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-if [ SECURE_LDAP == "yes" ]; then
+if [ $SECURE_LDAP == "yes" ]; then
 	echo -n "${Green} Enter the LDAP Port (default 636): ${Yellow}"
   	read LDAP_PORT
   	LDAP_PORT=${LDAP_PORT:-636}
