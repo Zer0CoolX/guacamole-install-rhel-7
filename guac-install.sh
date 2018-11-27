@@ -292,7 +292,7 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-if [ SECURE_LDAP == yes ]; then
+if [ SECURE_LDAP == "yes" ]; then
 	echo -n "${Green} Enter the LDAP Port (default 636): ${Yellow}"
   	read LDAP_PORT
   	LDAP_PORT=${LDAP_PORT:-636}
@@ -325,7 +325,6 @@ fi
 echo -n "${Green} Enter the LDAP Server Hostname (use the FQDN, Ex: ldaphost.domain.com): ${Yellow}"
   	read LDAP_HOSTNAME
   	LDAP_HOSTNAME=${LDAP_HOSTNAME:-ldaphost.domain.com}
-
 echo -n "${Green} Enter the LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}"
   	read LDAP_BASE_DN
   	LDAP_BASE_DN=${LDAP_BASE_DN:-dc=domain,dc=com}
