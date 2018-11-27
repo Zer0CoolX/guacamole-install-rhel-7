@@ -284,12 +284,48 @@ echo -n "${Green} Enter the DHE key-size to use. ${Red}Higher key-size will take
 
 #####    LDAP MENU    ########################################
 ldapmenu () {
+while true; do
+	read -p "${Green} Use LDAPS instead of LDAP (Requires having the cert from the server copied locally, default: no): ${Yellow}" SECURE_LDAP
+	case $SECURE_LDAP in
+		[Yy]* ) SECURE_LDAP="yes"; break;;
+		[Nn]*|"" ) SECURE_LDAP="no"; break;;
+		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
+	esac
+done
+if [ SECURE_LDAP == yes ]; then
+	echo -n "${Green} Enter the LDAP Port (default 636): ${Yellow}"
+  	read LDAP_PORT
+  	LDAP_PORT=${LDAP_PORT:-636}
+
+  	# LDAPS Certificate prompts
+	LDAPS_CERT_FN="mycert.cer"
+	LDAPS_CERT_FULL="xNULLx"
+
+	while [ ! -f ${LDAPS_CERT__FULL} ]; do
+		echo -n "${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
+			read LDAPS_CERT_FN
+			LDAPS_CERT_FN=${LDAPS_CERT_FN:-${LDAPS_CERT_FN}}
+		echo -n "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
+			read LDAPS_CERT_DIR
+			LDAPS_CERT_DIR=${LDAPS_CERT_DIR:-/home/}
+			LDAPS_CERT_FULL=${LDAPS_CERT_DIR}${LDAPS_CERT_FN}
+		if [ ! -f ${LDAPS_CERT_FULL} ]; then
+			echo "${Red} The file/path: ${LDAPS_CERT_FULL} does not exist! Ensure the file is in the directory and try again..."
+		fi
+	done
+	echo -n "${Green} Enter the cacerts keystore password (default changeit): ${Yellow}"
+	read CA_PASSWD
+	CA_PASSWD=${CA_PASSWD:-changeit}
+else
+	echo -n "${Green} Enter the LDAP Port (default 389): ${Yellow}"
+  	read LDAP_PORT
+  	LDAP_PORT=${LDAP_PORT:-389}
+fi
+
 echo -n "${Green} Enter the LDAP Server Hostname (use the FQDN, Ex: ldaphost.domain.com): ${Yellow}"
   	read LDAP_HOSTNAME
   	LDAP_HOSTNAME=${LDAP_HOSTNAME:-ldaphost.domain.com}
-echo -n "${Green} Enter the LDAP Port (default 389): ${Yellow}"
-  	read LDAP_PORT
-  	LDAP_PORT=${LDAP_PORT:-389}
+
 echo -n "${Green} Enter the LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}"
   	read LDAP_BASE_DN
   	LDAP_BASE_DN=${LDAP_BASE_DN:-dc=domain,dc=com}
@@ -724,9 +760,18 @@ sleep 1 | echo -e "\n${Bold}Updateing Guacamole configuration file for LDAP..." 
 echo "
 # LDAP properties
 ldap-hostname: ${LDAP_HOSTNAME}
-ldap-port: ${LDAP_PORT}
-# ldap-port: 636
-# ldap-encryption-method: ssl
+ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF}
+
+if [ SECURE_LDAP == yes ]; then
+	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
+
+	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass CA_PASSWD -file ${LDAPS_CERT_FULL} >> $logfile  2>&1
+
+	echo "
+	ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
+fi
+
+echo "
 ldap-user-base-dn: ${LDAP_BASE_DN}
 ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
