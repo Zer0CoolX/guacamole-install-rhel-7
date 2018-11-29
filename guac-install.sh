@@ -172,24 +172,15 @@ echo -n "${Green} Enter the Java KeyStore password (at least 6 characters): ${Ye
 echo -n "${Green} Enter the Java KeyStore key-size to use (default ${JKSTORE_KEY_SIZE_DEF}): ${Yellow}"
  	 read JKSTORE_KEY_SIZE
  	 JKSTORE_KEY_SIZE=${JKSTORE_KEY_SIZE:-${JKSTORE_KEY_SIZE_DEF}}
+nginxmenu
 while true; do
-	read -p "${Green} Do you wish to install the Proxy feature (Nginx)? (default yes): ${Yellow}" yn
-	case $yn in
-		[Yy]*|"" ) INSTALL_NGINX="yes"; nginxmenu; break;;
-        [Nn]* ) INSTALL_NGINX="no"; break;;
-        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
-if [ $INSTALL_NGINX == "yes" ]; then
- while true; do
     read -p "${Green} Do you use Let's Encrypt to create a Valid SSL Certificate? (default no): ${Yellow}" yn
     case $yn in
         [Yy]* ) LETSENCRYPT_CERT="yes"; letsencrypt; break;;
         [Nn]*|"" ) LETSENCRYPT_CERT="no"; selfsignmenu; break;;
         * ) echo "${Green} Please enter yes or no. ${Yellow}";;
     esac
- done
-fi
+done
 while true; do
     read -p "${Green} Do you wish to install Guacamole's LDAP Extension? (default no): ${Yellow}" yn
     case $yn in
@@ -1029,7 +1020,7 @@ if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_M
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then reposinstall; fi
 if [ $INSTALL_LDAP = "yes" ]; then ldapsetup; fi
 if [ $INSTALL_CUST = "yes" ]; then custsetup; fi
-if [ $INSTALL_NGINX = "yes" ]; then nginxinstall; fi
-if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then selinuxsettings; fi
-if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then firewallsetting; fi
-if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then showmessages; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then nginxinstall; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then selinuxsettings; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then firewallsetting; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then showmessages; fi
