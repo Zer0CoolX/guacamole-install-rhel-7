@@ -843,17 +843,20 @@ echo 'server {
 	ssl_protocols       TLSv1.3 TLSv1.2;' > /etc/nginx/conf.d/guacamole_ssl.conf
 
 # More Secure SSL Nginx Parameters (If selected)
+# # ssl_ecdh_curve   consider appending :X25519:prime256v1 to the end?
 if [ $NGINX_HARDEN = "yes" ]; then
-	echo "	ssl_ciphers         'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
-	ssl_ecdh_curve		secp521r1:secp384r1:prime256v1;
+	echo "	ssl_ciphers         'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384';
+	ssl_ecdh_curve		sect571r1:secp521r1:secp384r1;
     ssl_prefer_server_ciphers		on;
     ssl_session_cache		shared:SSL:10m;
     ssl_session_timeout		1d;
     ssl_session_tickets		off;
+    server_tokens off;
     add_header		Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
     add_header		X-Frame-Options DENY;
     add_header		X-Content-Type-Options nosniff;
-    add_header		X-XSS-Protection \"1; mode=block\";" >> /etc/nginx/conf.d/guacamole_ssl.conf
+    add_header		X-XSS-Protection \"1; mode=block\";
+    add_header 		Referrer-Policy "no-referrer-when-downgrade" always;" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Generate dhparam and append to Nginx SSL Conf for Forward Secrecy(If selected)
 	if [ $DHE_USE = "yes" ]; then
