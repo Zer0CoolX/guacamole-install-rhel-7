@@ -172,24 +172,15 @@ echo -n "${Green} Enter the Java KeyStore password (at least 6 characters): ${Ye
 echo -n "${Green} Enter the Java KeyStore key-size to use (default ${JKSTORE_KEY_SIZE_DEF}): ${Yellow}"
  	 read JKSTORE_KEY_SIZE
  	 JKSTORE_KEY_SIZE=${JKSTORE_KEY_SIZE:-${JKSTORE_KEY_SIZE_DEF}}
+nginxmenu
 while true; do
-	read -p "${Green} Do you wish to install the Proxy feature (Nginx)? (default yes): ${Yellow}" yn
-	case $yn in
-		[Yy]*|"" ) INSTALL_NGINX="yes"; nginxmenu; break;;
-        [Nn]* ) INSTALL_NGINX="no"; break;;
-        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
-if [ $INSTALL_NGINX == "yes" ]; then
- while true; do
     read -p "${Green} Do you use Let's Encrypt to create a Valid SSL Certificate? (default no): ${Yellow}" yn
     case $yn in
         [Yy]* ) LETSENCRYPT_CERT="yes"; letsencrypt; break;;
         [Nn]*|"" ) LETSENCRYPT_CERT="no"; selfsignmenu; break;;
         * ) echo "${Green} Please enter yes or no. ${Yellow}";;
     esac
- done
-fi
+done
 while true; do
     read -p "${Green} Do you wish to install Guacamole's LDAP Extension? (default no): ${Yellow}" yn
     case $yn in
@@ -976,13 +967,13 @@ firewallD
 firewallD () {
 echo -e "\nMaking Firewall Backup...\ncp /etc/firewalld/zones/public.xml $fwbkpfile" >> $logfile  2>&1
 cp /etc/firewalld/zones/public.xml $fwbkpfile >> $logfile 2>&1
-if [ $INSTALL_NGINX = "yes" ]; then
-	sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
-	echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http" >> $logfile  2>&1
-	firewall-cmd --permanent --zone=public --add-service=http >> $logfile  2>&1
-	echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https" >> $logfile  2>&1
-	firewall-cmd --permanent --zone=public --add-service=https >> $logfile  2>&1
-fi
+
+sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
+echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http" >> $logfile  2>&1
+firewall-cmd --permanent --zone=public --add-service=http >> $logfile  2>&1
+echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https" >> $logfile  2>&1
+firewall-cmd --permanent --zone=public --add-service=https >> $logfile  2>&1
+
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
     sleep 1 | echo -e "${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
     echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
@@ -1011,11 +1002,7 @@ systemctl restart nginx >> $logfile 2>&1 || exit 1
 sleep 1 | echo -e "\n${Bold}Finished Successfully" | pv -qL 25; echo -e "\nFinished Successfully" >> $logfile  2>&1
 sleep 1 | echo -e "${Reset}You can check the log file at ${logfile}" | pv -qL 25; echo -e "You can check the log file at ${logfile}" >> $logfile  2>&1
 sleep 1 | echo -e "${Reset}Your firewall backup file at ${fwbkpfile}"; echo -e "Your firewall backup file at ${fwbkpfile}" >> $logfile  2>&1
-if [ $INSTALL_NGINX = "yes" ]; then
-	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}" >> $logfile  2>&1
-else
-	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://<IP>:8080${GUAC_URIPATH} or https://<IP>:8443${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://<IP>:8080${GUAC_URIPATH} or https://<IP>:8443${GUAC_URIPATH}" >> $logfile  2>&1
-fi
+sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
 sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
@@ -1031,7 +1018,7 @@ if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_M
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then reposinstall; fi
 if [ $INSTALL_LDAP = "yes" ]; then ldapsetup; fi
 if [ $INSTALL_CUST = "yes" ]; then custsetup; fi
-if [ $INSTALL_NGINX = "yes" ]; then nginxinstall; fi
-if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then selinuxsettings; fi
-if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then firewallsetting; fi
-if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then showmessages; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then nginxinstall; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then selinuxsettings; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then firewallsetting; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then showmessages; fi
