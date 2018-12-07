@@ -822,7 +822,7 @@ echo "server {
 	return 301 https://\$host\$request_uri;
 
 	#location ${GUAC_URIPATH} {
-    #	proxy_pass http://${GUACSERVER_HOSTNAME}:8443/guacamole/;
+    #	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
     #	proxy_buffering off;
     #	proxy_http_version 1.1;
     #	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -869,7 +869,7 @@ fi
 # Append the rest of the SSL Nginx Conf
 echo "	
 	location ${GUAC_URIPATH} {
-		proxy_pass http://${GUACSERVER_HOSTNAME}:8443/guacamole/;
+		proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
 		proxy_buffering off;
 		proxy_http_version 1.1;
 		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
