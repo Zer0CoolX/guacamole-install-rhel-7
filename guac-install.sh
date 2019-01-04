@@ -812,7 +812,7 @@ sleep 1 | echo -e "${Reset}-Making Nginx Config Backup..." | pv -qL 25; echo -e 
 mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp >> $logfile  2>&1
 
 # Generate Nginx Conf's
-#sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; echo -e "-Generating Nginx Configurations..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; echo -e "-Generating Nginx Configurations..." >> $logfile  2>&1
 
 # HTTP Nginx Conf
 echo "server {
