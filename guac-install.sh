@@ -821,7 +821,7 @@ echo "server {
         server_name ${DOMAIN_NAME};
 	return 301 https://\$host\$request_uri;
 
-	#location ${GUAC_URIPATH} {
+	location ${GUAC_URIPATH} {
    	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
     	proxy_buffering off;
     	proxy_http_version 1.1;
