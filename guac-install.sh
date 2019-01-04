@@ -834,51 +834,51 @@ echo "server {
 }" > /etc/nginx/conf.d/guacamole.conf
 
 # Base HTTPS/SSL Nginx Conf
-#echo 'server {
-#	listen              443 ssl http2;
-#	listen				[::]:443 ssl http2;
-#	server_name         localhost;
-#	ssl_certificate     guacamole.crt;
-#	ssl_certificate_key guacamole.key;
-#	ssl_protocols       TLSv1.3 TLSv1.2;' > /etc/nginx/conf.d/guacamole_ssl.conf
+echo 'server {
+	listen              443 ssl http2;
+	listen				[::]:443 ssl http2;
+	server_name         ${DOMAIN_NAME};
+	ssl_certificate     guacamole.crt;
+	ssl_certificate_key guacamole.key;
+	ssl_protocols       TLSv1.3 TLSv1.2;' > /etc/nginx/conf.d/guacamole_ssl.conf
 
 # More Secure SSL Nginx Parameters (If selected)
-#if [ $NGINX_HARDEN = "yes" ]; then
-#	echo "	ssl_ciphers         'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
-#	ssl_ecdh_curve		secp521r1:secp384r1:prime256v1;
-#    ssl_prefer_server_ciphers		on;
-#    ssl_session_cache		shared:SSL:10m;
-#    ssl_session_timeout		1d;
-#    ssl_session_tickets		off;
-#    add_header		Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
-#    add_header		X-Frame-Options DENY;
-#    add_header		X-Content-Type-Options nosniff;
-#    add_header		X-XSS-Protection \"1; mode=block\";" >> /etc/nginx/conf.d/guacamole_ssl.conf
+if [ $NGINX_HARDEN = "yes" ]; then
+	echo "	ssl_ciphers         'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
+	ssl_ecdh_curve		secp521r1:secp384r1:prime256v1;
+    ssl_prefer_server_ciphers		on;
+    ssl_session_cache		shared:SSL:10m;
+    ssl_session_timeout		1d;
+    ssl_session_tickets		off;
+    add_header		Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
+    add_header		X-Frame-Options DENY;
+    add_header		X-Content-Type-Options nosniff;
+    add_header		X-XSS-Protection \"1; mode=block\";" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Generate dhparam and append to Nginx SSL Conf for Forward Secrecy(If selected)
-#	if [ $DHE_USE = "yes" ]; then
-#		openssl dhparam -out dhparam.pem ${DHE_KEY_SIZE} >> $logfile  2>&1 &
-#		sleep 1 | echo -ne "\n${Bold}Generating DHE Key, this may take a long time...    " | pv -qL 25; echo -ne "\nGenerating DHE Key, this may take a long time...    " >> $logfile 2>&1 | spinner
-#		mv dhparam.pem /etc/ssl/certs >> $logfile 2>&1
-#		echo '	ssl_dhparam			/etc/ssl/certs/dhparam.pem;' >> /etc/nginx/conf.d/guacamole_ssl.conf
-#	fi	
-#else # Generic SSL Nginx Parameters
-#	echo 'ssl_ciphers		HIGH:!aNULL:!MD5;' >> /etc/nginx/conf.d/guacamole_ssl.conf
-#fi
+	if [ $DHE_USE = "yes" ]; then
+		openssl dhparam -out dhparam.pem ${DHE_KEY_SIZE} >> $logfile  2>&1 &
+		sleep 1 | echo -ne "\n${Bold}Generating DHE Key, this may take a long time...    " | pv -qL 25; echo -ne "\nGenerating DHE Key, this may take a long time...    " >> $logfile 2>&1 | spinner
+		mv dhparam.pem /etc/ssl/certs >> $logfile 2>&1
+		echo '	ssl_dhparam			/etc/ssl/certs/dhparam.pem;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+	fi	
+else # Generic SSL Nginx Parameters
+	echo 'ssl_ciphers		HIGH:!aNULL:!MD5;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+fi
 
 # Append the rest of the SSL Nginx Conf
-#echo "	
-#	location ${GUAC_URIPATH} {
-#		proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
-#		proxy_buffering off;
-#		proxy_http_version 1.1;
-#		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-#		proxy_set_header Upgrade \$http_upgrade;
-#		proxy_set_header Connection \$http_connection;
-#		proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
-#		access_log off;
- #   }
-#}" >> /etc/nginx/conf.d/guacamole_ssl.conf
+echo "	
+	location ${GUAC_URIPATH} {
+		proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
+		proxy_buffering off;
+		proxy_http_version 1.1;
+		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+		proxy_set_header Upgrade \$http_upgrade;
+		proxy_set_header Connection \$http_connection;
+		proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
+		access_log off;
+    }
+}" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Lets Encrypt Setup (If selected)
 #if [ $LETSENCRYPT_CERT = "yes" ]; then
