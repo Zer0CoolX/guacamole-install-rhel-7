@@ -816,27 +816,27 @@ sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; ech
 
 # HTTP Nginx Conf
 echo "server {
-    listen 80 default_server;
-	listen [::]:80 default_server;
-    # server_name localhost;
+    	listen 80;
+	listen [::]:80;
+    	# server_name localhost;
 	return 301 https://\$host\$request_uri;
 
-	#location ${GUAC_URIPATH} {
-    #	proxy_pass https://${GUACSERVER_HOSTNAME}:8443/guacamole/;
-    #	proxy_buffering off;
-    #	proxy_http_version 1.1;
-    #	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    #	proxy_set_header Upgrade \$http_upgrade;
-    #	proxy_set_header Connection \$http_connection;
-    #	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
-    #	access_log off;
-	#}
+	location ${GUAC_URIPATH} {
+    	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
+    	proxy_buffering off;
+    	proxy_http_version 1.1;
+    	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    	proxy_set_header Upgrade \$http_upgrade;
+    	proxy_set_header Connection \$http_connection;
+    	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
+    	access_log off;
+	}
 }" > /etc/nginx/conf.d/guacamole.conf
 
 # Base HTTPS/SSL Nginx Conf
 echo 'server {
-	listen              443 ssl http2;
-	listen				[::]:443 ssl http2;
+	listen              443 ssl http2 default_server;
+	listen				[::]:443 ssl http2 default_server;
 	server_name         localhost;
 	ssl_certificate     guacamole.crt;
 	ssl_certificate_key guacamole.key;
@@ -872,7 +872,7 @@ fi
 # Append the rest of the SSL Nginx Conf
 echo "	
 	location ${GUAC_URIPATH} {
-		proxy_pass https://${GUACSERVER_HOSTNAME}:8443/guacamole/;
+		proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
 		proxy_buffering off;
 		proxy_http_version 1.1;
 		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
