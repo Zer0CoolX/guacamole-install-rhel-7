@@ -14,7 +14,7 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2018_11_29" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_1_4" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -816,8 +816,8 @@ sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; ech
 
 # HTTP Nginx Conf
 echo "server {
-	listen 80 default_server;
-	listen [::]:80 default_server;
+	listen 80;
+	listen [::]:80;
         server_name ${DOMAIN_NAME};
 	return 301 https://\$host\$request_uri;
 
@@ -833,14 +833,48 @@ echo "server {
 	}
 }" > /etc/nginx/conf.d/guacamole.conf
 
+# Enable/Start Nginx Service
+sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
+systemctl enable nginx.service >> $logfile 2>&1 || exit 1
+systemctl start nginx.service >> $logfile 2>&1 || exit 1
+
+# Lets Encrypt Setup (If selected)
+if [ $LETSENCRYPT_CERT = "yes" ]; then
+	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
+	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...\n" | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
+	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
+	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
+	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
+	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
+	certbot --nginx -n --agree-tos certonly --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+	#certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
+	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
+	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
+else # Use a Self-Signed Cert
+	if [ $INSTALL_MODE = "silent" ]; then
+		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
+		subj="-subj /C=XX/ST=/L=City/O=Company/CN=/"
+	else
+		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${CERTYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
+	fi
+	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
+fi
+
 # Base HTTPS/SSL Nginx Conf
 echo 'server {
-	listen              443 ssl http2;
-	listen				[::]:443 ssl http2;
+	listen              443 ssl http2 default_server;
+	listen				[::]:443 ssl http2 default_server;
 	server_name         ${DOMAIN_NAME};
 	ssl_certificate     guacamole.crt;
-	ssl_certificate_key guacamole.key;
-	ssl_protocols       TLSv1.3 TLSv1.2;' > /etc/nginx/conf.d/guacamole_ssl.conf
+	ssl_certificate_key guacamole.key;' > /etc/nginx/conf.d/guacamole_ssl.conf
+	
+if [ $LETSENCRYPT_CERT = "yes" ]; then
+	echo 'ssl_trusted_certificate guacamole.pem;
+	ssl_stapling on;
+	ssl_stapling_verify on;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+fi
+	echo 'ssl_protocols       TLSv1.3 TLSv1.2;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # More Secure SSL Nginx Parameters (If selected)
 if [ $NGINX_HARDEN = "yes" ]; then
@@ -880,27 +914,7 @@ echo "
     }
 }" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
-# Lets Encrypt Setup (If selected)
-#if [ $LETSENCRYPT_CERT = "yes" ]; then
-	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
-	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...\n" | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
-	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
-	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
-	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
-	#sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
-	#certbot --nginx -n --agree-tos --redirect --hsts --must-staple --staple-ocsp --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
-	#certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
-	#ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
-	#ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
-#else # Use a Self-Signed Cert
-#	if [ $INSTALL_MODE = "silent" ]; then
-#		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
-#		subj="-subj /C=XX/ST=/L=City/O=Company/CN=/"
-#	else
-#		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${CERTYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
-#	fi
-#	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
-#fi
+
 
 sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
 }
@@ -987,10 +1001,6 @@ firewall-cmd --reload >> $logfile  2>&1
 
 #####    COMPLETION MESSAGES    ########################################
 showmessages () {
-# Enable/Start Nginx Service
-sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
-systemctl enable nginx.service >> $logfile 2>&1 || exit 1
-systemctl start nginx.service >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "\n${Bold}Restarting all services" | pv -qL 25; echo -e "\nRestarting all services" >> $logfile  2>&1
 
