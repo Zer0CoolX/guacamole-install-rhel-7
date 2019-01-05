@@ -835,8 +835,9 @@ echo "server {
 
 # Enable/Start Nginx Service
 sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
-systemctl enable nginx.service >> $logfile 2>&1 || exit 1
-systemctl start nginx.service >> $logfile 2>&1 || exit 1
+systemctl enable nginx >> $logfile 2>&1 || exit 1
+systemctl start nginx >> $logfile 2>&1 || exit 1
+systemctl status nginx >> $logfile 2>&1 || exit 1
 
 # Lets Encrypt Setup (If selected)
 if [ $LETSENCRYPT_CERT = "yes" ]; then
@@ -846,7 +847,7 @@ if [ $LETSENCRYPT_CERT = "yes" ]; then
 	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
 	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
 	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
-	certbot --nginx -n --agree-tos certonly --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+	certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
 	#certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
