@@ -834,19 +834,19 @@ echo "server {
 }" > /etc/nginx/conf.d/guacamole.conf
 
 # Base HTTPS/SSL Nginx Conf
-echo 'server {
+echo "server {
 	listen 443 ssl http2 default_server;
 	listen [::]:443 ssl http2 default_server;
 	server_name ${DOMAIN_NAME};
 	#ssl_certificate guacamole.crt;
-	#ssl_certificate_key guacamole.key;' > /etc/nginx/conf.d/guacamole_ssl.conf
+	#ssl_certificate_key guacamole.key;" > /etc/nginx/conf.d/guacamole_ssl.conf
 	
 if [ $LETSENCRYPT_CERT = "yes" ]; then
 	echo '	#ssl_trusted_certificate guacamole.pem;
 	ssl_stapling on;
 	ssl_stapling_verify on;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 fi
-	echo 'ssl_protocols       TLSv1.3 TLSv1.2;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+	echo '	ssl_protocols       TLSv1.3 TLSv1.2;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # More Secure SSL Nginx Parameters (If selected)
 if [ $NGINX_HARDEN = "yes" ]; then
@@ -866,7 +866,7 @@ if [ $NGINX_HARDEN = "yes" ]; then
 		openssl dhparam -out dhparam.pem ${DHE_KEY_SIZE} >> $logfile  2>&1 &
 		sleep 1 | echo -ne "\n${Bold}Generating DHE Key, this may take a long time...    " | pv -qL 25; echo -ne "\nGenerating DHE Key, this may take a long time...    " >> $logfile 2>&1 | spinner
 		mv dhparam.pem /etc/ssl/certs >> $logfile 2>&1
-		echo 'ssl_dhparam /etc/ssl/certs/dhparam.pem;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+		echo '	ssl_dhparam /etc/ssl/certs/dhparam.pem;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 	fi	
 else # Generic SSL Nginx Parameters
 	echo 'ssl_ciphers HIGH:!aNULL:!MD5;' >> /etc/nginx/conf.d/guacamole_ssl.conf
@@ -980,7 +980,7 @@ sslcerts () {
 # Lets Encrypt Setup (If selected)
 if [ $LETSENCRYPT_CERT = "yes" ]; then
 	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
-	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    \n" | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
+	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
 	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
 	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
 	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
@@ -1000,6 +1000,7 @@ else # Use a Self-Signed Cert
 	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
 fi
 
+sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
 sed -i '/ssl.*certificate/s/^#//g' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 }
 
