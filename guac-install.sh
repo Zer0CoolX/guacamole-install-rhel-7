@@ -894,7 +894,7 @@ systemctl start nginx >> $logfile 2>&1 || exit 1
 # Lets Encrypt Setup (If selected)
 if [ $LETSENCRYPT_CERT = "yes" ]; then
 	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
-	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...\n" | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
+	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    \n" | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
 	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
 	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
 	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
