@@ -859,7 +859,7 @@ if [ $NGINX_HARDEN = "yes" ]; then
 	ssl_session_cache shared:SSL:10m;
 	ssl_session_timeout 1d;
 	ssl_session_tickets off;
-	add_header Referrer-Policy "no-refferrer-when-downgrade" always;
+	add_header Referrer-Policy \"no-refferrer-when-downgrade\" always;
 	add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
 	add_header X-Frame-Options DENY;
 	add_header X-Content-Type-Options nosniff;
@@ -886,7 +886,8 @@ echo "
 	proxy_set_header Upgrade \$http_upgrade;
 	proxy_set_header Connection \$http_connection;
 	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
-	access_log off;
+	access_log /var/log/nginx/guac_access.log;
+	error_log /var/log/nginx/guac_error.log;
 	}
 }" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
