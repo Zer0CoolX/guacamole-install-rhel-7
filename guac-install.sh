@@ -838,6 +838,7 @@ echo "server {
 	listen 443 ssl http2 default_server;
 	listen [::]:443 ssl http2 default_server;
 	server_name ${DOMAIN_NAME};
+	server_tokens off;
 	#ssl_certificate guacamole.crt;
 	#ssl_certificate_key guacamole.key;" > /etc/nginx/conf.d/guacamole_ssl.conf
 	
@@ -846,20 +847,23 @@ if [ $LETSENCRYPT_CERT = "yes" ]; then
 	ssl_stapling on;
 	ssl_stapling_verify on;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 fi
-	echo '	ssl_protocols       TLSv1.3 TLSv1.2;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+	echo '	ssl_protocols TLSv1.3 TLSv1.2;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # More Secure SSL Nginx Parameters (If selected)
 if [ $NGINX_HARDEN = "yes" ]; then
-	echo "	ssl_ciphers         'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
-	ssl_ecdh_curve		secp521r1:secp384r1:prime256v1;
-	ssl_prefer_server_ciphers		on;
-	ssl_session_cache		shared:SSL:10m;
-	ssl_session_timeout		1d;
-	ssl_session_tickets		off;
-	add_header		Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
-	add_header		X-Frame-Options DENY;
-	add_header		X-Content-Type-Options nosniff;
-	add_header		X-XSS-Protection \"1; mode=block\";" >> /etc/nginx/conf.d/guacamole_ssl.conf
+	#echo "	ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
+	#ssl_ecdh_curve secp521r1:secp384r1:prime256v1;
+	ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384::ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384';
+	ssl_ecdh_curve sect571r1:secp521r1:secp384r1;
+	ssl_prefer_server_ciphers on;
+	ssl_session_cache shared:SSL:10m;
+	ssl_session_timeout 1d;
+	ssl_session_tickets off;
+	add_header Referrer-Policy "no-refferrer-when-downgrade" always;
+	add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
+	add_header X-Frame-Options DENY;
+	add_header X-Content-Type-Options nosniff;
+	add_header X-XSS-Protection \"1; mode=block\";" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Generate dhparam and append to Nginx SSL Conf for Forward Secrecy(If selected)
 	if [ $DHE_USE = "yes" ]; then
