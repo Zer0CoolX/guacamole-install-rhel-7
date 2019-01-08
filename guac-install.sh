@@ -14,7 +14,7 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2018_11_27" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_1_4" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -816,13 +816,13 @@ sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; ech
 
 # HTTP Nginx Conf
 echo "server {
-    	listen 80;
+	listen 80;
 	listen [::]:80;
-    	# server_name localhost;
+        server_name ${DOMAIN_NAME};
 	return 301 https://\$host\$request_uri;
 
 	location ${GUAC_URIPATH} {
-    	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
+   	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
     	proxy_buffering off;
     	proxy_http_version 1.1;
     	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -834,74 +834,68 @@ echo "server {
 }" > /etc/nginx/conf.d/guacamole.conf
 
 # Base HTTPS/SSL Nginx Conf
-echo 'server {
-	listen              443 ssl http2 default_server;
-	listen				[::]:443 ssl http2 default_server;
-	server_name         localhost;
-	ssl_certificate     guacamole.crt;
-	ssl_certificate_key guacamole.key;
-	ssl_protocols       TLSv1.3 TLSv1.2;' > /etc/nginx/conf.d/guacamole_ssl.conf
+echo "server {
+	listen 443 ssl http2 default_server;
+	listen [::]:443 ssl http2 default_server;
+	server_name ${DOMAIN_NAME};
+	server_tokens off;
+	#ssl_certificate guacamole.crt;
+	#ssl_certificate_key guacamole.key;" > /etc/nginx/conf.d/guacamole_ssl.conf
+	
+if [ $LETSENCRYPT_CERT = "yes" ]; then
+	echo '	#ssl_trusted_certificate guacamole.pem;
+	ssl_stapling on;
+	ssl_stapling_verify on;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+fi
+	echo '	ssl_protocols TLSv1.3 TLSv1.2;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # More Secure SSL Nginx Parameters (If selected)
 # # ssl_ecdh_curve   consider appending :X25519:prime256v1 to the end?
 if [ $NGINX_HARDEN = "yes" ]; then
-	echo "	ssl_ciphers         'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384';
-	ssl_ecdh_curve		sect571r1:secp521r1:secp384r1;
-    ssl_prefer_server_ciphers		on;
-    ssl_session_cache		shared:SSL:10m;
-    ssl_session_timeout		1d;
-    ssl_session_tickets		off;
-    server_tokens off;
-    add_header		Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
-    add_header		X-Frame-Options DENY;
-    add_header		X-Content-Type-Options nosniff;
-    add_header		X-XSS-Protection \"1; mode=block\";
-    add_header 		Referrer-Policy "no-referrer-when-downgrade" always;" >> /etc/nginx/conf.d/guacamole_ssl.conf
+	#echo "	ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
+	echo "	ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384::ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384';
+	ssl_ecdh_curve secp521r1:secp384r1:prime256v1;
+	ssl_prefer_server_ciphers on;
+	ssl_session_cache shared:SSL:10m;
+	ssl_session_timeout 1d;
+	ssl_session_tickets off;
+	add_header Referrer-Policy \"no-refferrer-when-downgrade\" always;
+	add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
+	add_header X-Frame-Options DENY;
+	add_header X-Content-Type-Options nosniff;
+	add_header X-XSS-Protection \"1; mode=block\";" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Generate dhparam and append to Nginx SSL Conf for Forward Secrecy(If selected)
 	if [ $DHE_USE = "yes" ]; then
 		openssl dhparam -out dhparam.pem ${DHE_KEY_SIZE} >> $logfile  2>&1 &
 		sleep 1 | echo -ne "\n${Bold}Generating DHE Key, this may take a long time...    " | pv -qL 25; echo -ne "\nGenerating DHE Key, this may take a long time...    " >> $logfile 2>&1 | spinner
 		mv dhparam.pem /etc/ssl/certs >> $logfile 2>&1
-		echo '	ssl_dhparam			/etc/ssl/certs/dhparam.pem;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+		echo '	ssl_dhparam /etc/ssl/certs/dhparam.pem;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 	fi	
 else # Generic SSL Nginx Parameters
-	echo 'ssl_ciphers		HIGH:!aNULL:!MD5;' >> /etc/nginx/conf.d/guacamole_ssl.conf
+	echo 'ssl_ciphers HIGH:!aNULL:!MD5;' >> /etc/nginx/conf.d/guacamole_ssl.conf
 fi
 
 # Append the rest of the SSL Nginx Conf
-echo "	
+echo "
 	location ${GUAC_URIPATH} {
-		proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
-		proxy_buffering off;
-		proxy_http_version 1.1;
-		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-		proxy_set_header Upgrade \$http_upgrade;
-		proxy_set_header Connection \$http_connection;
-		proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
-		access_log off;
-    }
+	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
+	proxy_buffering off;
+	proxy_http_version 1.1;
+	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+	proxy_set_header Upgrade \$http_upgrade;
+	proxy_set_header Connection \$http_connection;
+	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
+	access_log /var/log/nginx/guac_access.log;
+	error_log /var/log/nginx/guac_error.log;
+	}
 }" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
-# Lets Encrypt Setup (If selected)
-if [ $LETSENCRYPT_CERT = "yes" ]; then
-	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...\n" | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile  2>&1
-	wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
-	sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
-	chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
-	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
-	certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
-	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
-	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
-else # Use a Self-Signed Cert
-	if [ $INSTALL_MODE = "silent" ]; then
-		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
-		subj="-subj /C=XX/ST=/L=City/O=Company/CN=/"
-	else
-		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${CERTYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
-	fi
-	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
-fi
+# Enable/Start Nginx Service
+sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
+systemctl enable nginx >> $logfile 2>&1 || exit 1
+systemctl start nginx >> $logfile 2>&1 || exit 1
+systemctl status nginx >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
 }
@@ -986,12 +980,42 @@ fi
 firewall-cmd --reload >> $logfile  2>&1
 }
 
+#####    SSL CERTIFICATE        ########################################
+sslcerts () {
+# Lets Encrypt Setup (If selected)
+if [ $LETSENCRYPT_CERT = "yes" ]; then
+	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
+	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
+	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
+	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
+	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
+	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
+	certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+	#certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
+	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
+	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
+	#setup automatic renewal
+	systemctl enable certbot-renew.service >> $logfile 2>&1
+	systemctl enable certbot-renew.timer >> $logfile 2>&1
+	systemctl list-timers --all | grep certbot >> $logfile 2>&1
+else # Use a Self-Signed Cert
+	if [ $INSTALL_MODE = "silent" ]; then
+		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
+		subj="-subj /C=XX/ST=/L=City/O=Company/CN=/"
+	else
+		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${CERTYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
+	fi
+	openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt ${subj} | tee -a $logfile
+fi
+
+sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
+#sed -i '/ssl.*certificate/s/^#//g' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
+sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
+}
+
 #####    COMPLETION MESSAGES    ########################################
 showmessages () {
-# Enable/Start Nginx Service
-sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
-systemctl enable nginx.service >> $logfile 2>&1 || exit 1
-systemctl start nginx.service >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "\n${Bold}Restarting all services" | pv -qL 25; echo -e "\nRestarting all services" >> $logfile  2>&1
 
@@ -1022,4 +1046,5 @@ if [ $INSTALL_CUST = "yes" ]; then custsetup; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then nginxinstall; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then selinuxsettings; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then firewallsetting; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then sslcerts; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then showmessages; fi
