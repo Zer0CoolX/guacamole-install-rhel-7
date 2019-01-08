@@ -1009,7 +1009,8 @@ else # Use a Self-Signed Cert
 fi
 
 sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
-sed -i '/ssl.*certificate/s/^#//g' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
+#sed -i '/ssl.*certificate/s/^#//g' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
+sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 }
 
 #####    COMPLETION MESSAGES    ########################################
