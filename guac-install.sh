@@ -994,6 +994,10 @@ if [ $LETSENCRYPT_CERT = "yes" ]; then
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
+	#setup automatic renewal
+	systemctl enable certbot-renew.service >> $logfile 2>&1
+	systemctl enable certbot-renew.timer >> $logfile 2>&1
+	systemctl list-timers --all | grep certbot >> $logfile 2>&1
 else # Use a Self-Signed Cert
 	if [ $INSTALL_MODE = "silent" ]; then
 		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
