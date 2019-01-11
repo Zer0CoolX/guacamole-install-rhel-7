@@ -14,11 +14,11 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_1_8" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_1_11" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
-GUAC_STBL_VER="0.9.14"
+GUAC_STBL_VER="1.0.0"
 MYSQL_CON_VER="8.0.13"
 LIBJPEG_VER="2.0.1"
 MAVEN_VER="3.6.0"
@@ -602,7 +602,7 @@ else
 	cd server
 
 	# Compile Guacamole Server
-	./configure --with-init-dir=/etc/init.d >> $logfile 2>&1 &
+	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 fi
 # Continue Compiling Server
