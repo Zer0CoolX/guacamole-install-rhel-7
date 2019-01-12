@@ -234,7 +234,7 @@ CERTYPE="Self-Signed"
 echo -n "${Green} Enter the Guacamole Server IP address or hostname (default ${GUACSERVER_HOSTNAME_DEF}): ${Yellow}"
   	read GUACSERVER_HOSTNAME
   	GUACSERVER_HOSTNAME=${GUACSERVER_HOSTNAME:-${GUACSERVER_HOSTNAME_DEF}}
-echo -n "${Green} Enter the URI path, starting with / for example /guacamole (default ${GUAC_URIPATH_DEF}): ${Yellow}"
+echo -n "${Green} Enter the URI path, starting with / for example /guacamole/ (default ${GUAC_URIPATH_DEF}): ${Yellow}"
   	read GUAC_URIPATH
   	GUAC_URIPATH=${GUAC_URIPATH:-${GUAC_URIPATH_DEF}}
 while true; do
@@ -261,9 +261,12 @@ done
 
 #####    SELF SIGN MENU    ########################################
 selfsignmenu () {
+DOMAIN_NAME="localhost"
 echo -n "${Green} Enter the Self-Signed SSL key-size to use (default ${SSL_KEY_SIZE_DEF}): ${Yellow}"
   	read SSL_KEY_SIZE
   	SSL_KEY_SIZE=${SSL_KEY_SIZE:-${SSL_KEY_SIZE_DEF}}
+echo -n "${Green} Enter a valid hostname (ex. localhost): ${Yellow}"
+  	read DOMAIN_NAME
 }
 
 #####    DHE MENU    ########################################
