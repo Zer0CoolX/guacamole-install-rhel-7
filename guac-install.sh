@@ -38,7 +38,8 @@ MYSQL_PASSWD_DEF="guacamole" # Default MySQL/MariaDB root password
 DB_NAME_DEF="guac_db" # Defualt database name
 DB_USER_DEF="guac_adm" # Defualt database user name
 DB_PASSWD_DEF="guacamole" # Defualt database password
-JKSTORE_PASSWD_DEF="guacamole" # Default Java Keystore password
+JKS_GUAC_PASSWD_DEF="guacamole" # Default Guacamole Java Keystore password
+JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used with LDAPS
 
 # Misc
 GUAC_URIPATH_DEF="/"
@@ -167,8 +168,8 @@ echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
  	 read DB_PASSWD
  	 DB_PASSWD=${DB_PASSWD:-${DB_PASSWD_DEF}}
 echo -n "${Green} Enter the Java KeyStore password (at least 6 characters): ${Yellow}"
- 	 read JKSTORE_PASSWD
- 	 JKSTORE_PASSWD=${JKSTORE_PASSWD:-${JKSTORE_PASSWD_DEF}}
+ 	 read JKS_GUAC_PASSWD
+ 	 JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
 echo -n "${Green} Enter the Java KeyStore key-size to use (default ${JKSTORE_KEY_SIZE_DEF}): ${Yellow}"
  	 read JKSTORE_KEY_SIZE
  	 JKSTORE_KEY_SIZE=${JKSTORE_KEY_SIZE:-${JKSTORE_KEY_SIZE_DEF}}
@@ -304,9 +305,9 @@ if [ $SECURE_LDAP == "yes" ]; then
 			echo "${Red} The file/path: ${LDAPS_CERT_FULL} does not exist! Ensure the file is in the directory and try again..."
 		fi
 	done
-	echo -n "${Green} Enter the cacerts keystore password (default changeit): ${Yellow}"
-	read CA_PASSWD
-	CA_PASSWD=${CA_PASSWD:-changeit}
+	echo -n "${Green} Set the password for the CACert Java Keystore (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
+	read JKS_CACERT_PASSWD
+	JKS_CACERT_PASSWD=${JKS_CACERT_PASSWD:-${JKS_CACERT_PASSWD_DEF}}
 else
 	echo -n "${Green} Enter the LDAP Port (default 389): ${Yellow}"
   	read LDAP_PORT
@@ -382,7 +383,7 @@ echo " -${Rev}a${Reset}, <string>	--Sets the root password for MariaDB. Default 
 echo " -${Rev}b${Reset}, <string>	--Sets the Guacamole DB name. Default is ${Bold}${DB_NAME}${Reset}."
 echo " -${Rev}c${Reset}, <string>	--Sets the Guacamole DB username. Default is ${Bold}{DB_USER}${Reset}."
 echo " -${Rev}d${Reset}, <string>	--Sets the Guacamole DB password. Default is ${Bold}${DB_PASSWD}${Reset}."
-echo " -${Rev}e${Reset}, <string>	--Sets the Java KeyStore password (least 6 characters). Default is ${Bold}${JKSTORE_PASSWD}${Reset}."
+echo " -${Rev}e${Reset}, <string>	--Sets the Java KeyStore password (least 6 characters). Default is ${Bold}${JKS_GUAC_PASSWD}${Reset}."
 echo " -${Rev}l${Reset}, <string:string>	--Sets a domain name and e-mail for the Let's Encrypt Certificate. Example ${Bold}your@email.com:guacamole.yourdomain.com${Reset}."
 echo " -${Rev}s${Reset},		--Install Guacamole Silently. Default names and password are: ${Bold}guacamole${Reset}."
 echo " -${Rev}p${Reset}, [yes|no]	--Install the Proxy feature (Nginx)?."
@@ -418,7 +419,7 @@ while getopts a:b:c:d:e:p:l:sihv FLAG; do
       	DB_PASSWD=$OPTARG
       	;;
     	e)  #set option "e"
-      	JKSTORE_PASSWD=$OPTARG
+      	JKS_GUAC_PASSWD=$OPTARG
       	;;
     	p)  #set option "p"
       	INSTALL_NGINX=$OPTARG
@@ -721,9 +722,9 @@ sed -i '92i <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true" \
                maxThreads="150" scheme="https" secure="true" \
                clientAuth="false" sslProtocol="TLS" \
                keystoreFile="/var/lib/tomcat/webapps/.keystore" \
-               keystorePass="JKSTORE_PASSWD" \
+               keystorePass="JKS_GUAC_PASSWD" \
                URIEncoding="UTF-8" />' /etc/tomcat/server.xml
-sed -i "s/JKSTORE_PASSWD/${JKSTORE_PASSWD}/g" /etc/tomcat/server.xml
+sed -i "s/JKS_GUAC_PASSWD/${JKS_GUAC_PASSWD}/g" /etc/tomcat/server.xml
 
 # Java KeyStore Setup
 if [ $INSTALL_MODE = "silent" ]; then
@@ -732,7 +733,7 @@ if [ $INSTALL_MODE = "silent" ]; then
 else
 	sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the Java KeyStore${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore" >> $logfile  2>&1
 fi
-keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKSTORE_PASSWD} -keypass ${JKSTORE_PASSWD} ${noprompt} | tee -a $logfile
+keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} ${noprompt} | tee -a $logfile
 
 # Enable/Start Tomcat and Guacamole Services
 sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Service..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Service..." >> $logfile  2>&1
@@ -754,7 +755,8 @@ ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF}
 
 if [ $SECURE_LDAP == "yes" ]; then
 	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
-	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${CA_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt >> $logfile  2>&1 &
+  keytool -storepasswd -new ${JKS_CACERT_PASSWD} -keystore ${KS_PATH} -storepass "changeit" 
+	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${JKS_CACERT_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt >> $logfile  2>&1 &
 	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
 
 	echo "ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
