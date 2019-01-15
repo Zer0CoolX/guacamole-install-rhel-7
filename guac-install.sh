@@ -329,6 +329,11 @@ echo -n "${Green} Enter the LDAP Search-Bind-Password: ${Yellow}"
 echo -n "${Green} Enter the LDAP Username-Attribute (default sAMAccountName): ${Yellow}"
   	read LDAP_UNAME_ATTR
   	LDAP_UNAME_ATTR=${LDAP_UNAME_ATTR:-sAMAccountName}
+	
+LDAP_SEARCH_FILTER_DEF="objectCategory=*"
+echo -n "${Green} Enter a custom LDAP user search filter (default objectCategory=*): ${Yellow}"
+  	read LDAP_SEARCH_FILTER
+  	LDAP_SEARCH_FILTER=${LDAP_SEARCH_FILTER:-${LDAP_SEARCH_FILTER_DEF}}
 }
 
 #####    CUSTOM EXTENSION MENU    ########################################
@@ -765,7 +770,8 @@ fi
 echo "ldap-user-base-dn: ${LDAP_BASE_DN}
 ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
-ldap-username-attribute: ${LDAP_UNAME_ATTR}" >> /etc/guacamole/${GUAC_CONF}
+ldap-username-attribute: ${LDAP_UNAME_ATTR}
+ldap-users-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
