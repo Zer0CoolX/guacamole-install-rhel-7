@@ -42,7 +42,7 @@ JKSTORE_PASSWD_DEF="guacamole" # Default Java Keystore password
 
 # Misc
 GUAC_URIPATH_DEF="/"
-GUACSERVER_HOSTNAME_DEF="localhost"
+DOMAIN_NAME_DEF="localhost"
 
 # ONLY CAHNGE IF NOT WORKING #
 # URLS
@@ -81,7 +81,7 @@ init_vars () {
 GUAC_GIT_VER=`curl -s https://raw.githubusercontent.com/apache/guacamole-server/master/configure.ac | grep 'AC_INIT([guacamole-server]*' | awk -F'[][]' -v n=2 '{ print $(2*n) }'`
 PWD=`pwd`
 REGEX_MAIL="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?\$"
-REGEX_IDN="(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)"
+#REGEX_IDN="(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)"
 
 # Determine if OS is RHEL or not (otherwise assume CentOS)
 if rpm -q subscription-manager 2>&1 > /dev/null; then IS_RHEL=true; else IS_RHEL=false; fi
@@ -212,16 +212,16 @@ while true; do
     	echo "${Green} Please enter a correct e-mail address. ${Yellow}"
  	fi
 done
-while true; do
-  	echo -n "${Green} Enter a valid domain for let's encrypt certificate (ex. gucamole.company.com): ${Yellow}"
-    	read DOMAIN_NAME
-  	if echo $DOMAIN_NAME | grep -P $REGEX_IDN > /dev/null; then
-    	echo "${Green}   Remember that Let's Encrypt only support DNS-based validation."
-    	break
-  	else
-    	echo "${Green} Please enter a correct domain name. ${Yellow}"
-	fi
-done
+#while true; do
+#  	echo -n "${Green} Enter a valid public domain for let's encrypt certificate (ex. gucamole.company.com): ${Yellow}"
+#    	read DOMAIN_NAME
+#  	if echo $DOMAIN_NAME | grep -P $REGEX_IDN > /dev/null; then
+#    	echo "${Green}   Remember that Let's Encrypt only support DNS-based validation."
+#    	break
+#  	else
+#    	echo "${Green} Please enter a correct domain name. ${Yellow}"
+#	fi
+#done
 echo -n "${Green} Enter the Let's Encrypt key-size to use (default ${LE_KEY_SIZE_DEF}): ${Yellow}"
   	read LE_KEY_SIZE
   	LE_KEY_SIZE=${LE_KEY_SIZE:-${LE_KEY_SIZE_DEF}}
@@ -231,10 +231,10 @@ echo -n "${Green} Enter the Let's Encrypt key-size to use (default ${LE_KEY_SIZE
 nginxmenu () {
 CERTYPE="Self-Signed"
 
-echo -n "${Green} Enter the Guacamole Server IP address or hostname (default ${GUACSERVER_HOSTNAME_DEF}): ${Yellow}"
-  	read GUACSERVER_HOSTNAME
-  	GUACSERVER_HOSTNAME=${GUACSERVER_HOSTNAME:-${GUACSERVER_HOSTNAME_DEF}}
-echo -n "${Green} Enter the URI path, starting with / for example /guacamole/ (default ${GUAC_URIPATH_DEF}): ${Yellow}"
+echo -n "${Green} Enter a valid hostname or public domain such as mydomain.com (default ${DOMAIN_NAME_DEF}): ${Yellow}"
+  	read DOMAIN_NAME
+  	DOMAIN_NAME=${DOMAIN_NAME:-${DOMAIN_NAME_DEF}}
+echo -n "${Green} Enter the URI path, starting and ending with / for example /guacamole/ (default ${GUAC_URIPATH_DEF}): ${Yellow}"
   	read GUAC_URIPATH
   	GUAC_URIPATH=${GUAC_URIPATH:-${GUAC_URIPATH_DEF}}
 while true; do
@@ -261,12 +261,9 @@ done
 
 #####    SELF SIGN MENU    ########################################
 selfsignmenu () {
-DOMAIN_NAME="localhost"
 echo -n "${Green} Enter the Self-Signed SSL key-size to use (default ${SSL_KEY_SIZE_DEF}): ${Yellow}"
   	read SSL_KEY_SIZE
   	SSL_KEY_SIZE=${SSL_KEY_SIZE:-${SSL_KEY_SIZE_DEF}}
-echo -n "${Green} Enter a valid hostname (ex. localhost): ${Yellow}"
-  	read DOMAIN_NAME
 }
 
 #####    DHE MENU    ########################################
@@ -825,7 +822,7 @@ echo "server {
 	return 301 https://\$host\$request_uri;
 
 	location ${GUAC_URIPATH} {
-   	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
+   	proxy_pass http://localhost:8080/guacamole/;
     	proxy_buffering off;
     	proxy_http_version 1.1;
     	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -882,7 +879,7 @@ fi
 # Append the rest of the SSL Nginx Conf
 echo "
 	location ${GUAC_URIPATH} {
-	proxy_pass http://${GUACSERVER_HOSTNAME}:8080/guacamole/;
+	proxy_pass http://localhost:8080/guacamole/;
 	proxy_buffering off;
 	proxy_http_version 1.1;
 	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
