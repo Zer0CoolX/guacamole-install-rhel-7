@@ -771,7 +771,7 @@ echo "ldap-user-base-dn: ${LDAP_BASE_DN}
 ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
 ldap-username-attribute: ${LDAP_UNAME_ATTR}
-ldap-users-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}
+ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
