@@ -1029,7 +1029,7 @@ systemctl restart nginx >> $logfile 2>&1 || exit 1
 sleep 1 | echo -e "\n${Bold}Finished Successfully" | pv -qL 25; echo -e "\nFinished Successfully" >> $logfile  2>&1
 sleep 1 | echo -e "${Reset}You can check the log file at ${logfile}" | pv -qL 25; echo -e "You can check the log file at ${logfile}" >> $logfile  2>&1
 sleep 1 | echo -e "${Reset}Your firewall backup file at ${fwbkpfile}"; echo -e "Your firewall backup file at ${fwbkpfile}" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${GUACSERVER_HOSTNAME}${GUAC_URIPATH} or https://${GUACSERVER_HOSTNAME}${GUAC_URIPATH}" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${DOMAIN_NAME}${GUAC_URIPATH} or https://${DOMAIN_NAME}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${DOMAIN_NAME}${GUAC_URIPATH} or https://${DOMAIN_NAME}${GUAC_URIPATH}" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
 sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
