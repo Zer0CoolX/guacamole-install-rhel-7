@@ -8,9 +8,10 @@ assignees: ''
 ---
 
 **Confirmation of Process**
-1. You have read the wiki and followed its guidlines, especially the [Installation Assunmptions](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Installation-Assumptions) page? Y/N
-2. You have checked the wiki and exisitng issues for the same problem? Y/N
-3. You are sure this issue is not specific to you personally and would affect others under similar circumstances? Y/N
+1. You have read the [How to report issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help) wiki page? Y/N
+2. You have read the wiki and followed its guidlines, especially the [Installation Assunmptions](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Installation-Assumptions) page? Y/N
+3. You have checked the wiki and exisitng issues for the same problem? Y/N
+4. You are sure this issue is not specific to you personally and would affect others under similar circumstances? Y/N
 
 **Describe the bug**
 A clear and concise description of what the bug is.
