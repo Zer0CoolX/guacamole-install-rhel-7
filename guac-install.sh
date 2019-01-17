@@ -553,7 +553,7 @@ do
 		"Nginx") sum_nginx; break;;
 		"Standard Extensions") sum_ext; break;;
 		"Custom Extension") sum_cust_ext; break;;
-		"Accept and Run Installation") repoinstall; break;;
+		"Accept and Run Installation") reposinstall; break;;
 		"Cancel and Start Over") ScriptLoc=$(readlink -f "$0"); exec "$ScriptLoc"; break;;
 		"Cancel and Exit Script") tput sgr0; exit 1; break;;
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the category to review.";;
