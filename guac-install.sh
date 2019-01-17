@@ -682,7 +682,8 @@ menu_header
 
 # Check if installing extensions was selected
 if [ ${ext_yn} == "Yes" ]; then
-  echo -e "${Green} Number of extensions selected: ${Yellow}${#selections[@]}\n"
+  ext_selections=${#selections[@]}-1
+  echo -e "${Green} Number of extensions selected: ${Yellow}${ext_selections}\n"
 
   # Lists only the selected extensions to review the settings of
   PS3="${Green} Select the number of the extension to view: ${Yellow}"
