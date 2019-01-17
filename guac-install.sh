@@ -628,7 +628,7 @@ SUB_MENU_TITLE="Nginx Summary"
 
 menu_header
 
-echo -e "${Green} Guacamole Server LAN hostname: ${Yellow}${GUACSERVER_HOSTNAME}"
+echo -e "${Green} Guacamole Server LAN hostname: ${Yellow}${DOMAIN_NAME}"
 echo -e "${Green} URI path: ${Yellow}${GUAC_URIPATH}"
 echo -e "${Green} Pre-configured Nginx security level: ${Yellow}${NGINX_SEC}"
 echo -e "${Green} Using Foreward Secrecy & DHE: ${Yellow}${DHE_USE}\n"
