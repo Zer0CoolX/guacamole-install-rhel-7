@@ -806,7 +806,7 @@ SUB_MENU_TITLE="Custom Extension Summary"
 
 menu_header
 
-echo -n "${Green} Install a custom Guacamole extension: ${Yellow}${CUST_EXT}"
+echo -e "${Green} Install a custom Guacamole extension: ${Yellow}${CUST_EXT}"
 
 if [ $CUST_EXT == "yes" ]; then
 	echo -e "${Green} Filename of the .jar extension file: ${Yellow}${CUST_FN}"
