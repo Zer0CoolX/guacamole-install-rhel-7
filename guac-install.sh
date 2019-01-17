@@ -855,7 +855,8 @@ tput sgr0
 #####    REPOS INSTALL      ########################################
 reposinstall () {
 clear
-echo -e "   ----====Installing====----" && tput sgr0
+tput sgr0
+echo -e "${Bold}   ----====Installing====----" && tput sgr0
 
 # Install EPEL Repo
 sleep 1 | echo -e "\n${Bold}Searching for EPEL Repository...";echo -e "\nSearching for EPEL Repository..." >> $logfile  2>&1
