@@ -11,10 +11,18 @@
 # 	-Read all documentation prior to using this script!
 #	-Test prior to deploying on a production system!
 #
+
+##### CHECK FOR SUDO or ROOT ################################## 
+if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
+
+##########################################################
+#####      VARIABLEs   ###################################
+##########################################################
+
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_1_15" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_1_17" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -33,12 +41,18 @@ LE_KEY_SIZE_DEF="4096" # Default Let's Encrypt key-size
 SSL_KEY_SIZE_DEF="4096" # Default Self-signed SSL key-size
 DHE_KEY_SIZE_DEF="2048" # Default DHE/Forward Secrecy key-size
 
+# SSL Certificate
+# SSL_CERT_TYPE="Self-signed"
+
+# Nginx
+# NGINX_SEC="High"
+
 # Default Credentials
 MYSQL_PASSWD_DEF="guacamole" # Default MySQL/MariaDB root password
 DB_NAME_DEF="guac_db" # Defualt database name
 DB_USER_DEF="guac_adm" # Defualt database user name
 DB_PASSWD_DEF="guacamole" # Defualt database password
-JKS_GUAC_PASSWD_DEF="guacamole" # Default Guacamole Java Keystore password
+JKS_GUAC_PASSWD_DEF="guacamole" # Default Java Keystore password
 JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used with LDAPS
 
 # Misc
@@ -73,16 +87,11 @@ Reset=`tput sgr0`      #${Reset}
 INSTALL_MODE="interactive"
 ##### END UNIVERSAL VARS   ###################################
 
-##### CHECK FOR SUDO or ROOT ################################## 
-if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
-
 #####    INITIALIZE COMMON VARS    ###################################
-# ONLY CAHNGE IF NOT WORKING #
+# ONLY CHANGE IF NOT WORKING #
 init_vars () {
 GUAC_GIT_VER=`curl -s https://raw.githubusercontent.com/apache/guacamole-server/master/configure.ac | grep 'AC_INIT([guacamole-server]*' | awk -F'[][]' -v n=2 '{ print $(2*n) }'`
 PWD=`pwd`
-REGEX_MAIL="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?\$"
-#REGEX_IDN="(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)"
 
 # Determine if OS is RHEL or not (otherwise assume CentOS)
 if rpm -q subscription-manager 2>&1 > /dev/null; then IS_RHEL=true; else IS_RHEL=false; fi
@@ -100,29 +109,8 @@ if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; th
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
 }
 
-#####      SOURCE MENU       ###################################
-src_menu () {
-clear
-
-echo -e "   ----====Installation Menu====----\n   ${Bold}Guacamole Remote Desktop Gateway" && tput sgr0
-echo -e "   ${Bold}OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}\n" && tput sgr0
-echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}\n" && tput sgr0
-
-while true; do
-	read -p "${Green} Pick the desired source to install from (enter 'stable' or 'git', default is 'stable'): ${Yellow}" GUAC_SOURCE
-	case $GUAC_SOURCE in
-    	[Ss]table|"" ) GUAC_SOURCE="Stable"; break;;
-		[Gg][Ii][Tt] ) GUAC_SOURCE="Git"; break;;
-		* ) echo "${Green} Please enter 'stable' or 'git' to select source/version (without quotes)";;
-  	esac
-done
-echo -e "Source (src_menu): ${GUAC_SOURCE}" >> /home/srlab/mylog.txt  2>&1
-tput sgr0
-}
-
 #####      SOURCE VARIABLES       ###################################
 src_vars () {
-echo -e "Source (src_vars): ${GUAC_SOURCE}" >> /home/srlab/mylog.txt  2>&1
 if [ $GUAC_SOURCE == "Git" ]; then
 	GUAC_VER=${GUAC_GIT_VER}
 	GUAC_URL="git://github.com/apache/"
@@ -132,7 +120,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	MAVEN_URL="https://www-us.apache.org/dist/maven/maven-${MAVEN_MAJOR_VER}/${MAVEN_VER}/binaries/"
 	MAVEN_FN="apache-maven-${MAVEN_VER}"
 	MAVEN_BIN="${MAVEN_FN}-bin.tar.gz"
-else
+else # Stable release
 	GUAC_VER=${GUAC_STBL_VER}
 	GUAC_URL="https://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/"
 	GUAC_SERVER="guacamole-server-${GUAC_VER}"
@@ -148,212 +136,694 @@ logfile="${FILENAME}.log"
 fwbkpfile="${FILENAME}.firewall.bkp" # Firewall backup file name
 }
 
-#####      INSTALL MENU       ###################################
-install_menu () {
+##########################################################
+#####      MENUs       ###################################
+##########################################################
+
+#####      SOURCE MENU       ###################################
+src_menu () {
 clear
 
-echo -e "   ----====Installation Menu====----\n   ${Bold}Guacamole Remote Desktop Gateway \n   Source/Version: ${Yellow}${GUAC_SOURCE} ${GUAC_VER}" && tput sgr0
-echo -e "   ${Bold}OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}\n" && tput sgr0
+echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
+echo -e "   ${Bold}***        Source Menu     ***\n"
+echo -e "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}" && tput sgr0
+echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}\n" && tput sgr0
 
-echo -n "${Green} Enter the root password for MariaDB: ${Yellow}"
-  	read MYSQL_PASSWD
-  	MYSQL_PASSWD=${MYSQL_PASSWD:-${MYSQL_PASSWD_DEF}}
+while true; do
+	read -p "${Green} Pick the desired source to install from (enter 'stable' or 'git', default is 'stable'): ${Yellow}" GUAC_SOURCE
+	case $GUAC_SOURCE in
+    	[Ss]table|"" ) GUAC_SOURCE="Stable"; break;;
+		[Gg][Ii][Tt] ) GUAC_SOURCE="Git"; break;;
+		* ) echo "${Green} Please enter 'stable' or 'git' to select source/version (without quotes)";;
+  	esac
+done
+
+tput sgr0
+}
+
+#####      MENU HEADERS       ###################################
+menu_header () {
+clear
+
+echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
+echo -e "   ${Bold}***     ${SUB_MENU_TITLE}     ***\n"
+echo -e "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}" && tput sgr0
+echo -e "   ${Bold}Source/Version: ${Yellow}${GUAC_SOURCE} ${GUAC_VER}\n" && tput sgr0
+}
+
+#####      DATABASE and JKS MENU       ###################################
+db_menu () {
+SUB_MENU_TITLE="Database and JKS Menu"
+
+menu_header
+
 echo -n "${Green} Enter the Guacamole DB name (default ${DB_NAME_DEF}): ${Yellow}"
   	read DB_NAME
  	 DB_NAME=${DB_NAME:-${DB_NAME_DEF}}
 echo -n "${Green} Enter the Guacamole DB username (default ${DB_USER_DEF}): ${Yellow}"
   	read DB_USER
   	DB_USER=${DB_USER:-${DB_USER_DEF}}
-echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
- 	 read DB_PASSWD
- 	 DB_PASSWD=${DB_PASSWD:-${DB_PASSWD_DEF}}
-echo -n "${Green} Enter the Java KeyStore password (at least 6 characters): ${Yellow}"
- 	 read JKS_GUAC_PASSWD
- 	 JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
 echo -n "${Green} Enter the Java KeyStore key-size to use (default ${JKSTORE_KEY_SIZE_DEF}): ${Yellow}"
  	 read JKSTORE_KEY_SIZE
  	 JKSTORE_KEY_SIZE=${JKSTORE_KEY_SIZE:-${JKSTORE_KEY_SIZE_DEF}}
-nginxmenu
-while true; do
-    read -p "${Green} Do you use Let's Encrypt to create a Valid SSL Certificate? (default no): ${Yellow}" yn
-    case $yn in
-        [Yy]* ) LETSENCRYPT_CERT="yes"; letsencrypt; break;;
-        [Nn]*|"" ) LETSENCRYPT_CERT="no"; selfsignmenu; break;;
-        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
-    esac
-done
-while true; do
-    read -p "${Green} Do you wish to install Guacamole's LDAP Extension? (default no): ${Yellow}" yn
-    case $yn in
-        [Yy]* ) INSTALL_LDAP="yes"; ldapmenu; break;;
-        [Nn]*|"" ) INSTALL_LDAP="no"; break;;
-        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
-    esac
-done
-while true; do
-    read -p "${Green} Do you wish to install a custom Guacamole extension from a local file? (default no): ${Yellow}" yn
-    case $yn in
-        [Yy]* ) INSTALL_CUST="yes"; custmenu; break;;
-        [Nn]*|"" ) INSTALL_CUST="no"; break;;
-        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
-    esac
-done
+
 tput sgr0
 }
 
-#####    LETSENCRYPT MENU     ###################################
-letsencrypt () {
-CERTYPE="Let's Encrypt"
-while true; do
-  	echo -n "${Green} Enter a valid e-mail for let's encrypt certificate: ${Yellow}"
-    	read EMAIL_NAME
-  	if [[ $EMAIL_NAME =~ $REGEX_MAIL ]] ; then
-    	break
-  	else
-    	echo "${Green} Please enter a correct e-mail address. ${Yellow}"
- 	fi
+#####      PASSWORDS MENU       ###################################
+pw_menu () {
+SUB_MENU_TITLE="Passwords Menu"
+
+menu_header
+
+echo -n "${Green} Enter the root password for MariaDB: ${Yellow}"
+  	read MYSQL_PASSWD
+  	MYSQL_PASSWD=${MYSQL_PASSWD:-${MYSQL_PASSWD_DEF}}
+echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
+ 	 read DB_PASSWD
+ 	 DB_PASSWD=${DB_PASSWD:-${DB_PASSWD_DEF}}
+echo -n "${Green} Enter the Guacamole Java KeyStore password (at least 6 characters): ${Yellow}"
+ 	 read JKS_GUAC_PASSWD
+ 	 JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
+
+tput sgr0
+}
+
+#####      SSL CERTIFICATE TYPE MENU       ###################################
+ssl_cert_type_menu () {
+SUB_MENU_TITLE="SSL Certificate Type Menu"
+
+menu_header
+
+echo -e "${Green} What kind of SSL certificate should be used?${Yellow}"
+PS3="${Green} Enter the number of the desired SSL certificate type: ${Yellow}"
+options=("LetsEncrypt" "Self-signed" "None")
+select opt in "${options[@]}"
+do
+	case $opt in
+    	"LetsEncrypt") SSL_CERT_TYPE="LetsEncrypt"; le_menu; break;;
+		"Self-signed"|"") SSL_CERT_TYPE="Self-signed"; ss_menu; break;;
+		"None")
+			SSL_CERT_TYPE="None"
+			sleep 1 | echo -e "\n\n${Red} No SSL certificate selected. This can be configured manually at a later time."
+			sleep 5
+			break;;
+		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing your desired cert type.";;
+  	esac
 done
-#while true; do
-#  	echo -n "${Green} Enter a valid public domain for let's encrypt certificate (ex. gucamole.company.com): ${Yellow}"
-#    	read DOMAIN_NAME
-#  	if echo $DOMAIN_NAME | grep -P $REGEX_IDN > /dev/null; then
-#    	echo "${Green}   Remember that Let's Encrypt only support DNS-based validation."
-#    	break
-#  	else
-#    	echo "${Green} Please enter a correct domain name. ${Yellow}"
-#	fi
-#done
+
+tput sgr0
+}
+
+#####      LETSENCRYPT MENU       ###################################
+le_menu () {
+SUB_MENU_TITLE="LetsEncrypt Menu"
+
+menu_header
+
+echo -n "${Green} Enter a valid e-mail for let's encrypt certificate: ${Yellow}"
+    read EMAIL_NAME
+
 echo -n "${Green} Enter the Let's Encrypt key-size to use (default ${LE_KEY_SIZE_DEF}): ${Yellow}"
   	read LE_KEY_SIZE
   	LE_KEY_SIZE=${LE_KEY_SIZE:-${LE_KEY_SIZE_DEF}}
+
+tput sgr0
 }
 
-#####    NGINX MENU    ########################################
-nginxmenu () {
-CERTYPE="Self-Signed"
+#####    SELF-SIGNED SSL CERT MENU    ########################################
+ss_menu () {
+SUB_MENU_TITLE="Self-signed SSL Certificate Menu"
+
+menu_header
+
+echo -n "${Green} Enter the Self-Signed SSL key-size to use (default ${SSL_KEY_SIZE_DEF}): ${Yellow}"
+  	read SSL_KEY_SIZE
+  	SSL_KEY_SIZE=${SSL_KEY_SIZE:-${SSL_KEY_SIZE_DEF}}
+
+tput sgr0
+}
+
+#####    NGINX OPTIONS MENU    ########################################
+nginx_menu () {
+SUB_MENU_TITLE="Nginx Menu"
+
+menu_header
 
 echo -n "${Green} Enter a valid hostname or public domain such as mydomain.com (default ${DOMAIN_NAME_DEF}): ${Yellow}"
-  	read DOMAIN_NAME
-  	DOMAIN_NAME=${DOMAIN_NAME:-${DOMAIN_NAME_DEF}}
+    read DOMAIN_NAME
+    DOMAIN_NAME=${DOMAIN_NAME:-${DOMAIN_NAME_DEF}}
 echo -n "${Green} Enter the URI path, starting and ending with / for example /guacamole/ (default ${GUAC_URIPATH_DEF}): ${Yellow}"
   	read GUAC_URIPATH
   	GUAC_URIPATH=${GUAC_URIPATH:-${GUAC_URIPATH_DEF}}
-while true; do
-    read -p "${Green} Use a more secure Nginx SSL configuration? (default no): ${Yellow}" yn
-    case $yn in
-        [Yy]* ) NGINX_HARDEN="yes"; nginxhardenmenu; break;;
-        [Nn]*|"" ) NGINX_HARDEN="no"; break;;
-        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
-    esac
-done
-}
 
-#####    NGINX HARDEN MENU    ########################################
-nginxhardenmenu () {
+# Changes what parameters are included in the guacamole.conf and guacamole_ssl.conf Nginx configuration files
+echo -e "${Green}\n What level of security should Nginx be pre-configured with?${Yellow}"
+PS3="${Green} Enter the number of the desired level of security: ${Yellow}"
+options=("Highest (A+ and 100% score capable) ${Red}Note: Will not work with legacy browsers or devices${Yellow}" "High (A+ and 90-100% score capable) ${Red}Note: compatible with all browsers tested, reasonably secure${Yellow}" "Base (Minimal settings required for Nginx to run) ${Red}Warning: Only select if you intend to manually configure Nginx later")
+select opt in "${options[@]}"
+do
+	case $opt in
+    	"Highest (A+ and 100% score capable) ${Red}Note: Will not work with legacy browsers or devices${Yellow}") NGINX_SEC="Highest"; break;;
+		"High (A+ and 90-100% score capable) ${Red}Note: compatible with all browsers tested, reasonably secure${Yellow}") NGINX_SEC="High"; break;;
+		"Base (Minimal settings required for Nginx to run) ${Red}Warning: Only select if you intend to manually configure Nginx later") NGINX_SEC="Base"; break;;
+		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing your desired Nginx configuratin security level.";;
+  	esac
+done
+
+echo -e ""
+
 while true; do
     read -p "${Green} Use Forward Secrecy & DHE? ${Red}**This may take a long time!** (default no): ${Yellow}" yn
     case $yn in
-        [Yy]* ) DHE_USE="yes"; dhemenu; break;;
+        [Yy]* ) 
+			DHE_USE="yes"
+			echo -n "${Green} Enter the DHE key-size to use. ${Red}Higher key-size will take more time (default ${DHE_KEY_SIZE_DEF}): ${Yellow}"
+  				read DHE_KEY_SIZE
+  				DHE_KEY_SIZE=${DHE_KEY_SIZE:-${DHE_KEY_SIZE_DEF}}
+			break;;
         [Nn]*|"" ) DHE_USE="no"; break;;
         * ) echo "${Green} Please enter yes or no. ${Yellow}";;
     esac
 done
+
+tput sgr0
 }
 
-#####    SELF SIGN MENU    ########################################
-selfsignmenu () {
-echo -n "${Green} Enter the Self-Signed SSL key-size to use (default ${SSL_KEY_SIZE_DEF}): ${Yellow}"
-  	read SSL_KEY_SIZE
-  	SSL_KEY_SIZE=${SSL_KEY_SIZE:-${SSL_KEY_SIZE_DEF}}
+#####    EXTENSIONS MENU    ########################################
+ext_menu () {
+SUB_MENU_TITLE="Extensions Menu"
+
+menu_header
+
+while true; do
+    read -p "${Green} Would you like to install any standard Guacamole extensions (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) 
+          ext_yn="Yes"
+          ext_sel_menu
+          break;;
+        [Nn]*|"" ) ext_yn="No"; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+
+tput sgr0
 }
 
-#####    DHE MENU    ########################################
-dhemenu () {
-echo -n "${Green} Enter the DHE key-size to use. ${Red}Higher key-size will take more time (default ${DHE_KEY_SIZE_DEF}): ${Yellow}"
-  	read DHE_KEY_SIZE
-  	DHE_KEY_SIZE=${DHE_KEY_SIZE:-${DHE_KEY_SIZE_DEF}}
+#####    EXTENSIONS SELECTION MENU    ########################################
+ext_sel_menu () {
+# All possible options (may depend on Guac version and other configuration)
+# "LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID"
+# Currenlty only LDAP is woring via this script
+options=("LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID")
+selections=()
+
+# This function is used to print the extension choices menu
+ext_sub_menu() {
+    echo "${Green} Select the desired extensions to install:${Yellow}"
+    for i in ${!options[@]}; do 
+        printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+    done
+    [[ "$msg" ]] && echo "$msg"; :
+}
+
+# This function is used to select/deselct extensions from the menu
+ext_sub_prompt () {
+prompt="${Green} Enter a number and press ENTER to check/uncheck an option. Selections designated by a + sign. (Press ENTER while blank when done): "
+while ext_sub_menu && read -rp "$prompt" num && [[ "$num" ]]; do
+    [[ "$num" != *[![:digit:]]* ]] &&
+    (( num > 0 && num <= ${#options[@]} )) ||
+    { msg="Invalid option: $num"; continue; }
+    ((num--)); msg=" ${options[num]} was ${choices[num]:+un}checked"
+    [[ "${choices[num]}" ]] && unset 'choices[num]' || choices[num]="+"
+done
+
+# Ensure that at least 1 extension is selected
+if [[ ${#choices[@]} == 0 ]]; then
+  echo "${Red} At least one extension needs to be selected, please pick one."
+  msg=""
+  ext_sub_prompt
+fi
+}
+
+ext_sub_prompt
+
+# Used to change all strings in array to lower case
+#options=("${options[@],,}")
+
+# Loop final extension selections and call the specific function for each
+for i in ${!options[@]}; do
+  [[ "${choices[i]}" ]] && ${options[i]}_ext_menu
+  [[ "${choices[i]}" ]] && selections+=(${options[i]}) # An array of the selections only used for the extensions summary menu
+done
+
+# Adds this entry to the array for use in the extensions summary menu
+selections+=("Return to Standard Extension Summary")
 }
 
 #####    LDAP MENU    ########################################
-ldapmenu () {
+LDAP_ext_menu () {
+SUB_MENU_TITLE="LDAP Extension Menu"
+
+menu_header
+
 while true; do
-	read -p "${Green} Use LDAPS instead of LDAP (Requires having the cert from the server copied locally, default: no): ${Yellow}" SECURE_LDAP
-	case $SECURE_LDAP in
-		[Yy]* ) SECURE_LDAP="yes"; break;;
-		[Nn]*|"" ) SECURE_LDAP="no"; break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
+  read -p "${Green} Use LDAPS instead of LDAP (Requires having the cert from the server copied locally, default: no): ${Yellow}" SECURE_LDAP
+  case $SECURE_LDAP in
+    [Yy]* ) SECURE_LDAP="yes"; break;;
+    [Nn]*|"" ) SECURE_LDAP="no"; break;;
+    * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+  esac
 done
+
+# Check if LDAPS was selected
 if [ $SECURE_LDAP == "yes" ]; then
-	echo -n "${Green} Enter the LDAP Port (default 636): ${Yellow}"
-  	read LDAP_PORT
-  	LDAP_PORT=${LDAP_PORT:-636}
+  echo -n "${Green} Enter the LDAP Port (default 636): ${Yellow}"
+    read LDAP_PORT
+    LDAP_PORT=${LDAP_PORT:-636}
 
-  	# LDAPS Certificate prompts
-	LDAPS_CERT_FN="mycert.cer"
-	LDAPS_CERT_FULL="xNULLx"
+    # LDAPS Certificate prompts
+  LDAPS_CERT_FN="mycert.cer"
+  LDAPS_CERT_FULL="xNULLx"
 
-	while [ ! -f ${LDAPS_CERT_FULL} ]; do
-		echo -n "${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
-			read LDAPS_CERT_FN
-			LDAPS_CERT_FN=${LDAPS_CERT_FN:-${LDAPS_CERT_FN}}
-		echo -n "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
-			read LDAPS_CERT_DIR
-			LDAPS_CERT_DIR=${LDAPS_CERT_DIR:-/home/}
-			LDAPS_CERT_FULL=${LDAPS_CERT_DIR}${LDAPS_CERT_FN}
-		if [ ! -f ${LDAPS_CERT_FULL} ]; then
-			echo "${Red} The file/path: ${LDAPS_CERT_FULL} does not exist! Ensure the file is in the directory and try again..."
-		fi
-	done
-	echo -n "${Green} Set the password for the CACert Java Keystore (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
-	read JKS_CACERT_PASSWD
-	JKS_CACERT_PASSWD=${JKS_CACERT_PASSWD:-${JKS_CACERT_PASSWD_DEF}}
-else
-	echo -n "${Green} Enter the LDAP Port (default 389): ${Yellow}"
-  	read LDAP_PORT
-  	LDAP_PORT=${LDAP_PORT:-389}
+  while [ ! -f ${LDAPS_CERT_FULL} ]; do
+    echo -n "${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
+      read LDAPS_CERT_FN
+      LDAPS_CERT_FN=${LDAPS_CERT_FN:-${LDAPS_CERT_FN}}
+    echo -n "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
+      read LDAPS_CERT_DIR
+      LDAPS_CERT_DIR=${LDAPS_CERT_DIR:-/home/}
+      LDAPS_CERT_FULL=${LDAPS_CERT_DIR}${LDAPS_CERT_FN}
+    if [ ! -f ${LDAPS_CERT_FULL} ]; then
+      echo "${Red} The file/path: ${LDAPS_CERT_FULL} does not exist! Ensure the file is in the directory and try again..."
+    fi
+  done
+  echo -n "${Green} Set the password for the CACert Java Keystore (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
+  read JKS_CACERT_PASSWD
+  JKS_CACERT_PASSWD=${JKS_CACERT_PASSWD:-${JKS_CACERT_PASSWD_DEF}}
+else # Use LDAP not LDAPS
+  echo -n "${Green} Enter the LDAP Port (default 389): ${Yellow}"
+    read LDAP_PORT
+    LDAP_PORT=${LDAP_PORT:-389}
 fi
 
 echo -n "${Green} Enter the LDAP Server Hostname (use the FQDN, Ex: ldaphost.domain.com): ${Yellow}"
-  	read LDAP_HOSTNAME
-  	LDAP_HOSTNAME=${LDAP_HOSTNAME:-ldaphost.domain.com}
+    read LDAP_HOSTNAME
+    LDAP_HOSTNAME=${LDAP_HOSTNAME:-ldaphost.domain.com}
 echo -n "${Green} Enter the LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}"
-  	read LDAP_BASE_DN
-  	LDAP_BASE_DN=${LDAP_BASE_DN:-dc=domain,dc=com}
+    read LDAP_BASE_DN
+    LDAP_BASE_DN=${LDAP_BASE_DN:-dc=domain,dc=com}
 echo -n "${Green} Enter the LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=doamin,dc=com): ${Yellow}"
-  	read LDAP_BIND_DN
-  	LDAP_BIND_DN=${LDAP_BIND_DN:-cn=user,ou=Admins,dc=doamin,dc=com}
+    read LDAP_BIND_DN
+    LDAP_BIND_DN=${LDAP_BIND_DN:-cn=user,ou=Admins,dc=doamin,dc=com}
 echo -n "${Green} Enter the LDAP Search-Bind-Password: ${Yellow}"
-  	read LDAP_BIND_PW
-  	LDAP_BIND_PW=${LDAP_BIND_PW:-password}
+    read LDAP_BIND_PW
+    LDAP_BIND_PW=${LDAP_BIND_PW:-password}
 echo -n "${Green} Enter the LDAP Username-Attribute (default sAMAccountName): ${Yellow}"
-  	read LDAP_UNAME_ATTR
-  	LDAP_UNAME_ATTR=${LDAP_UNAME_ATTR:-sAMAccountName}
-	
+    read LDAP_UNAME_ATTR
+    LDAP_UNAME_ATTR=${LDAP_UNAME_ATTR:-sAMAccountName}
+
 LDAP_SEARCH_FILTER_DEF="objectCategory=*"
 echo -n "${Green} Enter a custom LDAP user search filter (default objectCategory=*): ${Yellow}"
-  	read LDAP_SEARCH_FILTER
-  	LDAP_SEARCH_FILTER=${LDAP_SEARCH_FILTER:-${LDAP_SEARCH_FILTER_DEF}}
+    read LDAP_SEARCH_FILTER
+    LDAP_SEARCH_FILTER=${LDAP_SEARCH_FILTER:-${LDAP_SEARCH_FILTER_DEF}}
+}
+
+#####    TOTP MENU    ########################################
+TOTP_ext_menu () {
+SUB_MENU_TITLE="TOTP Extension Menu"
+
+menu_header
+
+echo " totp menu works"
+}
+
+#####    DUO MENU    ########################################
+Duo_ext_menu () {
+SUB_MENU_TITLE="DUO Extension Menu"
+
+menu_header
+
+echo " duo menu works"
+}
+
+#####    RADIUS MENU    ########################################
+Radius_ext_menu () {
+SUB_MENU_TITLE="RADIUS Extension Menu"
+
+menu_header
+
+echo " radius menu works"
+}
+
+#####    CAS MENU    ########################################
+CAS_ext_menu () {
+SUB_MENU_TITLE="CAS Extension Menu"
+
+menu_header
+
+echo " cas menu works"
+}
+
+#####    OpenID MENU    ########################################
+OpenID_ext_menu () {
+SUB_MENU_TITLE="OpenID Extension Menu"
+
+menu_header
+
+echo " openid menu works"
 }
 
 #####    CUSTOM EXTENSION MENU    ########################################
-custmenu () {
-# Set Defaults
-CUST_FN="myextension.jar"
-CUST_FULL="xNULLx"
+cust_ext_menu () {
+SUB_MENU_TITLE="Custom Extension Menu"
 
-while [ ! -f ${CUST_FULL} ]; do
-	echo -n "${Green} Enter a valid filename of the .jar extension file (Ex: myextension.jar): ${Yellow}"
-		read CUST_FN
-		CUST_FN=${CUST_FN:-${CUST_FN}}
-	echo -n "${Green} Enter the full path of the dir containing the .jar extension file (must end with / Ex: /home/me/): ${Yellow}"
-		read CUST_DIR
-		CUST_DIR=${CUST_DIR:-/home/}
-		CUST_FULL=${CUST_DIR}${CUST_FN}
-	if [ ! -f ${CUST_FULL} ]; then
-		echo "${Red} The file/path: ${CUST_FULL} does not exist! Ensure the file is in the directory and try again..."
-	fi
+menu_header
+
+while true; do
+    read -p "${Green} Would you like to install a custom Guacamole extensions from a local file (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* )
+        # Set Defaults
+		CUST_FN="myextension.jar"
+		CUST_FULL="xNULLx"
+		CUST_EXT="yes"
+
+		while [ ! -f ${CUST_FULL} ]; do
+			echo -n "${Green} Enter a valid filename of the .jar extension file (Ex: myextension.jar): ${Yellow}"
+				read CUST_FN
+				CUST_FN=${CUST_FN:-${CUST_FN}}
+			echo -n "${Green} Enter the full path of the dir containing the .jar extension file (must end with / Ex: /home/me/): ${Yellow}"
+				read CUST_DIR
+				CUST_DIR=${CUST_DIR:-/home/}
+				CUST_FULL=${CUST_DIR}${CUST_FN}
+			if [ ! -f ${CUST_FULL} ]; then
+				echo "${Red} The file/path: ${CUST_FULL} does not exist! Ensure the file is in the directory and try again..."
+			fi
+		done
+		break;;
+	[Nn]*|"" ) CUST_EXT="no"; break;;
+	* ) echo "${Green} Please enter yes or no. ${Yellow}";;
+	esac
 done
+
+tput sgr0
+}
+
+##########################################################
+#####      SUMMARY MENUs    ##############################
+##########################################################
+
+#####      MAIN SUMMARY MENU   ###################################
+sum_menu () {
+SUB_MENU_TITLE="Summary Menu"
+
+menu_header
+
+# List categories/menus to review or change
+echo -e "${Green} Select a category to review selections: ${Yellow}"
+PS3="${Green} Enter the number of the category to review: ${Yellow}"
+options=("Database" "SSL Cert Type" "Nginx" "Standard Extensions" "Custom Extension" "Accept and Run Installation" "Cancel and Start Over" "Cancel and Exit Script")
+select opt in "${options[@]}"
+do
+	case $opt in
+    "Database") sum_db; break;;
+		"SSL Cert Type") sum_ssl; break;;
+		"Nginx") sum_nginx; break;;
+		"Standard Extensions") sum_ext; break;;
+		"Custom Extension") sum_cust_ext; break;;
+		"Accept and Run Installation") repoinstall; break;;
+		"Cancel and Start Over") ScriptLoc=$(readlink -f "$0"); exec "$ScriptLoc"; break;;
+		"Cancel and Exit Script") tput sgr0; exit 1; break;;
+		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the category to review.";;
+  	esac
+done
+
+tput sgr0
+}
+
+#####      DATABASE SUMMARY       ###################################
+sum_db () {
+SUB_MENU_TITLE="Database Summary"
+
+menu_header
+
+echo -e "${Green} Guacamole DB name: ${Yellow}${DB_NAME}"
+echo -e "${Green} Guacamole DB username: ${Yellow}${DB_USER}"
+echo -e "${Green} Java KeyStore key-size: ${Yellow}${JKSTORE_KEY_SIZE}\n"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) db_menu; break;;
+        [Nn]*|"" ) sum_menu; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+
+tput sgr0
+sum_menu
+}
+
+#####      SSL CERTIFICATE SUMMARY       ###################################
+sum_ssl () {
+SUB_MENU_TITLE="SSL Certificate Summary"
+
+menu_header
+
+echo -e "${Green} Certficate Type: ${Yellow}${SSL_CERT_TYPE}\n"
+
+# Check the certificate selection to display proper information for selection
+case $SSL_CERT_TYPE in
+	"LetsEncrypt")
+		echo -e "${Green} e-mail for LetsEncrypt certificate: ${Yellow}${EMAIL_NAME}"
+		echo -e "${Green} Domain for LetsEncrypt certificate (Set via Nginx menu): ${Yellow}${DOMAIN_NAME}"
+		echo -e "${Green} LetEncrypt key-size: ${Yellow}${LE_KEY_SIZE}\n"
+		;;
+	"Self-signed")
+		echo -e "${Green} Self-Signed SSL key-size: ${Yellow}${SSL_KEY_SIZE}\n"
+		;;
+	"None")
+		echo -e "${Yellow} As no certificate type was selected, an SSL certificate can be configured manually at a later time.\n"
+		;;
+esac
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) ssl_cert_type_menu; break;;
+        [Nn]*|"" ) sum_menu; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+
+tput sgr0
+sum_menu
+}
+
+#####      NGINX SUMMARY       ###################################
+sum_nginx () {
+SUB_MENU_TITLE="Nginx Summary"
+
+menu_header
+
+echo -e "${Green} Guacamole Server LAN hostname: ${Yellow}${GUACSERVER_HOSTNAME}"
+echo -e "${Green} URI path: ${Yellow}${GUAC_URIPATH}"
+echo -e "${Green} Pre-configured Nginx security level: ${Yellow}${NGINX_SEC}"
+echo -e "${Green} Using Foreward Secrecy & DHE: ${Yellow}${DHE_USE}\n"
+if [ $DHE_USE == "yes" ]; then echo -e "${Green} DHE key-size: ${Yellow}${DHE_KEY_SIZE}\n"; fi
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) nginx_menu; break;;
+        [Nn]*|"" ) sum_menu; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+
+tput sgr0
+sum_menu
+}
+
+#####      STANDARD EXTENSION SUMMARY       ###################################
+# Provides options to review selected extensions or change if extensions are installed and if so which ones
+sum_ext () {
+SUB_MENU_TITLE="Standard Extension Summary"
+
+menu_header
+
+echo -e "${Green} Install standard Guacamole extensions: ${Yellow}${ext_yn}\n"
+
+echo -e "${Green} Do you want to: ${Yellow}"
+PS3="${Green} Enter the number of the action to take: ${Yellow}"
+actions=("View selected extensions and their settings" "Change if extensions are installed and if so which" "Return to the Summary menu")
+
+select a in "${actions[@]}"
+do
+    case $a in
+        "View selected extensions and their settings") sum_sel_ext; break;;
+        "Change if extensions are installed and if so which") ext_menu; break;;
+        "Return to the Summary menu") sum_menu; break;;
+        * ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the action to take.";;
+    esac
+done
+
+tput sgr0
+sum_menu
+}
+
+#####      SELECTED EXTENSIONS SUMMARY       ###################################
+sum_sel_ext () {
+SUB_MENU_TITLE="Summary of Selected Extensions"
+
+menu_header
+
+# Check if installing extensions was selected
+if [ ${ext_yn} == "Yes" ]; then
+  echo -e "${Green} Number of extensions selected: ${Yellow}${#selections[@]}\n"
+
+  # Lists only the selected extensions to review the settings of
+  PS3="${Green} Select the number of the extension to view: ${Yellow}"
+
+  select s in "${selections[@]}"
+  do
+    case $s in
+      "LDAP") sum_LDAP; break;;
+      "TOTP") sum_TOTP; break;;
+      "Duo") sum_Duo; break;;
+      "Radius") sum_Radius; break;;
+      "CAS") sum_CAS; break;;
+      "OpenID") sum_OpenID; break;;
+      "Return to Standard Extension Summary") sum_ext; break;;
+      * ) echo "Select a valid option.";;
+      esac
+    done
+else # Installing extensions was set to "no"
+  sleep 1 | echo -e "${Green} Installation of extensions was declined.\n If you want to install extensions, change if extensions are installed from the Standard Extension Summary menu using option 2"
+  sleep 5
+fi
+
+tpu sgr0
+sum_ext
+}
+
+#####      LDAP SUMMARY       ###################################
+# Need to add LDAP properties
+sum_LDAP () {
+echo "LDAP"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) LDAP_ext_menu; break;;
+        [Nn]*|"" ) sum_ext; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+}
+
+#####      TOTP SUMMARY       ###################################
+# Need to add TOTP properties
+sum_TOTP () {
+echo "TOTP"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) TOTP_menu; break;;
+        [Nn]*|"" ) sum_ext; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+}
+
+#####      DUP SUMMARY       ###################################
+# Need to add Duo properties
+sum_Duo () {
+echo "Duo"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) Duo_menu; break;;
+        [Nn]*|"" ) sum_ext; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+}
+
+#####      RADIUS SUMMARY       ###################################
+# Need to add Radius properties
+sum_Radius () {
+echo "Radius"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) Radius_ext_menu; break;;
+        [Nn]*|"" ) sum_ext; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+}
+
+#####      CAS SUMMARY       ###################################
+# Need to add CAS properties
+sum_CAS () {
+echo "CAS"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) CAS_menu; break;;
+        [Nn]*|"" ) sum_ext; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+}
+
+#####      OpenID SUMMARY       ###################################
+# Need to add OpenID properties
+sum_OpenID () {
+echo "OpenID"
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) OpenID_menu; break;;
+        [Nn]*|"" ) sum_ext; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+}
+
+#####      CUSTOM EXTENSION SUMMARY       ###################################
+sum_cust_ext () {
+SUB_MENU_TITLE="Custom Extension Summary"
+
+menu_header
+
+echo -n "${Green} Install a custom Guacamole extension: ${Yellow}${CUST_EXT}"
+
+if [ $CUST_EXT == "yes" ]; then
+	echo -e "${Green} Filename of the .jar extension file: ${Yellow}${CUST_FN}"
+	echo -e "${Green} Full path of the dir containing the .jar extension file: ${Yellow}${CUST_DIR}"
+	echo -e "${Green} Full file path: ${Yellow}${CUST_FULL}\n"
+fi
+
+while true; do
+    read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
+    case $yn in
+        [Yy]* ) cust_ext_menu; break;;
+        [Nn]*|"" ) sum_menu; break;;
+        * ) echo "${Green} Please enter yes or no. ${Yellow}";;
+    esac
+done
+
+tput sgr0
+sum_menu
 }
 
 #####    SPINNER      ########################################
@@ -377,85 +847,14 @@ echo
 tput sgr0
 }
 
-#####    HELP      ########################################
-HELP () {
-echo -e \\n"${Bold}Guacamole Install Script Help.${Reset}"\\n
-echo "${Bold}Usage:${Reset}"
-echo "  $SCRIPT [options] -s		install Guacamole Silently"
-echo -e "  $SCRIPT [options] -p [yes|no]	install Proxy feature"\\n
-echo "${Bold}Options:${Reset}"
-echo " -${Rev}a${Reset}, <string>	--Sets the root password for MariaDB. Default is ${Bold}${MYSQL_PASSWD}${Reset}."
-echo " -${Rev}b${Reset}, <string>	--Sets the Guacamole DB name. Default is ${Bold}${DB_NAME}${Reset}."
-echo " -${Rev}c${Reset}, <string>	--Sets the Guacamole DB username. Default is ${Bold}{DB_USER}${Reset}."
-echo " -${Rev}d${Reset}, <string>	--Sets the Guacamole DB password. Default is ${Bold}${DB_PASSWD}${Reset}."
-echo " -${Rev}e${Reset}, <string>	--Sets the Java KeyStore password (least 6 characters). Default is ${Bold}${JKS_GUAC_PASSWD}${Reset}."
-echo " -${Rev}l${Reset}, <string:string>	--Sets a domain name and e-mail for the Let's Encrypt Certificate. Example ${Bold}your@email.com:guacamole.yourdomain.com${Reset}."
-echo " -${Rev}s${Reset},		--Install Guacamole Silently. Default names and password are: ${Bold}guacamole${Reset}."
-echo " -${Rev}p${Reset}, [yes|no]	--Install the Proxy feature (Nginx)?."
-echo " -${Rev}i${Reset},		--This option launches the interactive menu. Default is ${Bold}yes${Reset}."
-echo " -${Rev}h${Reset}, 		--Displays this help message and exit."
-echo -e " -${Rev}v${Reset}, 		--Displays the script version information and exits."\\n
-echo "${Bold}Examples:${Reset}"
-echo "  * Full and no interactive install: ${Bold}$SCRIPT -a sqlpasswd -b guacadb -c guacadbuser -d guacadbpasswd -e guacakey -s -p yes -l your@email.com:guacamole.yourdomain.com${Reset}"
-echo "  * Same as above but with default names and passwords: ${Bold}$SCRIPT -s -p yes -l your@email.com:guacamole.yourdomain.com${Reset}"
-echo "  * Same as above but not install Nginx and not create Let's Encrypt Certificate : ${Bold}$SCRIPT -s -p no${Reset}"
-echo -e "  * Only install Nginx: ${Bold}$SCRIPT -p yes${Reset}"\\n
-exit 1
-}
-
-showscriptversion () {
-echo -e " ${Bold}Guacamole Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUACA_GIT_VER}\n" && tput sgr0
-echo -e " ${Bold}Install Script Build: ${Yellow}${SCRIPT_BUILD}\n" && tput sgr0
-exit 2
-}
-
-while getopts a:b:c:d:e:p:l:sihv FLAG; do
-  	case $FLAG in
-    	a)  #set option "a"
-      	MYSQL_PASSWD=$OPTARG
-      	;;
-    	b)  #set option "b"
-      	DB_NAME=$OPTARG
-      	;;
-		c)  #set option "c"
-      	DB_USER=$OPTARG
-      	;;
-    	d)  #set option "d"
-      	DB_PASSWD=$OPTARG
-      	;;
-    	e)  #set option "e"
-      	JKS_GUAC_PASSWD=$OPTARG
-      	;;
-    	p)  #set option "p"
-      	INSTALL_NGINX=$OPTARG
-      	if [ $INSTALL_MODE != "silent" ]; then INSTALL_MODE="proxy"; fi
-      	;;
-    	l)  #set option "l"      
-      	while IFS=":" read -r str1 str2; do LETSENCRYPT_CERT="yes"; if [[ $str1 = *"@"* ]]; then EMAIL_NAME=$str1; DOMAIN_NAME=$str2; else EMAIL_NAME=$str2; DOMAIN_NAME=$str1; fi; done < <(echo $OPTARG)
-      	;;
-    	s)  #set option "s"
-      	INSTALL_MODE="silent"
-      	;;
-    	i)  #set option "i"
-      	if [ $INSTALL_MODE != "silent" ]; then INSTALL_MODE="interactive"; fi
-      	;;
-    	h)  #show help
-      	HELP
-      	;;
-    	v)  #set option "v"
-      	showscriptversion
-      	;;
-    	\?) #unrecognized option - show help
-      	echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
-      	HELP
-      	;;
-  	esac
-done
+#################################################################
+#####    INSTALLATION    ########################################
+#################################################################
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
 clear
-echo -e "   ----====Installation====----" && tput sgr0
+echo -e "   ----====Installing====----" && tput sgr0
 
 # Install EPEL Repo
 sleep 1 | echo -e "\n${Bold}Searching for EPEL Repository...";echo -e "\nSearching for EPEL Repository..." >> $logfile  2>&1
@@ -568,7 +967,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	sleep 1 | echo -e "\n${Bold}Cloning Guacamole packages from git for installation..." | pv -qL 25; echo -e "\nCloning Guacamole packages from git for installation..." >> $logfile  2>&1
 	git clone ${GUAC_URL}${GUAC_SERVER} >> $logfile  2>&1
 	git clone ${GUAC_URL}${GUAC_CLIENT} >> $logfile  2>&1
-else
+else # Stable release
 	sleep 1 | echo -e "\n${Bold}Downloading Guacamole packages for installation..." | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation..." >> $logfile  2>&1
 	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz >> $logfile  2>&1
 	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war >> $logfile  2>&1
@@ -604,13 +1003,14 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
-else
+else # Stable release
 	cd server
 
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 fi
+
 # Continue Compiling Server
 make >> $logfile 2>&1 &
 sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
@@ -632,7 +1032,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	sleep 1 | echo -e "\n${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "\nCopying Guacamole Client..." >> $logfile  2>&1
 	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
 	cd ..
-else
+else # Stable release
 	sleep 1 | echo -e "\n${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "\nCopying Guacamole Client..." >> $logfile  2>&1
 	mv -v client/guacamole.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
 fi
@@ -647,7 +1047,6 @@ sleep 1 | echo -e "\n${Bold}Generating Guacamole configuration file..." | pv -qL
 echo "# Hostname and port of guacamole proxy
 guacd-hostname: ${GUACSERVER_HOSTNAME}
 guacd-port:     ${GUAC_PORT}
-
 # MySQL properties
 mysql-hostname: ${GUACSERVER_HOSTNAME}
 mysql-port: ${MYSQL_PORT}
@@ -758,6 +1157,7 @@ echo "
 ldap-hostname: ${LDAP_HOSTNAME}
 ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF}
 
+# LDAPS specific properties
 if [ $SECURE_LDAP == "yes" ]; then
 	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
   keytool -storepasswd -new ${JKS_CACERT_PASSWD} -keystore ${KS_PATH} -storepass "changeit" 
@@ -801,6 +1201,7 @@ mv -v ${CUST_FULL} ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 }
 
 #####    NGINX INSTALL    ########################################
+# Needs attention for the 3 desired levels of security
 nginxinstall ()
 {
 # Install Nginx Repo
@@ -828,7 +1229,6 @@ echo "server {
 	listen [::]:80;
         server_name ${DOMAIN_NAME};
 	return 301 https://\$host\$request_uri;
-
 	location ${GUAC_URIPATH} {
    	proxy_pass http://localhost:8080/guacamole/;
     	proxy_buffering off;
@@ -903,12 +1303,12 @@ echo "
 sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
 systemctl enable nginx >> $logfile 2>&1 || exit 1
 systemctl start nginx >> $logfile 2>&1 || exit 1
-systemctl status nginx >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
 }
 
 #####    SELINUX SETTINGS    ########################################
+# Needs attention for other extension options
 selinuxsettings ()
 {
 sleep 1 | echo -e "\n${Bold}Setting SELinux Context..." | pv -qL 25; echo -e "\nSetting SELinux Context..." >> $logfile  2>&1
@@ -963,6 +1363,7 @@ elif [ $RETVALqaf -eq 0 ]; then
      systemctl enable firewalld
      systemctl start firewalld
 fi
+
 firewallD
 }
 
@@ -971,12 +1372,14 @@ firewallD () {
 echo -e "\nMaking Firewall Backup...\ncp /etc/firewalld/zones/public.xml $fwbkpfile" >> $logfile  2>&1
 cp /etc/firewalld/zones/public.xml $fwbkpfile >> $logfile 2>&1
 
+# Open HTTP and HTTPS ports
 sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
 echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http" >> $logfile  2>&1
 firewall-cmd --permanent --zone=public --add-service=http >> $logfile  2>&1
 echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https" >> $logfile  2>&1
 firewall-cmd --permanent --zone=public --add-service=https >> $logfile  2>&1
 
+# Open 8080 and 8443 ports. Need to review if this is required or not
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
     sleep 1 | echo -e "${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
     echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
@@ -985,6 +1388,7 @@ if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then
     firewall-cmd --permanent --zone=public --add-port=8443/tcp >> $logfile  2>&1
     echo -e "Reload firewall...\nfirewall-cmd --reload\n" >> $logfile  2>&1
 fi
+
 firewall-cmd --reload >> $logfile  2>&1
 }
 
@@ -994,16 +1398,15 @@ sslcerts () {
 if [ $LETSENCRYPT_CERT = "yes" ]; then
 	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
 	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
-	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
-	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
-	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
+	
 	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
 	certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
-	#certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+	
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
-	#setup automatic renewal
+
+	#Setup automatic renewal
 	systemctl enable certbot-renew.service >> $logfile 2>&1
 	systemctl enable certbot-renew.timer >> $logfile 2>&1
 	systemctl list-timers --all | grep certbot >> $logfile 2>&1
@@ -1018,7 +1421,6 @@ else # Use a Self-Signed Cert
 fi
 
 sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
-#sed -i '/ssl.*certificate/s/^#//g' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 }
 
@@ -1047,7 +1449,13 @@ tput sgr0
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then init_vars; fi
 if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then src_menu; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then src_vars; fi
-if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then install_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then db_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then pw_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then ssl_cert_type_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then nginx_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then ext_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then cust_ext_menu; fi
+if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then sum_menu; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then reposinstall; fi
 if [ $INSTALL_LDAP = "yes" ]; then ldapsetup; fi
 if [ $INSTALL_CUST = "yes" ]; then custsetup; fi
