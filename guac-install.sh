@@ -116,13 +116,11 @@ while true; do
 		* ) echo "${Green} Please enter 'stable' or 'git' to select source/version (without quotes)";;
   	esac
 done
-echo -e "Source (src_menu): ${GUAC_SOURCE}" >> /home/srlab/mylog.txt  2>&1
 tput sgr0
 }
 
 #####      SOURCE VARIABLES       ###################################
 src_vars () {
-echo -e "Source (src_vars): ${GUAC_SOURCE}" >> /home/srlab/mylog.txt  2>&1
 if [ $GUAC_SOURCE == "Git" ]; then
 	GUAC_VER=${GUAC_GIT_VER}
 	GUAC_URL="git://github.com/apache/"
