@@ -865,7 +865,7 @@ if [ $NGINX_HARDEN = "yes" ]; then
 	ssl_session_cache shared:SSL:10m;
 	ssl_session_timeout 1d;
 	ssl_session_tickets off;
-	add_header Referrer-Policy \"no-refferrer-when-downgrade\" always;
+	add_header Referrer-Policy "no-referrer-when-downgrade" always;
 	add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
 	add_header X-Frame-Options DENY;
 	add_header X-Content-Type-Options nosniff;
