@@ -741,6 +741,11 @@ sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.RemoteIpValve" 
 
 sed -i "s/GUAC_SERVER_IP/${GUAC_SERVER_IP}/g" /etc/tomcat/server.xml
 
+# Add ErrorReportingValve to prevent displaying tomcat info on error pages
+sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValve" \
+	showReport="false" \
+	showServerInfo="false"/>' /etc/tomcat/server.xml
+
 # Java KeyStore Setup
 if [ $INSTALL_MODE = "silent" ]; then
 	sleep 1 | echo -e "\n${Bold}Generating the Java KeyStore" | pv -qL 25; echo -e "\nGenerating the Java KeyStore" >> $logfile  2>&1
