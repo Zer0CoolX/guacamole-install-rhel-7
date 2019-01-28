@@ -22,7 +22,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_1_17" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_1_28" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -107,6 +107,9 @@ MACHINE_ARCH=`uname -m`
 if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; then MACHINE_ARCH="i386"; else ARCH=""; fi
 
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
+
+# Server LAN IP
+GUAC_SERVER_IP=$(hostname -I | tr -d " ")
 }
 
 #####      SOURCE VARIABLES       ###################################
@@ -1132,6 +1135,20 @@ sed -i '92i <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true" \
                URIEncoding="UTF-8" />' /etc/tomcat/server.xml
 sed -i "s/JKS_GUAC_PASSWD/${JKS_GUAC_PASSWD}/g" /etc/tomcat/server.xml
 
+# Tomcat RemoteIpValve (to pass remote host IP's from proxy to tomcat. Allows Guacamole to log remote host IPs)
+sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.RemoteIpValve" \
+               internalProxies="GUAC_SERVER_IP" \
+               remoteIpHeader="x-forwarded-for" \
+               remoteIpProxiesHeader="x-forwarded-by" \
+               protocolHeader="x-forwarded-proto" />' /etc/tomcat/server.xml
+
+sed -i "s/GUAC_SERVER_IP/${GUAC_SERVER_IP}/g" /etc/tomcat/server.xml
+
+# Add ErrorReportingValve to prevent displaying tomcat info on error pages
+sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValve" \
+	showReport="false" \
+	showServerInfo="false"/>' /etc/tomcat/server.xml
+
 # Java KeyStore Setup
 if [ $INSTALL_MODE = "silent" ]; then
 	sleep 1 | echo -e "\n${Bold}Generating the Java KeyStore" | pv -qL 25; echo -e "\nGenerating the Java KeyStore" >> $logfile  2>&1
@@ -1232,7 +1249,7 @@ echo "server {
         server_name ${DOMAIN_NAME};
 	return 301 https://\$host\$request_uri;
 	location ${GUAC_URIPATH} {
-   	proxy_pass http://localhost:8080/guacamole/;
+   	proxy_pass http://${GUAC_SERVER_IP}:8080/guacamole/;
     	proxy_buffering off;
     	proxy_http_version 1.1;
     	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -1269,7 +1286,7 @@ if [ $NGINX_HARDEN = "yes" ]; then
 	ssl_session_cache shared:SSL:10m;
 	ssl_session_timeout 1d;
 	ssl_session_tickets off;
-	add_header Referrer-Policy "no-referrer-when-downgrade" always;
+	add_header Referrer-Policy \"no-referrer-when-downgrade\" always;
 	add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
 	add_header X-Frame-Options DENY;
 	add_header X-Content-Type-Options nosniff;
@@ -1289,7 +1306,7 @@ fi
 # Append the rest of the SSL Nginx Conf
 echo "
 	location ${GUAC_URIPATH} {
-	proxy_pass http://localhost:8080/guacamole/;
+	proxy_pass http://${GUAC_SERVER_IP}:8080/guacamole/;
 	proxy_buffering off;
 	proxy_http_version 1.1;
 	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
