@@ -14,7 +14,7 @@
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_1_15" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_1_28" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -214,16 +214,6 @@ while true; do
     	echo "${Green} Please enter a correct e-mail address. ${Yellow}"
  	fi
 done
-#while true; do
-#  	echo -n "${Green} Enter a valid public domain for let's encrypt certificate (ex. gucamole.company.com): ${Yellow}"
-#    	read DOMAIN_NAME
-#  	if echo $DOMAIN_NAME | grep -P $REGEX_IDN > /dev/null; then
-#    	echo "${Green}   Remember that Let's Encrypt only support DNS-based validation."
-#    	break
-#  	else
-#    	echo "${Green} Please enter a correct domain name. ${Yellow}"
-#	fi
-#done
 echo -n "${Green} Enter the Let's Encrypt key-size to use (default ${LE_KEY_SIZE_DEF}): ${Yellow}"
   	read LE_KEY_SIZE
   	LE_KEY_SIZE=${LE_KEY_SIZE:-${LE_KEY_SIZE_DEF}}
