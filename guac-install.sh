@@ -98,6 +98,9 @@ MACHINE_ARCH=`uname -m`
 if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; then MACHINE_ARCH="i386"; else ARCH=""; fi
 
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
+
+# Server LAN IP
+GUAC_SERVER_IP=$(hostname -I | tr -d " ")
 }
 
 #####      SOURCE MENU       ###################################
@@ -729,6 +732,20 @@ sed -i '92i <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true" \
                URIEncoding="UTF-8" />' /etc/tomcat/server.xml
 sed -i "s/JKS_GUAC_PASSWD/${JKS_GUAC_PASSWD}/g" /etc/tomcat/server.xml
 
+# Tomcat RemoteIpValve (to pass remote host IP's from proxy to tomcat. Allows Guacamole to log remote host IPs)
+sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.RemoteIpValve" \
+               internalProxies="GUAC_SERVER_IP" \
+               remoteIpHeader="x-forwarded-for" \
+               remoteIpProxiesHeader="x-forwarded-by" \
+               protocolHeader="x-forwarded-proto" />' /etc/tomcat/server.xml
+
+sed -i "s/GUAC_SERVER_IP/${GUAC_SERVER_IP}/g" /etc/tomcat/server.xml
+
+# Add ErrorReportingValve to prevent displaying tomcat info on error pages
+sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValve" \
+	showReport="false" \
+	showServerInfo="false"/>' /etc/tomcat/server.xml
+
 # Java KeyStore Setup
 if [ $INSTALL_MODE = "silent" ]; then
 	sleep 1 | echo -e "\n${Bold}Generating the Java KeyStore" | pv -qL 25; echo -e "\nGenerating the Java KeyStore" >> $logfile  2>&1
@@ -828,7 +845,7 @@ echo "server {
 	return 301 https://\$host\$request_uri;
 
 	location ${GUAC_URIPATH} {
-   	proxy_pass http://localhost:8080/guacamole/;
+   	proxy_pass http://${GUAC_SERVER_IP}:8080/guacamole/;
     	proxy_buffering off;
     	proxy_http_version 1.1;
     	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -885,7 +902,7 @@ fi
 # Append the rest of the SSL Nginx Conf
 echo "
 	location ${GUAC_URIPATH} {
-	proxy_pass http://localhost:8080/guacamole/;
+	proxy_pass http://${GUAC_SERVER_IP}:8080/guacamole/;
 	proxy_buffering off;
 	proxy_http_version 1.1;
 	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -992,15 +1009,14 @@ sslcerts () {
 if [ $LETSENCRYPT_CERT = "yes" ]; then
 	yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
 	sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
-	#wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot-auto | tee -a $logfile
-	#sleep 1 | echo -e "\n${Bold}Changing permissions to certboot...\n" | pv -qL 25; echo -e "\nChanging permissions to certboot...\n" >> $logfile  2>&1
-	#chmod a+x /usr/bin/certbot-auto >> $logfile 2>&1
-	sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
+	
+  sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
 	certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
-	#certbot-auto certonly -n --agree-tos --standalone --preferred-challenges tls-sni --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
 	ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
+
 	#setup automatic renewal
 	systemctl enable certbot-renew.service >> $logfile 2>&1
 	systemctl enable certbot-renew.timer >> $logfile 2>&1
@@ -1016,7 +1032,6 @@ else # Use a Self-Signed Cert
 fi
 
 sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
-#sed -i '/ssl.*certificate/s/^#//g' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 }
 
