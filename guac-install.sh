@@ -225,6 +225,7 @@ do
 		"Self-signed"|"") SSL_CERT_TYPE="Self-signed"; ss_menu; break;;
 		"None")
 			SSL_CERT_TYPE="None"
+			OCSP_USE=false
 			sleep 1 | echo -e "\n\n${Red} No SSL certificate selected. This can be configured manually at a later time."
 			sleep 5
 			break;;
@@ -311,7 +312,15 @@ while true; do
 			INSTALL_EXT=true
 			ext_sel_menu
 			break;;
-		[Nn]*|"" ) INSTALL_EXT=false; break;;
+		[Nn]*|"" )
+			INSTALL_EXT=false
+			INSTALL_LDAP=false
+			INSTALL_TOTP=false
+			INSTALL_DUO=false
+			INSTALL_RADIUS=false
+			INSTALL_CAS=false
+			INSTALL_OPENID=false
+			break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
