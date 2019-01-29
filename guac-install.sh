@@ -1552,7 +1552,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 	# Lets Encrypt Setup (If selected)
 	if [ $SSL_CERT_TYPE = "LetsEncrypt" ]; then
 		yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
-		sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
+		sleep 1 | echo -ne "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
 		
 		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
 		certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
