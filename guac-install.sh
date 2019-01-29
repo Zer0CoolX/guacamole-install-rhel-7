@@ -1502,7 +1502,7 @@ echo -e "rpm -qa | grep firewalld" >> $logfile  2>&1
 rpm -qa | grep firewalld >> $logfile  2>&1
 RETVALqaf=$?
 echo -e "\nservice firewalld status" >> $logfile  2>&1
-service firewalld status >> $logfile  2>&1
+systemctl status firewalld >> $logfile  2>&1
 RETVALsf=$?
 
 if [ $RETVALsf -eq 0 ]; then
