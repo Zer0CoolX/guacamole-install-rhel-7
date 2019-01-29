@@ -439,8 +439,8 @@ echo -n "${Green} Enter the LDAP Username-Attribute (default sAMAccountName): ${
 	read LDAP_UNAME_ATTR
 	LDAP_UNAME_ATTR=${LDAP_UNAME_ATTR:-sAMAccountName}
 
-LDAP_SEARCH_FILTER_DEF="objectCategory=*"
-echo -n "${Green} Enter a custom LDAP user search filter (default objectCategory=*): ${Yellow}"
+LDAP_SEARCH_FILTER_DEF="(objectClass=*)"
+echo -n "${Green} Enter a custom LDAP user search filter (default \"${LDAP_SEARCH_FILTER_DEF}\"): ${Yellow}"
 	read LDAP_SEARCH_FILTER
 	LDAP_SEARCH_FILTER=${LDAP_SEARCH_FILTER:-${LDAP_SEARCH_FILTER_DEF}}
 }
