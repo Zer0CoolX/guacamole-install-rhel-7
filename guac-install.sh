@@ -11,7 +11,6 @@
 # 	-Read all documentation prior to using this script!
 #	-Test prior to deploying on a production system!
 #
-
 ##### CHECK FOR SUDO or ROOT ################################## 
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
 
