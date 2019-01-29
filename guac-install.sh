@@ -1552,9 +1552,9 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 	# Lets Encrypt Setup (If selected)
 	if [ $SSL_CERT_TYPE = "LetsEncrypt" ]; then
 		yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
-		sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...\n" >> $logfile 2>&1 | spinner
+		sleep 1 | echo -e "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
 		
-		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate...\n" | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate...\n" >> $logfile  2>&1
+		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
 		certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
 		
 		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
@@ -1571,14 +1571,14 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt | tee -a $logfile
 	fi
 
-	sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config..." | pv -qL 25; echo -e "\nEnabling SSL Certificate in config..." >> $logfile  2>&1
 	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 	HTTPS_ENABLED=true
 else # None
-	sleep 1 | echo -e "\n${Bold}Skipping SSL Certificate in config...\n" | pv -qL 25; echo -e "\nSkipping SSL Certificate in config...\n" >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Skipping SSL Certificate in config..." | pv -qL 25; echo -e "\nSkipping SSL Certificate in config..." >> $logfile  2>&1
 	
 	# Cannot force/use HTTPS without a cert
-	sed -i '/\(return 301 https\)/s/^/#/' >> $logfile 2>&1
+	sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf >> $logfile 2>&1
 	HTTPS_ENABLED=false
 fi
 
