@@ -1573,8 +1573,13 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 
 	sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config...\n" | pv -qL 25; echo -e "\nEnabling SSL Certificate in config...\n" >> $logfile  2>&1
 	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
+	HTTPS_ENABLED=true
 else # None
 	sleep 1 | echo -e "\n${Bold}Skipping SSL Certificate in config...\n" | pv -qL 25; echo -e "\nSkipping SSL Certificate in config...\n" >> $logfile  2>&1
+	
+	# Cannot force/use HTTPS without a cert
+	sed -i '/\(return 301 https\)/s/^/#/' >> $logfile 2>&1
+	HTTPS_ENABLED=false
 fi
 
 showmessages
@@ -1595,11 +1600,18 @@ sleep 1 | echo -e "${Reset}You can check the log file at ${logfile}" | pv -qL 25
 sleep 1 | echo -e "${Reset}Your firewall backup file at ${fwbkpfile}"; echo -e "Your firewall backup file at ${fwbkpfile}" >> $logfile  2>&1
 
 if [ ${DOMAIN_NAME} = "localhost" ]; then
-	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUAC_SERVER_IP}${GUAC_URIPATH} or https://${GUAC_SERVER_IP}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${GUAC_SERVER_IP}${GUAC_URIPATH} or https://${GUAC_SERVER_IP}${GUAC_URIPATH}" >> $logfile  2>&1
+	GUAC_URL=${GUAC_SERVER_IP}${GUAC_URIPATH}
 else
-	sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${DOMAIN_NAME}${GUAC_URIPATH} or https://${DOMAIN_NAME}${GUAC_URIPATH}"; echo -e "\nTo manage Guacamole go to http://${DOMAIN_NAME}${GUAC_URIPATH} or https://${DOMAIN_NAME}${GUAC_URIPATH}" >> $logfile  2>&1
+	GUAC_URL=${DOMAIN_NAME}${GUAC_URIPATH}
 fi
 
+if [ ${HTTPS_ENABLED} = true ]; then
+	HTTPS_MSG=" or https://${GUAC_URL}"
+else
+	HTTPS_MSG=". Without a cert, HTTPS is not available."
+fi
+
+sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}; echo -e "\nTo manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
 sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
