@@ -1,4 +1,7 @@
 # Apache Guacamole Installation Script for RHEL/CentOS
+## Notice (1/31/2019)
+I have recently made major changes to the script, its menus and its features. I have tested said changes to the best of my ability hence merging the changes into the master branch. As per issue #24 I have not yet updated the README or the Wiki to reflect the changes. I am starting to work on re-writing and organizing the wiki to best document the script in its newest iteration. I am hoping to have all the documentation updated in the next few days or couple of weeks. It is still advisable to review the documentation as it is to get a base understanding of what the script does and how. Thanks
+
 ## Introduction
 The `guac-install.sh` script is intended to allow easily installing a complete Apache Guacamole server on RHEL/CentOS 7.x and up. The wiki will cover more in-depth what exactly the script includes and how it configures settings. Before using the script read all the documentation and review the script (especially the variables). Test the script in a test environment/server and ensure it functions exactly as desired before attempting to utilize it on a production system.
 
