@@ -1555,7 +1555,11 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		sleep 1 | echo -ne "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
 		
 		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
-		certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+		if [ $OCSP_USE = true ]; then
+			certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+		else
+			certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+		fi
 		
 		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
