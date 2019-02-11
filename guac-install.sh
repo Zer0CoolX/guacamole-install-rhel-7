@@ -38,7 +38,6 @@ MYSQL_PORT="3306"
 JKSTORE_KEY_SIZE_DEF="4096" # Default Java Keystore key-size
 LE_KEY_SIZE_DEF="4096" # Default Let's Encrypt key-size
 SSL_KEY_SIZE_DEF="4096" # Default Self-signed SSL key-size
-DHE_KEY_SIZE_DEF="2048" # Default DHE/Forward Secrecy key-size
 
 # SSL Certificate
 SSL_CERT_TYPE="Self-signed"
