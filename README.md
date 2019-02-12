@@ -36,7 +36,6 @@ Of special importance to starting with this Guacamole install script are:
 - [Warnings](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Warnings)
 - [Known Issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Known-Issues-and-Common-Mistakes)
 - [Variables](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Variables)
-- Installation Assumptions
 - Step-by-Step Directions
 - [Troubleshooting](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Troubleshooting)
 - [How to Report an Issue](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help))
