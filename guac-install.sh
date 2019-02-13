@@ -21,7 +21,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_2_11" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_2_13" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1553,7 +1553,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
 		sleep 1 | echo -ne "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
 		
-		sleep 1 | echo -e "\n${Bold}Generating a ${CERTYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
+		sleep 1 | echo -e "\n${Bold}Generating a ${SSL_CERT_TYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${SSL_CERT_TYPE} SSL Certificate..." >> $logfile  2>&1
 		if [ $OCSP_USE = true ]; then
 			certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
 		else
@@ -1569,7 +1569,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		systemctl enable certbot-renew.timer >> $logfile 2>&1
 		systemctl list-timers --all | grep certbot >> $logfile 2>&1
 	else # Use a Self-Signed Cert
-		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${CERTYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${CERTYPE} SSL Certificate..." >> $logfile  2>&1
+		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate..." >> $logfile  2>&1
 		
 		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt | tee -a $logfile
 	fi
