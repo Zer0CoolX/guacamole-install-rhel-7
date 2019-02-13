@@ -899,7 +899,7 @@ while true; do
 	read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
 	case $yn in
 		[Yy]* ) cust_ext_menu; break;;
-		[Nn]*|"" ) sum_sel_menu; break;;
+		[Nn]*|"" ) sum_menu; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
