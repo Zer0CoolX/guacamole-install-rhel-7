@@ -21,7 +21,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_1_29" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_2_11" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -38,12 +38,11 @@ MYSQL_PORT="3306"
 JKSTORE_KEY_SIZE_DEF="4096" # Default Java Keystore key-size
 LE_KEY_SIZE_DEF="4096" # Default Let's Encrypt key-size
 SSL_KEY_SIZE_DEF="4096" # Default Self-signed SSL key-size
-DHE_KEY_SIZE_DEF="2048" # Default DHE/Forward Secrecy key-size
 
-# SSL Certificate
+# SSL Certificate default type
 SSL_CERT_TYPE="Self-signed"
 
-# Nginx
+# Nginx defualt security level
 NGINX_SEC="High"
 
 # Default Credentials
@@ -55,8 +54,8 @@ JKS_GUAC_PASSWD_DEF="guacamole" # Default Java Keystore password
 JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used with LDAPS
 
 # Misc
-GUAC_URIPATH_DEF="/"
-DOMAIN_NAME_DEF="localhost"
+GUAC_URIPATH_DEF="/" # Default URI for Guacamole
+DOMAIN_NAME_DEF="localhost" # Default domain name of server
 
 # ONLY CAHNGE IF NOT WORKING #
 # URLS

@@ -10,7 +10,7 @@ The wiki will cover all aspects of the Apache Guacamole installation script for 
 Some of the main features and benefits of using this Apache Guacamole installation script are:
 - In typical scenarios, once the script completes the Guacamole server should be fully ready to use
 - Use Nginx as a reverse proxy allowing for changing the URI, having SSL/HTTPS securely setup and forcing HTTPS among other benefits.
-- Nginx configuration options capable of scoring A+ and 90-100% on categories of the Qualys SSL test. Will varying on other options selected.
+- Nginx configuration options capable of scoring A+ and 90-100% on categories of the Qualys SSL test. Will varying based on other options selected.
 - Ability to create a valid SSL certificate from LetsEncrypt AND keep it updated automatically. Also allows setting the key-size used by LetsEncrypt.
 - MariaDB is setup and configured as the database for user settings and basic authentication. It also automatically runs hardening on the database (by running mysql_secure_installation and automatically answering the prompts)
 - Ability to install and configure Guacamole extensions (currently limited to LDAP)
@@ -33,12 +33,12 @@ Some of the main features and benefits of using this Apache Guacamole installati
 I recommend reading the entire README page AND the entire Wiki in this repo prior to attempting to use the Apache Guacamole installation script. It is essential to understand what the script does as you will be prompted to enter parameters of its setup when running the script. It is important to be prepared to answer these prompts with accurate and desired parameters.
 
 Of special importance to starting with this Guacamole install script are:
-- Warnings
-- Known Issues
-- Variables
-- Installation Assumptions
+- [Warnings](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Warnings)
+- [Known Issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Known-Issues-and-Common-Mistakes)
+- [Variables](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Variables)
 - Step-by-Step Directions
-- Troubleshooting
+- [Troubleshooting](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Troubleshooting)
+- [How to Report an Issue](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help))
 
 ## Download/Run the Apache Guacamole Script for RHEL 7 & CentOS 7
 **WARNING: It is highly recommended to test this script in a dev environment prior to using it in a production setting!**
