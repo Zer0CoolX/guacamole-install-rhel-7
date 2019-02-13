@@ -36,7 +36,7 @@ Of special importance to starting with this Guacamole install script are:
 - [Warnings](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Warnings)
 - [Known Issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Known-Issues-and-Common-Mistakes)
 - [Variables](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Variables)
-- Step-by-Step Directions
+- [Step-by-Step Directions](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Step-by-Step-Installation-Guide)
 - [Troubleshooting](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Troubleshooting)
 - [How to Report an Issue](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help))
 
@@ -57,7 +57,7 @@ Run the script as sudo/root:
 ```
 ./guac-install.sh
 ```
-Proceed with the prompts provided by the installer, see wiki for more details.
+Proceed with the prompts provided by the installer, see [Step-by-Step Installation Guide](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Step-by-Step-Installation-Guide) for a walk-through of the options.
 
 ## Customizing the Apache Guacamole login screen
 See this wiki post regarding [Customizing the Apache Guacamole Login Screen](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) for details on another repo of mine to accomplish this.
