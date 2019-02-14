@@ -18,6 +18,8 @@ Some of the main features and benefits of using this Apache Guacamole installati
 - Script generates a log file of what it did for review.
 - And more...
 
+Further details on the [Script Features](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Guacamole-Install-Script-Features) page.
+
 ## Requirements to Run the Guacamole Install Script Successfully
 - Install RHEL 7.x or CentOS 7.x and up using either minimal install or Server with GUI.
 - `wget` installed to download the Guacamole install script `guac-install.sh` from this repo.
