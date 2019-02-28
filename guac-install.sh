@@ -1065,11 +1065,11 @@ else # Stable release
 	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
 	
 	# Decompress Guacamole Packages
-	sleep 1 | echo -e "\n${Bold}Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "Decompressing Guacamole Server Source..." >> $logfile  2>&1
 	tar xzvf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_SERVER} server >> $logfile 2>&1
 
-	sleep 1 | echo -e "${Bold}Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
 	tar xzvf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
 fi
@@ -1078,7 +1078,7 @@ fi
 sleep 1 | echo -e "\n${Bold}Downloading MySQL Connector package for installation..." | pv -qL 25; echo -e "\nDownloading MySQL Connector package for installation..." >> $logfile  2>&1
 wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz 2>&1 >> $logfile  2>&1
 
-sleep 1 | echo -e "${Bold}Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
 tar xzvf ${MYSQL_CON}.tar.gz >> $logfile 2>&1 && rm -f ${MYSQL_CON}.tar.gz >> $logfile 2>&1
 
 installguacserver
@@ -1637,10 +1637,13 @@ else # HTTPS not used
 fi
 
 sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}"; echo -e "\nTo manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
-sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable the default asap!" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}Contact ${ADM_POC} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}The default username and password are: ${Bold}${Red}guacadmin${Reset}"; echo -e "The default username and password are: guacadmin" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Red}Its highly recommended to create an admin account in Guacamole and disable the default asap!${Reset}"; echo -e "\nIts highly recommended to create an admin account in Guacamole and disable the default asap!" >> $logfile  2>&1
+if [ $SECURE_LDAP = true ]; then
+	sleep 1 | echo -e "$\n{Red}Its highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS${Reset}"; echo -e "\nIts highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS." >> $logfile  2>&1
+fi
+sleep 1 | echo -e "\n${Green}While not required, you should consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you should consider a reboot after verifying install" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
 
 tput sgr0
 exit 1
