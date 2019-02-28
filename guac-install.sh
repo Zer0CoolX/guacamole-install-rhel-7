@@ -21,7 +21,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_2_20" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_2_28" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -205,7 +205,7 @@ echo -n "${Green} Enter the root password for MariaDB: ${Yellow}"
 echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
 	read DB_PASSWD
 	DB_PASSWD=${DB_PASSWD:-${DB_PASSWD_DEF}}
-echo -n "${Green} Enter the Guacamole Java KeyStore password (at least 6 characters): ${Yellow}"
+echo -n "${Green} Enter the Guacamole Java KeyStore password: ${Yellow}"
 	read JKS_GUAC_PASSWD
 	JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
 
@@ -1638,7 +1638,7 @@ fi
 
 sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}"; echo -e "\nTo manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
-sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
+sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable the default asap!" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
 sleep 1 | echo -e "\n${Bold}Contact ${ADM_POC} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
 
