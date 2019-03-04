@@ -318,6 +318,7 @@ while true; do
 		[Nn]*|"" )
 			INSTALL_EXT=false
 			INSTALL_LDAP=false
+			SECURE_LDAP=false
 			INSTALL_TOTP=false
 			INSTALL_DUO=false
 			INSTALL_RADIUS=false
@@ -1066,11 +1067,11 @@ else # Stable release
 	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
 	
 	# Decompress Guacamole Packages
-	sleep 1 | echo -e "${Reset}Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "Decompressing Guacamole Server Source..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "Decompressing Guacamole Server Source..." >> $logfile  2>&1
 	tar xzvf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_SERVER} server >> $logfile 2>&1
 
-	sleep 1 | echo -e "${Reset}Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
 	tar xzvf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
 fi
@@ -1079,7 +1080,7 @@ fi
 sleep 1 | echo -e "\n${Bold}Downloading MySQL Connector package for installation..." | pv -qL 25; echo -e "\nDownloading MySQL Connector package for installation..." >> $logfile  2>&1
 wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz 2>&1 >> $logfile  2>&1
 
-sleep 1 | echo -e "${Reset}Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
 tar xzvf ${MYSQL_CON}.tar.gz >> $logfile 2>&1 && rm -f ${MYSQL_CON}.tar.gz >> $logfile 2>&1
 
 installguacserver
@@ -1095,20 +1096,20 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Reset}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 else # Stable release
 	cd server
 
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Reset}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 fi
 
 # Continue Compiling Server
 make >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Reset}Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && make install >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Reset}Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && ldconfig >> $logfile 2>&1 &
 sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
 cd ..
@@ -1122,7 +1123,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
 	mvn package >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Client...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Client...    " >> $logfile  2>&1 | spinner
-	sleep 1 | echo -e "\n${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "\nCopying Guacamole Client..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "Copying Guacamole Client..." >> $logfile  2>&1
 	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
 	cd ..
 else # Stable release
@@ -1621,8 +1622,8 @@ systemctl restart mariadb >> $logfile 2>&1 || exit 1
 systemctl restart nginx >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "\n${Bold}Finished Successfully" | pv -qL 25; echo -e "\nFinished Successfully" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}You can check the log file at ${logfile}" | pv -qL 25; echo -e "You can check the log file at ${logfile}" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}Your firewall backup file at ${fwbkpfile}"; echo -e "Your firewall backup file at ${fwbkpfile}" >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Log file: ${logfile}" | pv -qL 25; echo -e "Log file: ${logfile}" >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Firewall backup file: ${fwbkpfile}"; echo -e "Firewall backup file: ${fwbkpfile}" >> $logfile  2>&1
 
 # Determine Guac server URL for web GUI
 if [ ${DOMAIN_NAME} = "localhost" ]; then
