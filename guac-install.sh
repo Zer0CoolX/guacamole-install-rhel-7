@@ -2,13 +2,13 @@
 #####    NOTES             ###################################
 # Project Page: https://github.com/Zer0CoolX/guacamole-install-rhel
 # Licence (GPL-3.0): https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/LICENSE
-# Report Issues: https://github.com/Zer0CoolX/guacamole-install-rhel/issues
+# Report Issues: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)
 # Wiki: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki
 #
 # WARNING: For use on RHEL/CentOS 7.x and up only.
 #	-Use at your own risk!  
 #	-Use only for new installations of Guacamole!
-# 	-Read all documentation prior to using this script!
+# 	-Read all documentation (wiki) prior to using this script!
 #	-Test prior to deploying on a production system!
 #
 ##### CHECK FOR SUDO or ROOT ################################## 
@@ -21,14 +21,14 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_2_14" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_3_4" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
-GUAC_STBL_VER="1.0.0"
-MYSQL_CON_VER="8.0.15"
-LIBJPEG_VER="2.0.2"
-MAVEN_VER="3.6.0"
+GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
+MYSQL_CON_VER="8.0.15" # Latest stable release of MySQL Connecter J
+LIBJPEG_VER="2.0.2" # Latest stable version of libjpeg-turbo
+MAVEN_VER="3.6.0" # Latest stable version of Apache Maven
 
 # Ports
 GUAC_PORT="4822"
@@ -64,7 +64,7 @@ LIBJPEG_URL="https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_VER}
 
 # Dirs and File Names
 LIB_DIR="/var/lib/guacamole/"
-GUAC_CONF="guacamole.properties"
+GUAC_CONF="guacamole.properties" # Guacamole configuration/properties file
 MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
 LIBJPEG_TURBO="libjpeg-turbo-official-${LIBJPEG_VER}"
 
@@ -80,23 +80,21 @@ White=`tput setaf 7`   #${White}
 Bold=`tput bold`       #${Bold}
 Rev=`tput smso`        #${Rev}
 Reset=`tput sgr0`      #${Reset}
-
 ##### END UNIVERSAL VARS   ###################################
 
 #####    INITIALIZE COMMON VARS    ###################################
 # ONLY CHANGE IF NOT WORKING #
 init_vars () {
+# Get the release version of Guacamole from/for Git
 GUAC_GIT_VER=`curl -s https://raw.githubusercontent.com/apache/guacamole-server/master/configure.ac | grep 'AC_INIT([guacamole-server]*' | awk -F'[][]' -v n=2 '{ print $(2*n) }'`
-PWD=`pwd`
+PWD=`pwd` # Current directory
 
 # Determine if OS is RHEL or not (otherwise assume CentOS)
-if rpm -q subscription-manager 2>&1 > /dev/null; then IS_RHEL=true; else IS_RHEL=false; fi
-
-MAJOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | head -1` # Return 5, 6 or 7 when OS is 5.x, 6.x or 7.x
-
-if [ $IS_RHEL = true ]; then OS_NAME="RHEL"; else OS_NAME="CentOS"; fi
-
+if rpm -q subscription-manager 2>&1 > /dev/null; then OS_NAME="RHEL"; else OS_NAME="CentOS"; fi
 OS_NAME_L="$(echo $OS_NAME | tr '[:upper:]' '[:lower:]')" # Set lower case rhel or centos for use in some URLs
+
+# Get OS major version, used in some paths/vars that require it
+MAJOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | head -1` # Return 5, 6 or 7 when OS is 5.x, 6.x or 7.x
 
 #Set arch used in some paths
 MACHINE_ARCH=`uname -m`
@@ -110,6 +108,7 @@ GUAC_SERVER_IP=$(hostname -I | tr -d " ")
 
 #####      SOURCE VARIABLES       ###################################
 src_vars () {
+# Check if selected source is Git or stable release, set variables based on selection
 if [ $GUAC_SOURCE == "Git" ]; then
 	GUAC_VER=${GUAC_GIT_VER}
 	GUAC_URL="git://github.com/apache/"
@@ -126,12 +125,16 @@ else # Stable release
 	GUAC_CLIENT="guacamole-${GUAC_VER}"
 fi
 
+# JDBC Extension file name
 GUAC_JDBC="guacamole-auth-jdbc-${GUAC_VER}"
+
+# LDAP extension file name
 GUAC_LDAP="guacamole-auth-ldap-${GUAC_VER}"
 
-INSTALL_DIR="/usr/local/src/guacamole/${GUAC_VER}/"
-FILENAME="${PWD}/guacamole-${GUAC_VER}_"$(date +"%d-%y-%b")""
-logfile="${FILENAME}.log"
+# Dirs and file names
+INSTALL_DIR="/usr/local/src/guacamole/${GUAC_VER}/" # Guacamole installation dir
+FILENAME="${PWD}/guacamole-${GUAC_VER}_"$(date +"%d-%y-%b")"" # Script generated log filename
+logfile="${FILENAME}.log" # Script generated log file full name
 fwbkpfile="${FILENAME}.firewall.bkp" # Firewall backup file name
 }
 
@@ -161,6 +164,7 @@ tput sgr0
 }
 
 #####      MENU HEADERS       ###################################
+# Called by each menu and summary menu to display the dynamic header
 menu_header () {
 clear
 
@@ -201,7 +205,7 @@ echo -n "${Green} Enter the root password for MariaDB: ${Yellow}"
 echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
 	read DB_PASSWD
 	DB_PASSWD=${DB_PASSWD:-${DB_PASSWD_DEF}}
-echo -n "${Green} Enter the Guacamole Java KeyStore password (at least 6 characters): ${Yellow}"
+echo -n "${Green} Enter the Guacamole Java KeyStore password: ${Yellow}"
 	read JKS_GUAC_PASSWD
 	JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
 
@@ -314,6 +318,7 @@ while true; do
 		[Nn]*|"" )
 			INSTALL_EXT=false
 			INSTALL_LDAP=false
+			SECURE_LDAP=false
 			INSTALL_TOTP=false
 			INSTALL_DUO=false
 			INSTALL_RADIUS=false
@@ -336,6 +341,7 @@ options=("LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID")
 choices=()
 selections=()
 INSTALL_LDAP=false
+SECURE_LDAP=false
 INSTALL_TOTP=false
 INSTALL_DUO=false
 INSTALL_RADIUS=false
@@ -351,7 +357,7 @@ ext_sub_menu() {
 	[[ "$msg" ]] && echo "$msg"; :
 }
 
-# This function is used to select/deselct extensions from the menu
+# This function is used to select/deselect extensions from the menu
 ext_sub_prompt () {
 prompt="${Green} Enter a number and press ENTER to check/uncheck an option. Selections designated by a + sign. (Press ENTER while blank when done): "
 while ext_sub_menu && read -rp "$prompt" num && [[ "$num" ]]; do
@@ -404,7 +410,7 @@ if [ $SECURE_LDAP = true ]; then
 		read LDAP_PORT
 		LDAP_PORT=${LDAP_PORT:-636}
 
-	# LDAPS Certificate prompts
+	# LDAPS Certificate placeholder values
 	LDAPS_CERT_FN="mycert.cer"
 	LDAPS_CERT_FULL="xNULLx"
 
@@ -527,10 +533,11 @@ while true; do
 	read -p "${Green} Would you like to install a custom Guacamole extensions from a local file (default no)? ${Yellow}" yn
 	case $yn in
 		[Yy]* )
-			# Set Defaults
+			INSTALL_CUST_EXT=true
+
+			# Set placeholder values
 			CUST_FN="myextension.jar"
 			CUST_FULL="xNULLx"
-			INSTALL_CUST_EXT=true
 
 			while [ ! -f ${CUST_FULL} ]; do
 				echo -n "${Green} Enter a valid filename of the .jar extension file (Ex: myextension.jar): ${Yellow}"
@@ -692,7 +699,6 @@ sum_menu
 }
 
 #####      STANDARD EXTENSION SUMMARY       ###################################
-# Provides options to review selected extensions or change if extensions are installed and if so which ones
 sum_ext () {
 SUB_MENU_TITLE="Standard Extension Summary"
 
@@ -755,7 +761,6 @@ sum_ext
 }
 
 #####      LDAP SUMMARY       ###################################
-# Need to add LDAP properties
 sum_LDAP () {
 SUB_MENU_TITLE="LDAP Extension Summary"	
 
@@ -909,6 +914,7 @@ sum_menu
 }
 
 #####    SPINNER      ########################################
+# Shows progress as a spinning line at the end of an outputted line for the last run command
 spinner () {
 pid=$!
 
@@ -970,11 +976,12 @@ yumupdate
 #####    YUM UPDATES    ########################################
 yumupdate () {
 # Enable repos needed if using RHEL
-if [ $IS_RHEL = true ] ; then
+if [ $OS_NAME == "RHEL" ] ; then
 	subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms" >> $logfile 2>&1 &
 	echo -ne "\n${Bold}Enabling ${OS_NAME} Repos...    ${Reset}"; echo -ne "\nEnabling ${OS_NAME} Repos...    " >> $logfile 2>&1 | spinner
 fi
 
+# Update packages
 yum update -y >> $logfile 2>&1 &
 echo -ne "\n${Bold}Updating ${OS_NAME}, please wait...    "; echo -ne "\nUpdating ${OS_NAME}, please wait...    " >> $logfile 2>&1 | spinner
 
@@ -985,7 +992,7 @@ baseinstall
 baseinstall () {
 sleep 1 | echo -e "\n${Bold}Installing Dependencies..."; echo -e "\nInstalling Dependencies..." >> $logfile  2>&1
 
-# Install libjpeg
+# Install libjpeg-turbo
 rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} | tee -a $logfile
 RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} RC is: $RETVAL" >> $logfile  2>&1
 
@@ -1015,7 +1022,7 @@ yum install -y wget pv dialog gcc cairo-devel libpng-devel uuid-devel ffmpeg-dev
 sleep 1 | echo -ne "\n${Bold}Installing Required Packages...    "; echo -ne "\nInstalling Required Packages...    " >> $logfile 2>&1 | spinner
 RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
 
-# Packages required by git
+# Additional packages required by git
 if [ $GUAC_SOURCE == "Git" ]; then
 	yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Installing Required Packages for git...    "; echo -ne "\nInstalling Required Packages for git...    " >> $logfile 2>&1 | spinner
@@ -1060,11 +1067,11 @@ else # Stable release
 	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
 	
 	# Decompress Guacamole Packages
-	sleep 1 | echo -e "\n${Bold}Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "Decompressing Guacamole Server Source..." >> $logfile  2>&1
 	tar xzvf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_SERVER} server >> $logfile 2>&1
 
-	sleep 1 | echo -e "${Bold}Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
 	tar xzvf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
 	mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
 fi
@@ -1073,7 +1080,7 @@ fi
 sleep 1 | echo -e "\n${Bold}Downloading MySQL Connector package for installation..." | pv -qL 25; echo -e "\nDownloading MySQL Connector package for installation..." >> $logfile  2>&1
 wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz 2>&1 >> $logfile  2>&1
 
-sleep 1 | echo -e "${Bold}Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
 tar xzvf ${MYSQL_CON}.tar.gz >> $logfile 2>&1 && rm -f ${MYSQL_CON}.tar.gz >> $logfile 2>&1
 
 installguacserver
@@ -1081,6 +1088,7 @@ installguacserver
 
 #####    INSTALL GUAC SERVER    ########################################
 installguacserver () {
+sleep 1 | echo -e "\n${Bold}Compiling Guacamole Server..." | pv -qL 25; echo -ne "\nCompiling Guacamole Server Complete..." >> $logfile 2>&1
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
 	autoreconf -fi >> $logfile 2>&1 &
@@ -1088,20 +1096,20 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 else # Stable release
 	cd server
 
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 fi
 
 # Continue Compiling Server
 make >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && make install >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && ldconfig >> $logfile 2>&1 &
 sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
 cd ..
@@ -1115,7 +1123,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
 	mvn package >> $logfile 2>&1 &
 	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Client...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Client...    " >> $logfile  2>&1 | spinner
-	sleep 1 | echo -e "\n${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "\nCopying Guacamole Client..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "Copying Guacamole Client..." >> $logfile  2>&1
 	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
 	cd ..
 else # Stable release
@@ -1143,7 +1151,7 @@ mysql-default-max-connections-per-user: 0
 mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUAC_CONF}
 
 # Create Required Symlinks for Guacamole
-sleep 1 | echo -e "\n${Bold}Making Guacamole symbolic links..." | pv -qL 25; echo -e "\nMaking Guacamole symbolic links..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}Making Guacamole symbolic links..." | pv -qL 25; echo -e "Making Guacamole symbolic links..." >> $logfile  2>&1
 ln -vfs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps >> $logfile  2>&1 || exit 1
 ln -vfs /etc/guacamole/${GUAC_CONF} /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
 ln -vfs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
@@ -1156,7 +1164,7 @@ sleep 1 | echo -e "\n${Bold}Copying Guacamole JDBC Extension to Extensions Dir..
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Get JDBC from compiled client
 	find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
-else
+else # Stable release
 	# Copy JDBC from download
 	mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 fi
@@ -1180,7 +1188,7 @@ sleep 1 | echo -e "\n${Bold}Setting Root Password for MariaDB..." | pv -qL 25; e
 mysqladmin -u root password ${MYSQL_PASSWD} | tee -a $logfile || exit 1
 
 # Run MariaDB/MySQL Secure Install
-sleep 1 | echo -e "\n${Bold}Harden MariaDB...${Reset}" | pv -qL 25; echo -e "\nHarden MariaDB..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}Harden MariaDB..." | pv -qL 25; echo -e "Harden MariaDB..." >> $logfile  2>&1
 mysql_secure_installation <<EOF
 ${MYSQL_PASSWD}
 n
@@ -1200,7 +1208,7 @@ mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" >> $logfile  2>&1 || exit
 if [ $GUAC_SOURCE == "Git" ]; then
 	sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
 	cat guacamole-client/extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
-else
+else # Stable release
 	sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
 	cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
 fi
@@ -1231,12 +1239,11 @@ sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValv
 							showServerInfo="false"/>' /etc/tomcat/server.xml
 
 # Java KeyStore Setup
-sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the Java KeyStore${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore" >> $logfile  2>&1
-
+sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the Java KeyStore...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore..." >> $logfile  2>&1
 keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} ${noprompt} | tee -a $logfile
 
 # Enable/Start Tomcat and Guacamole Services
-sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Service..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Service..." >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Services..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Services..." >> $logfile  2>&1
 systemctl enable tomcat >> $logfile  2>&1
 systemctl start tomcat >> $logfile  2>&1
 systemctl enable guacd >> $logfile  2>&1
@@ -1246,9 +1253,7 @@ nginxinstall
 }
 
 #####    NGINX INSTALL    ########################################
-# Needs attention for the 3 desired levels of security
-nginxinstall ()
-{
+nginxinstall () {
 # Install Nginx Repo
 sleep 1 | echo -e "\n${Bold}Installing Nginx repository..."; echo -e "\nInstalling Nginx repository..." >> $logfile  2>&1
 echo "[nginx]
@@ -1257,6 +1262,7 @@ baseurl=${NGINX_URL}
 gpgcheck=0
 enabled=1" > /etc/yum.repos.d/nginx.repo
 
+# Install Nginx
 yum install -y nginx pv >> $logfile  2>&1 &
 sleep 1 | echo -ne "${Bold}Installing Nginx...    "; echo -ne "Installing Nginx...    " >> $logfile 2>&1 | spinner
 RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
@@ -1337,12 +1343,13 @@ echo "	ssl_protocols TLSv1.3 TLSv1.2;
 }" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Enable/Start Nginx Service
-sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Enable & Start Nginx Service..." | pv -qL 25; echo -e "-Enable & Start Nginx Service..." >> $logfile  2>&1
 systemctl enable nginx >> $logfile 2>&1 || exit 1
 systemctl start nginx >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
 
+# Call each Guac extension function for those selected
 if [ $INSTALL_LDAP = true ]; then ldapsetup; fi
 if [ $INSTALL_TOTP = true ]; then totpsetup; fi
 if [ $INSTALL_DUO = true ]; then duosetup; fi
@@ -1350,12 +1357,12 @@ if [ $INSTALL_RADIUS = true ]; then radiussetup; fi
 if [ $INSTALL_CAS = true ]; then cassetup; fi
 if [ $INSTALL_OPENID = true ]; then openidsetup; fi
 if [ $INSTALL_CUST_EXT = true ]; then custsetup; fi
+
 selinuxsettings
 }
 
 #####    LDAP SETUP    ########################################
 ldapsetup () {
-
 # Append LDAP configuration lines to guacamole.properties
 sleep 1 | echo -e "\n${Bold}Updating Guacamole configuration file for LDAP..." | pv -qL 25; echo -e "\nUpdating Guacamole configuration file for LDAP..." >> $logfile  2>&1
 echo "
@@ -1368,7 +1375,7 @@ if [ $SECURE_LDAP = true ]; then
 	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
 	keytool -storepasswd -new ${JKS_CACERT_PASSWD} -keystore ${KS_PATH} -storepass "changeit" 
 	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${JKS_CACERT_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt >> $logfile  2>&1 &
-	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
+	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "-Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
 
 	echo "ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
 fi
@@ -1381,41 +1388,51 @@ ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
-	sleep 1 | echo -e "${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
 	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
-else
+else # Stable release
 	# Download LDAP Extension
-	sleep 1 | echo -e "${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "Downloading LDAP Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "\nDownloading LDAP Extension..." >> $logfile  2>&1
 	wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 
 	# Decompress LDAP Extension
-	sleep 1 | echo -e "${Bold}Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "-Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
 	tar xzvf ${GUAC_LDAP}.tar.gz >> $logfile  2>&1 && rm -f ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 	mv ${GUAC_LDAP} extension >> $logfile  2>&1
 
 	# Copy LDAP Extension to Extensions Directory
-	sleep 1 | echo -e "${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "-Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
 	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 fi
 }
 
+#####    TOTP SETUP    ########################################
 totpsetup () {
+	# Placehold until extension is added
 	echo "totpsetup"
 }
 
+#####    DUO SETUP    ########################################
 duosetup () {
+	# Placehold until extension is added
 	echo "duosetup"
 }
 
+#####    RADIUS SETUP    ########################################
 radiussetup () {
+	# Placehold until extension is added
 	echo "radiussetup"
 }
 
+#####    CAS SETUP    ########################################
 cassetup () {
+	# Placehold until extension is added
 	echo "cassetup"
 }
 
+#####    OpenID SETUP    ########################################
 openidsetup () {
+	# Placehold until extension is added
 	echo "openidsetup"
 }
 
@@ -1427,7 +1444,6 @@ mv -v ${CUST_FULL} ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 }
 
 #####    SELINUX SETTINGS    ########################################
-# Needs attention for other extension options
 selinuxsettings ()
 {
 sleep 1 | echo -e "\n${Bold}Setting SELinux Context..." | pv -qL 25; echo -e "\nSetting SELinux Context..." >> $logfile  2>&1
@@ -1457,6 +1473,7 @@ fi
 
 # Guacamole TOTP Extension Context (If selected)
 if [ $INSTALL_TOTP = true ]; then
+	# Placehold until extension is added
 	echo "totp true"
 	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
 	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
@@ -1464,6 +1481,7 @@ fi
 
 # Guacamole Duo Extension Context (If selected)
 if [ $INSTALL_DUO = true ]; then
+	# Placehold until extension is added
 	echo "duo true"
 	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
 	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
@@ -1471,6 +1489,7 @@ fi
 
 # Guacamole RADIUS Extension Context (If selected)
 if [ $INSTALL_RADIUS = true ]; then
+	# Placehold until extension is added
 	echo "radius true"
 	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
 	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
@@ -1478,6 +1497,7 @@ fi
 
 # Guacamole CAS Extension Context (If selected)
 if [ $INSTALL_CAS = true ]; then
+	# Placehold until extension is added
 	echo "cas true"
 	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
 	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
@@ -1485,6 +1505,7 @@ fi
 
 # Guacamole OpenID Extension Context (If selected)
 if [ $INSTALL_OPENID = true ]; then
+	# Placehold until extension is added
 	echo "openid true"
 	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
 	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
@@ -1550,16 +1571,18 @@ sslcerts () {
 if [ $SSL_CERT_TYPE != "None" ]; then
 	# Lets Encrypt Setup (If selected)
 	if [ $SSL_CERT_TYPE = "LetsEncrypt" ]; then
+		# Install certbot from repo
 		yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
 		sleep 1 | echo -ne "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
 		
 		sleep 1 | echo -e "\n${Bold}Generating a ${SSL_CERT_TYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${SSL_CERT_TYPE} SSL Certificate..." >> $logfile  2>&1
 		if [ $OCSP_USE = true ]; then
 			certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
-		else
+		else # Generate without OCSP --must-staple
 			certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
 		fi
 		
+		# Symlink Lets Encrypt certs so renewal does not break Nginx
 		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
 		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
 		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
@@ -1570,17 +1593,17 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		systemctl list-timers --all | grep certbot >> $logfile 2>&1
 	else # Use a Self-Signed Cert
 		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate..." >> $logfile  2>&1
-		
 		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt | tee -a $logfile
 	fi
 
+	# Uncomment cert lines from Nginx guacamole_ssl.conf
 	sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config..." | pv -qL 25; echo -e "\nEnabling SSL Certificate in config..." >> $logfile  2>&1
 	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
 	HTTPS_ENABLED=true
-else # None
+else # Is set to None
 	sleep 1 | echo -e "\n${Bold}Skipping SSL Certificate in config..." | pv -qL 25; echo -e "\nSkipping SSL Certificate in config..." >> $logfile  2>&1
 	
-	# Cannot force/use HTTPS without a cert
+	# Cannot force/use HTTPS without a cert, comment out redirect
 	sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf >> $logfile 2>&1
 	HTTPS_ENABLED=false
 fi
@@ -1590,35 +1613,40 @@ showmessages
 
 #####    COMPLETION MESSAGES    ########################################
 showmessages () {
+sleep 1 | echo -e "\n${Bold}Restarting all services..." | pv -qL 25; echo -e "\nRestarting all services..." >> $logfile  2>&1
 
-sleep 1 | echo -e "\n${Bold}Restarting all services" | pv -qL 25; echo -e "\nRestarting all services" >> $logfile  2>&1
-
+# Restart all services
 systemctl restart tomcat >> $logfile 2>&1 || exit 1
 systemctl restart guacd >> $logfile 2>&1 || exit 1
 systemctl restart mariadb >> $logfile 2>&1 || exit 1
 systemctl restart nginx >> $logfile 2>&1 || exit 1
 
 sleep 1 | echo -e "\n${Bold}Finished Successfully" | pv -qL 25; echo -e "\nFinished Successfully" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}You can check the log file at ${logfile}" | pv -qL 25; echo -e "You can check the log file at ${logfile}" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}Your firewall backup file at ${fwbkpfile}"; echo -e "Your firewall backup file at ${fwbkpfile}" >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Log file: ${logfile}" | pv -qL 25; echo -e "Log file: ${logfile}" >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Firewall backup file: ${fwbkpfile}"; echo -e "Firewall backup file: ${fwbkpfile}" >> $logfile  2>&1
 
+# Determine Guac server URL for web GUI
 if [ ${DOMAIN_NAME} = "localhost" ]; then
 	GUAC_URL=${GUAC_SERVER_IP}${GUAC_URIPATH}
-else
+else # Not localhost
 	GUAC_URL=${DOMAIN_NAME}${GUAC_URIPATH}
 fi
 
+# Determine if HTTPS is used or not
 if [ ${HTTPS_ENABLED} = true ]; then
 	HTTPS_MSG=" or https://${GUAC_URL}"
-else
+else # HTTPS not used
 	HTTPS_MSG=". Without a cert, HTTPS is not available."
 fi
 
 sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}"; echo -e "\nTo manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}The default username and password are: ${Red}guacadmin${Reset}"; echo -e "\nThe default username and password are: guacadmin" >> $logfile  2>&1
-sleep 1 | echo -e "${Red}Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!${Reset}"; echo -e "Its highly recommended to create an admin account in Guacamole and disable/delete the default asap!" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Green}While not required, you may consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you may consider a reboot after verifying install" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}Contact ${ADM_POC} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}The default username and password are: ${Bold}${Red}guacadmin${Reset}"; echo -e "The default username and password are: guacadmin" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Red}Its highly recommended to create an admin account in Guacamole and disable the default asap!${Reset}"; echo -e "\nIts highly recommended to create an admin account in Guacamole and disable the default asap!" >> $logfile  2>&1
+if [ $SECURE_LDAP = true ]; then
+	sleep 1 | echo -e "$\n{Red}Its highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS${Reset}"; echo -e "\nIts highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS." >> $logfile  2>&1
+fi
+sleep 1 | echo -e "\n${Green}While not required, you should consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you should consider a reboot after verifying install" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
 
 tput sgr0
 exit 1
