@@ -1086,6 +1086,7 @@ installguacserver
 
 #####    INSTALL GUAC SERVER    ########################################
 installguacserver () {
+sleep 1 | echo -e "$\n{Bold}Compiling Guacamole Server..." | pv -qL 25; echo -ne "\nCompiling Guacamole Server Complete..." >> $logfile 2>&1
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
 	autoreconf -fi >> $logfile 2>&1 &
@@ -1093,20 +1094,20 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	sleep 1 | echo -ne "\n${Reset}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 else # Stable release
 	cd server
 
 	# Compile Guacamole Server
 	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	sleep 1 | echo -ne "\n${Reset}Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
 fi
 
 # Continue Compiling Server
 make >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Reset}Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && make install >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
+sleep 1 | echo -ne "${Reset}Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
 sleep 1 && ldconfig >> $logfile 2>&1 &
 sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
 cd ..
@@ -1148,7 +1149,7 @@ mysql-default-max-connections-per-user: 0
 mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUAC_CONF}
 
 # Create Required Symlinks for Guacamole
-sleep 1 | echo -e "\n${Bold}Making Guacamole symbolic links..." | pv -qL 25; echo -e "\nMaking Guacamole symbolic links..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}Making Guacamole symbolic links..." | pv -qL 25; echo -e "Making Guacamole symbolic links..." >> $logfile  2>&1
 ln -vfs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps >> $logfile  2>&1 || exit 1
 ln -vfs /etc/guacamole/${GUAC_CONF} /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
 ln -vfs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
@@ -1185,7 +1186,7 @@ sleep 1 | echo -e "\n${Bold}Setting Root Password for MariaDB..." | pv -qL 25; e
 mysqladmin -u root password ${MYSQL_PASSWD} | tee -a $logfile || exit 1
 
 # Run MariaDB/MySQL Secure Install
-sleep 1 | echo -e "\n${Bold}Harden MariaDB...${Reset}" | pv -qL 25; echo -e "\nHarden MariaDB..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}Harden MariaDB..." | pv -qL 25; echo -e "Harden MariaDB..." >> $logfile  2>&1
 mysql_secure_installation <<EOF
 ${MYSQL_PASSWD}
 n
@@ -1236,11 +1237,11 @@ sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValv
 							showServerInfo="false"/>' /etc/tomcat/server.xml
 
 # Java KeyStore Setup
-sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the Java KeyStore${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the Java KeyStore...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore..." >> $logfile  2>&1
 keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} ${noprompt} | tee -a $logfile
 
 # Enable/Start Tomcat and Guacamole Services
-sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Service..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Service..." >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Services..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Services..." >> $logfile  2>&1
 systemctl enable tomcat >> $logfile  2>&1
 systemctl start tomcat >> $logfile  2>&1
 systemctl enable guacd >> $logfile  2>&1
@@ -1340,7 +1341,7 @@ echo "	ssl_protocols TLSv1.3 TLSv1.2;
 }" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Enable/Start Nginx Service
-sleep 1 | echo -e "\n${Bold}Enable & Start Nginx Service..." | pv -qL 25; echo -e "\nEnable & Start Nginx Service..." >> $logfile  2>&1
+sleep 1 | echo -e "${Reset}-Enable & Start Nginx Service..." | pv -qL 25; echo -e "-Enable & Start Nginx Service..." >> $logfile  2>&1
 systemctl enable nginx >> $logfile 2>&1 || exit 1
 systemctl start nginx >> $logfile 2>&1 || exit 1
 
@@ -1372,7 +1373,7 @@ if [ $SECURE_LDAP = true ]; then
 	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
 	keytool -storepasswd -new ${JKS_CACERT_PASSWD} -keystore ${KS_PATH} -storepass "changeit" 
 	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${JKS_CACERT_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt >> $logfile  2>&1 &
-	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
+	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "-Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
 
 	echo "ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
 fi
@@ -1385,20 +1386,20 @@ ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
-	sleep 1 | echo -e "${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
 	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
 else # Stable release
 	# Download LDAP Extension
-	sleep 1 | echo -e "${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "Downloading LDAP Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "\n${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "\nDownloading LDAP Extension..." >> $logfile  2>&1
 	wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 
 	# Decompress LDAP Extension
-	sleep 1 | echo -e "${Bold}Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "-Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
 	tar xzvf ${GUAC_LDAP}.tar.gz >> $logfile  2>&1 && rm -f ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
 	mv ${GUAC_LDAP} extension >> $logfile  2>&1
 
 	# Copy LDAP Extension to Extensions Directory
-	sleep 1 | echo -e "${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
+	sleep 1 | echo -e "${Reset}-Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "-Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
 	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
 fi
 }
@@ -1610,7 +1611,7 @@ showmessages
 
 #####    COMPLETION MESSAGES    ########################################
 showmessages () {
-sleep 1 | echo -e "\n${Bold}Restarting all services" | pv -qL 25; echo -e "\nRestarting all services" >> $logfile  2>&1
+sleep 1 | echo -e "\n${Bold}Restarting all services..." | pv -qL 25; echo -e "\nRestarting all services..." >> $logfile  2>&1
 
 # Restart all services
 systemctl restart tomcat >> $logfile 2>&1 || exit 1
