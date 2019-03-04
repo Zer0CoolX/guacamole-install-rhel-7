@@ -1086,7 +1086,7 @@ installguacserver
 
 #####    INSTALL GUAC SERVER    ########################################
 installguacserver () {
-sleep 1 | echo -e "$\n{Bold}Compiling Guacamole Server..." | pv -qL 25; echo -ne "\nCompiling Guacamole Server Complete..." >> $logfile 2>&1
+sleep 1 | echo -e "\n${Bold}Compiling Guacamole Server..." | pv -qL 25; echo -ne "\nCompiling Guacamole Server Complete..." >> $logfile 2>&1
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
 	autoreconf -fi >> $logfile 2>&1 &
