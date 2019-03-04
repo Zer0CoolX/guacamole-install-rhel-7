@@ -340,6 +340,7 @@ options=("LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID")
 choices=()
 selections=()
 INSTALL_LDAP=false
+SECURE_LDAP=false
 INSTALL_TOTP=false
 INSTALL_DUO=false
 INSTALL_RADIUS=false
