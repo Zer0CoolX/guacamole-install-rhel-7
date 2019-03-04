@@ -21,7 +21,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_2_28" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_3_4" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
