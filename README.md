@@ -11,7 +11,7 @@ Some of the main features and benefits of using this Apache Guacamole installati
 - Ability to create a valid SSL certificate from LetsEncrypt AND keep it updated automatically. Also allows setting the key-size used by LetsEncrypt.
 - MariaDB is setup and configured as the database for user settings and basic authentication. It also automatically runs hardening on the database (by running mysql_secure_installation and automatically answering the prompts)
 - Ability to install and configure Guacamole extensions (currently limited to LDAP)
-- Ability to install a custom Guacamole extension, like my Guacamole Customize Login Page extension to change the appearance of the login page.
+- Ability to install a custom Guacamole extension, like my [Guacamole Customize Login Page extension](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) to change the appearance of the login page.
 - LDAP/LDAPS authentication via Guacamole LDAP extension and configuration prompts.
 - All SELinux contexts properly set instead of disabling SEL.
 - Firewalld configured for Guacamole.
