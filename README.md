@@ -66,7 +66,7 @@ I have based this Apache Guacamole install script on multiple other projects wit
 
 The script versioning, for now, will be based on the date of the last commit in the format "yyyy_mm_dd".
 
-I try and test the script as many ways as I can. Should you find an issue you feel is due to the script please submit an issue according to the directions here. I am also open to ideas on improving or fixing issues with the script. I am hoping that in time, after revisions and testing, that this install script for Guacamole will become the go-to for those looking to setup Guacamole on RHEL or CentOS.
+I try and test the script as many ways as I can. Should you find an issue you feel is due to the script please submit an issue according to the directions [here](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)). I am also open to ideas on improving or fixing issues with the script. I am hoping that in time, after revisions and testing, that this install script for Guacamole will become the go-to for those looking to setup Guacamole on RHEL or CentOS.
 
 Thanks
 
