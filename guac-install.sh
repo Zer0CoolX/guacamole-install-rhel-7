@@ -103,7 +103,7 @@ if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; th
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
 
 # Server LAN IP
-GUAC_SERVER_IP=$(hostname -I | tr -d " ")
+GUAC_SERVER_IP=$(hostname -I | sed 's/ .*//')
 }
 
 #####      SOURCE VARIABLES       ###################################
