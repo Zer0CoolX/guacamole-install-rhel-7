@@ -101,9 +101,6 @@ MACHINE_ARCH=`uname -m`
 if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; then MACHINE_ARCH="i386"; else ARCH=""; fi
 
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
-
-# Server LAN IP
-GUAC_SERVER_IP=$(hostname -I | sed 's/ .*//')
 }
 
 #####      SOURCE VARIABLES       ###################################
@@ -283,6 +280,12 @@ SUB_MENU_TITLE="Nginx Menu"
 
 menu_header
 
+# Server LAN IP
+GUAC_SERVER_IP=$(hostname -I | sed 's/ .*//')
+
+echo -n "${Green} Enter the LAN IP of this server (default ${GUAC_SERVER_IP}): ${Yellow}"
+	read GUAC_SERVER_IP
+	GUAC_SERVER_IP=${GUAC_SERVER_IP:-${GUAC_SERVER_IP}}
 echo -n "${Green} Enter a valid hostname or public domain such as mydomain.com (default ${DOMAIN_NAME_DEF}): ${Yellow}"
 	read DOMAIN_NAME
 	DOMAIN_NAME=${DOMAIN_NAME:-${DOMAIN_NAME_DEF}}
@@ -681,6 +684,7 @@ SUB_MENU_TITLE="Nginx Summary"
 
 menu_header
 
+echo -e "${Green} Guacamole Server LAN IP address: ${Yellow}${GUAC_SERVER_IP}"
 echo -e "${Green} Guacamole Server hostname or public domain: ${Yellow}${DOMAIN_NAME}"
 echo -e "${Green} URI path: ${Yellow}${GUAC_URIPATH}"
 echo -e "${Green} Using only 256-bit >= ciphers?: ${Yellow}${NGINX_SEC}\n"
