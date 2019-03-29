@@ -1139,10 +1139,10 @@ finishguac () {
 # Generate Guacamole Configuration File
 sleep 1 | echo -e "\n${Bold}Generating Guacamole configuration file..." | pv -qL 25; echo -e "\nGenerating Guacamole configuration file..." >> $logfile  2>&1
 echo "# Hostname and port of guacamole proxy
-guacd-hostname: ${GUACSERVER_HOSTNAME}
+guacd-hostname: localhost
 guacd-port:     ${GUAC_PORT}
 # MySQL properties
-mysql-hostname: ${GUACSERVER_HOSTNAME}
+mysql-hostname: localhost
 mysql-port: ${MYSQL_PORT}
 mysql-database: ${DB_NAME}
 mysql-username: ${DB_USER}
