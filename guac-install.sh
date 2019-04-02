@@ -1547,7 +1547,7 @@ selinuxsettings ()
 		fi
 	} &
 
-sleep 1 | s_echo "y" "${Bold}Setting SELinux Context..."; spinner
+sleep 1 | s_echo "y" "${Bold}Setting SELinux Context...    "; spinner
 
 sestatus
 
