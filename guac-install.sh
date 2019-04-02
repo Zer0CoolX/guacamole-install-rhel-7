@@ -283,7 +283,7 @@ menu_header
 # Server LAN IP
 GUAC_LAN_IP_DEF=$(hostname -I | sed 's/ .*//')
 
-echo -n "${Green} Enter the LAN IP of this server (default ${GUAC_LAN_IP}): ${Yellow}"
+echo -n "${Green} Enter the LAN IP of this server (default ${GUAC_LAN_IP_DEF}): ${Yellow}"
 	read GUAC_LAN_IP
 	GUAC_LAN_IP=${GUAC_LAN_IP:-${GUAC_LAN_IP_DEF}}
 echo -n "${Green} Enter a valid hostname or public domain such as mydomain.com (default ${DOMAIN_NAME_DEF}): ${Yellow}"
