@@ -21,7 +21,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_4_2" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_3_4" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -917,6 +917,9 @@ tput sgr0
 sum_menu
 }
 
+# Sets file descriptor to 3 for this special echo function and spinner
+exec 3>&1
+
 #####    SPINNER      ########################################
 # Shows progress as a spinning line at the end of an outputted line for the last run command
 spinner () {
@@ -940,38 +943,55 @@ echo
 tput sgr0
 }
 
+# This allows echoing to log and stdout while sending all else to log by default using exec
+s_echo () {
+	# Use first arg to determine if echo skips a line
+	case $1 in
+		# No preceeding blank line 
+		[Nn])
+			echo -e "$2" | tee -a /dev/fd/3 ;;
+		# Preceeding blank line
+		[Yy]|*)
+			echo -e "\n{$2}" | tee -a /dev/fd/3 ;;
+	esac
+}
+
 #################################################################
 #####    INSTALLATION    ########################################
 #################################################################
+
+# Used to force all stdout and stderr to the log file
+# s_echo function will be used when echos need to be displayed and logged
+exec &> $logfile
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
 clear
 tput sgr0
-echo -e "${Bold}   ----====Installing====----" && tput sgr0
+s_echo "n" "${Bold}   ----====Installing====----"
 
 # Install EPEL Repo
-sleep 1 | echo -e "\n${Bold}Searching for EPEL Repository..."; echo -e "\nSearching for EPEL Repository..." >> $logfile  2>&1
-rpm -qa | grep epel-release | tee -a $logfile
+sleep 1 | s_echo "y" "${Bold}Searching for EPEL Repository..."
+rpm -qa | grep epel-release
 RETVAL=${PIPESTATUS[1]}
 
 if [ $RETVAL -eq 0 ]; then
-	sleep 1 | echo -ne "${Reset}EPEL is installed."; echo -ne "EPEL is installed." >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}EPEL is installed.";
 else
-	rpm -Uvh http://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm >> $logfile 2>&1 &
-	sleep 1 | echo -ne "${Reset}EPEL is missing. Installing...    "; echo -ne "EPEL is missing. Installing...    " >> $logfile 2>&1 | spinner
+	rpm -Uvh http://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm &
+	sleep 1 | s_echo "n" "${Reset}EPEL is missing. Installing...    "; spinner
 fi
 
 # Install RPMFusion Repo
-sleep 1 | echo -e "\n${Bold}Searching for RPMFusion Repository..."; echo -e "\nSearching for RPMFusion Repository..." >> $logfile  2>&1
-rpm -qa | grep rpmfusion | tee -a $logfile
+sleep 1 | s_echo "y" "${Bold}Searching for RPMFusion Repository..."
+rpm -qa | grep rpmfusion
 RETVAL=${PIPESTATUS[1]}
 
 if [ $RETVAL -eq 0 ]; then
-	sleep 1 | echo -ne "${Reset}RPMFusion is installed.\n"; echo -ne "RPMFusion is installed.\n" >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}RPMFusion is installed."
 else
-	rpm -Uvh https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${MAJOR_VER}.noarch.rpm >> $logfile 2>&1 &
-	sleep 1 | echo -ne "${Reset}RPMFusion is missing. Installing...    "; echo -ne "RPMFusion is missing. Installing...    " >> $logfile 2>&1 | spinner
+	rpm -Uvh https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${MAJOR_VER}.noarch.rpm &
+	sleep 1 | s_echo "n" "${Reset}RPMFusion is missing. Installing...    "; spinner
 fi
 
 yumupdate
@@ -981,65 +1001,65 @@ yumupdate
 yumupdate () {
 # Enable repos needed if using RHEL
 if [ $OS_NAME == "RHEL" ] ; then
-	subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms" >> $logfile 2>&1 &
-	echo -ne "\n${Bold}Enabling ${OS_NAME} Repos...    ${Reset}"; echo -ne "\nEnabling ${OS_NAME} Repos...    " >> $logfile 2>&1 | spinner
+	subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms" &
+	s_echo "y" "${Bold}Enabling ${OS_NAME} Repos...    ${Reset}"; spinner
 fi
 
 # Update packages
-yum update -y >> $logfile 2>&1 &
-echo -ne "\n${Bold}Updating ${OS_NAME}, please wait...    "; echo -ne "\nUpdating ${OS_NAME}, please wait...    " >> $logfile 2>&1 | spinner
+yum update -y
+s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
 
 baseinstall
 }
 
 #####    INSTALL BASE PACKAGES    ########################################
 baseinstall () {
-sleep 1 | echo -e "\n${Bold}Installing Dependencies..."; echo -e "\nInstalling Dependencies..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Installing Dependencies..."
 
 # Install libjpeg-turbo
-rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} | tee -a $logfile
-RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} RC is: $RETVAL" >> $logfile  2>&1
+rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER}
+RETVAL=${PIPESTATUS[1]}; echo -e "rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} RC is: $RETVAL"
 
 if [ $RETVAL -eq 0 ]; then
-	sleep 1 | echo -ne "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is installed\n"; echo -ne "-libjpeg-turbo-official-${LIBJPEG_VER} is installed\n" >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is installed"
 else
-	yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm >> $logfile 2>&1 &
-	sleep 1 | echo -ne "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    "; echo -ne "-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    " >> $logfile 2>&1 | spinner
-	RETVAL=${PIPESTATUS[0]} ; echo -e "yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm RC is: $RETVAL" >> $logfile  2>&1
-	ln -vfs /opt/libjpeg-turbo/include/* /usr/include/ >> $logfile 2>&1
-	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/ >> $logfile 2>&1
+	yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm &
+	sleep 1 | s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    "; spinner
+	RETVAL=${PIPESTATUS[0]} ; echo -e "yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm RC is: $RETVAL"
+	ln -vfs /opt/libjpeg-turbo/include/* /usr/include/
+	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/
 fi
 
 # Install ffmpeg-devel
-rpm -qa | grep ffmpeg-devel | tee -a $logfile
-RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep ffmpeg-devel RC is: $RETVAL" >> $logfile  2>&1
+rpm -qa | grep ffmpeg-devel
+RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep ffmpeg-devel RC is: $RETVAL"
 if [ $RETVAL -eq 0 ]; then
-	sleep 1 | echo -e "${Reset}-ffmpeg-devel is installed\n"; echo -e "-ffmpeg-devel is installed\n" >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}-ffmpeg-devel is installed";
 else
-	yum install -y ffmpeg-devel >> $logfile 2>&1 &
-	sleep 1 | echo -ne "${Reset}-ffmpeg-devel is not installed, installing...    "; echo -ne "-ffmpeg-devel is not installed, installing...    " >> $logfile 2>&1 | spinner
-	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install -y ffmpeg-devel RC is: $RETVAL" >> $logfile  2>&1
+	yum install -y ffmpeg-devel
+	sleep 1 | s_echo "n" "${Reset}-ffmpeg-devel is not installed, installing...    "; spinner
+	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install -y ffmpeg-devel RC is: $RETVAL"
 fi
 
 # Install Required Packages
-yum install -y wget pv dialog gcc cairo-devel libpng-devel uuid-devel ffmpeg-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot >> $logfile 2>&1 &
-sleep 1 | echo -ne "\n${Bold}Installing Required Packages...    "; echo -ne "\nInstalling Required Packages...    " >> $logfile 2>&1 | spinner
-RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
+yum install -y wget pv dialog gcc cairo-devel libpng-devel uuid-devel ffmpeg-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot &
+sleep 1 | s_echo "y" "${Bold}Installing Required Packages...    "; spinner
+RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL"
 
 # Additional packages required by git
 if [ $GUAC_SOURCE == "Git" ]; then
-	yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Installing Required Packages for git...    "; echo -ne "\nInstalling Required Packages for git...    " >> $logfile 2>&1 | spinner
-	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC for git is: $RETVAL" >> $logfile  2>&1
+	yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel &
+	sleep 1 | s_echo "y" "${Bold}Installing Required Packages for git...    "; spinner
+	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC for git is: $RETVAL"
 
 	#Install Maven
-	sleep 1 | echo -e "\n${Bold}Download and setup Apache Maven for git..."; echo -e "\nDownload and setup Apache Maven for git..." >> $logfile 2>&1
+	sleep 1 | s_echo "y" "${Bold}Download and setup Apache Maven for git..."
 	cd /opt
-	wget ${MAVEN_URL}${MAVEN_BIN} >> $logfile  2>&1
-	tar -xvzf ${MAVEN_BIN} >> $logfile  2>&1
-	ln -s ${MAVEN_FN} maven >> $logfile  2>&1
-	export PATH=/opt/maven/bin:${PATH} >> $logfile  2>&1
-	rm -rf /opt/${MAVEN_BIN} >> $logfile  2>&1
+	wget ${MAVEN_URL}${MAVEN_BIN}
+	tar -xvzf ${MAVEN_BIN}
+	ln -s ${MAVEN_FN} maven
+	export PATH=/opt/maven/bin:${PATH}
+	rm -rf /opt/${MAVEN_BIN}
 	cd ~
 fi
 
@@ -1048,12 +1068,13 @@ createdirs
 
 #####    CREATE DIRS    ########################################
 createdirs () {
-sleep 1 | echo -e "\n${Bold}Creating Directories..." | pv -qL 25; echo -e "\nCreating Directories..." >> $logfile  2>&1
-rm -fr ${INSTALL_DIR} | tee -a $logfile
-mkdir -v /etc/guacamole >> $logfile  2>&1
-mkdir -vp ${INSTALL_DIR}{client,selinux} >> $logfile 2>&1 && cd ${INSTALL_DIR}
-mkdir -vp ${LIB_DIR}{extensions,lib} >> $logfile  2>&1
-mkdir -v /usr/share/tomcat/.guacamole/ >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Creating Directories..."
+rm -fr ${INSTALL_DIR}
+mkdir -v /etc/guacamole
+mkdir -vp ${INSTALL_DIR}{client,selinux}
+cd ${INSTALL_DIR}
+mkdir -vp ${LIB_DIR}{extensions,lib}
+mkdir -v /usr/share/tomcat/.guacamole/
 
 downloadguac
 }
@@ -1061,61 +1082,64 @@ downloadguac
 #####    DOWNLOAD GUAC    ########################################
 downloadguac () {
 if [ $GUAC_SOURCE == "Git" ]; then
-	sleep 1 | echo -e "\n${Bold}Cloning Guacamole packages from git for installation..." | pv -qL 25; echo -e "\nCloning Guacamole packages from git for installation..." >> $logfile  2>&1
-	git clone ${GUAC_URL}${GUAC_SERVER} >> $logfile  2>&1
-	git clone ${GUAC_URL}${GUAC_CLIENT} >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Bold}Cloning Guacamole packages from git for installation..."
+	git clone ${GUAC_URL}${GUAC_SERVER}
+	git clone ${GUAC_URL}${GUAC_CLIENT}
 else # Stable release
-	sleep 1 | echo -e "\n${Bold}Downloading Guacamole packages for installation..." | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation..." >> $logfile  2>&1
-	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz >> $logfile  2>&1
-	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war >> $logfile  2>&1
-	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz 2>&1 >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Bold}Downloading Guacamole packages for installation..."
+	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz
+	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war
+	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz
 	
 	# Decompress Guacamole Packages
-	sleep 1 | echo -e "${Reset}-Decompressing Guacamole Server Source..." | pv -qL 25; echo -e "Decompressing Guacamole Server Source..." >> $logfile  2>&1
-	tar xzvf ${GUAC_SERVER}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_SERVER}.tar.gz >> $logfile 2>&1
-	mv -v ${GUAC_SERVER} server >> $logfile 2>&1
+	sleep 1 | s_echo "n" "${Reset}-Decompressing Guacamole Server Source..."
+	tar xzvf ${GUAC_SERVER}.tar.gz
+	rm -f ${GUAC_SERVER}.tar.gz
+	mv -v ${GUAC_SERVER} server
 
-	sleep 1 | echo -e "${Reset}-Decompressing Guacamole JDBC Extension..." | pv -qL 25; echo -e "Decompressing Guacamole JDBC Extension..." >> $logfile  2>&1
-	tar xzvf ${GUAC_JDBC}.tar.gz >> $logfile 2>&1 && rm -f ${GUAC_JDBC}.tar.gz >> $logfile 2>&1
-	mv -v ${GUAC_JDBC} extension >> $logfile 2>&1
+	sleep 1 | s_echo "n" "${Reset}-Decompressing Guacamole JDBC Extension..."
+	tar xzvf ${GUAC_JDBC}.tar.gz
+	rm -f ${GUAC_JDBC}.tar.gz
+	mv -v ${GUAC_JDBC} extension
 fi
 
 # MySQL Connector
-sleep 1 | echo -e "\n${Bold}Downloading MySQL Connector package for installation..." | pv -qL 25; echo -e "\nDownloading MySQL Connector package for installation..." >> $logfile  2>&1
-wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz 2>&1 >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Downloading MySQL Connector package for installation..."
+wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz
 
-sleep 1 | echo -e "${Reset}-Decompressing MySQL Connector..." | pv -qL 25; echo -e "Decompressing MySQL Connector..." >> $logfile  2>&1
-tar xzvf ${MYSQL_CON}.tar.gz >> $logfile 2>&1 && rm -f ${MYSQL_CON}.tar.gz >> $logfile 2>&1
+sleep 1 | s_echo "n" "${Reset}-Decompressing MySQL Connector..."
+tar xzvf ${MYSQL_CON}.tar.gz
+rm -f ${MYSQL_CON}.tar.gz
 
 installguacserver
 }
 
 #####    INSTALL GUAC SERVER    ########################################
 installguacserver () {
-sleep 1 | echo -e "\n${Bold}Compiling Guacamole Server..." | pv -qL 25; echo -ne "\nCompiling Guacamole Server Complete..." >> $logfile 2>&1
+sleep 1 | s_echo "y" "${Bold}Compiling Guacamole Server..."
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
-	autoreconf -fi >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Guacamole Server Compile Prep...    " | pv -qL 25; echo -ne "\nGuacamole Server Compile Prep...    " >> $logfile 2>&1 | spinner
+	autoreconf -fi &
+	sleep 1 | s_echo "n" "${Bold}Guacamole Server Compile Prep...    "; spinner
 	
 	# Compile Guacamole Server
-	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	./configure --with-systemd-dir=/etc/systemd/system &
+	sleep 1 | s_echo "n" "${Reset}-Compiling Guacamole Server Stage 1 of 3...    "; spinner
 else # Stable release
 	cd server
 
 	# Compile Guacamole Server
-	./configure --with-systemd-dir=/etc/systemd/system >> $logfile 2>&1 &
-	sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 1 of 3...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Server Stage 1 of 3...    " >> $logfile 2>&1 | spinner
+	./configure --with-systemd-dir=/etc/systemd/system &
+	sleep 1 | s_echo "n" "${Reset}-Compiling Guacamole Server Stage 1 of 3...    "; spinner
 fi
 
 # Continue Compiling Server
-make >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 2 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 2 of 3...    " >> $logfile 2>&1 | spinner
-sleep 1 && make install >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Reset}-Compiling Guacamole Server Stage 3 of 3...    " | pv -qL 25; echo -ne "Compiling Guacamole Server Stage 3 of 3...    " >> $logfile 2>&1 | spinner
-sleep 1 && ldconfig >> $logfile 2>&1 &
-sleep 1 | echo -ne "${Bold}Compiling Guacamole Server Complete...    ${Reset}" | pv -qL 25; echo -ne "Compiling Guacamole Server Complete...    " >> $logfile 2>&1 | spinner
+make
+sleep 1 | s_echo "n" "${Reset}-Compiling Guacamole Server Stage 2 of 3...    "; spinner
+sleep 1 && make install &
+sleep 1 | s_echo "n" "${Reset}-Compiling Guacamole Server Stage 3 of 3...    "; spinner
+sleep 1 && ldconfig &
+sleep 1 | s_echo "n" "${Bold}Compiling Guacamole Server Complete...    ${Reset}"; spinner
 cd ..
 
 installguacclient
@@ -1125,14 +1149,14 @@ installguacclient
 installguacclient () {
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
-	mvn package >> $logfile 2>&1 &
-	sleep 1 | echo -ne "\n${Bold}Compiling Guacamole Client...    " | pv -qL 25; echo -ne "\nCompiling Guacamole Client...    " >> $logfile  2>&1 | spinner
-	sleep 1 | echo -e "${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "Copying Guacamole Client..." >> $logfile  2>&1
-	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
+	mvn package &
+	sleep 1 | s_echo "y" "${Bold}Compiling Guacamole Client...    "; spinner
+	sleep 1 | s_echo "y" "${Bold}Copying Guacamole Client..."
+	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war
 	cd ..
 else # Stable release
-	sleep 1 | echo -e "\n${Bold}Copying Guacamole Client..." | pv -qL 25; echo -e "\nCopying Guacamole Client..." >> $logfile  2>&1
-	mv -v client/guacamole.war ${LIB_DIR}guacamole.war >> $logfile 2>&1
+	sleep 1 | s_echo "y" "${Bold}Copying Guacamole Client..."
+	mv -v client/guacamole.war ${LIB_DIR}guacamole.war
 fi
 
 finishguac
@@ -1141,7 +1165,7 @@ finishguac
 #####    FINALIZE GUAC    ########################################
 finishguac () {
 # Generate Guacamole Configuration File
-sleep 1 | echo -e "\n${Bold}Generating Guacamole configuration file..." | pv -qL 25; echo -e "\nGenerating Guacamole configuration file..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Generating Guacamole configuration file..."
 echo "# Hostname and port of guacamole proxy
 guacd-hostname: localhost
 guacd-port:     ${GUAC_PORT}
@@ -1155,27 +1179,27 @@ mysql-default-max-connections-per-user: 0
 mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUAC_CONF}
 
 # Create Required Symlinks for Guacamole
-sleep 1 | echo -e "${Reset}Making Guacamole symbolic links..." | pv -qL 25; echo -e "Making Guacamole symbolic links..." >> $logfile  2>&1
-ln -vfs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps >> $logfile  2>&1 || exit 1
-ln -vfs /etc/guacamole/${GUAC_CONF} /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
-ln -vfs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
-ln -vfs ${LIB_DIR}extensions/ /usr/share/tomcat/.guacamole/ >> $logfile  2>&1 || exit 1
-ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp >> $logfile  2>&1 || exit 1
+sleep 1 | s_echo "y" "${Reset}Making Guacamole symbolic links..."
+ln -vfs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps || exit 1
+ln -vfs /etc/guacamole/${GUAC_CONF} /usr/share/tomcat/.guacamole/ || exit 1
+ln -vfs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ || exit 1
+ln -vfs ${LIB_DIR}extensions/ /usr/share/tomcat/.guacamole/ || exit 1
+ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp || exit 1
 
 # Install Default Extensions
-sleep 1 | echo -e "\n${Bold}Copying Guacamole JDBC Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Copying Guacamole JDBC Extension to Extensions Dir..."
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Get JDBC from compiled client
-	find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
+	find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;
 else # Stable release
 	# Copy JDBC from download
-	mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
+	mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ || exit 1
 fi
 
 # Copy MySQL Connector
-sleep 1 | echo -e "${Bold}Copying MySQL Connector to Lib Dir..." | pv -qL 25; echo -e "Copying MySQL Connector to Lib Dir..." >> $logfile  2>&1
-mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ >> $logfile  2>&1 || exit 1
+sleep 1 | s_echo "y" "${Bold}Copying MySQL Connector to Lib Dir..."
+mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ || exit 1
 
 appconfigs
 }
@@ -1183,16 +1207,16 @@ appconfigs
 #####    DATABASE/TOMCAT/JKS SETUP    ########################################
 appconfigs () {
 # Enable/Start MariaDB/MySQL Service
-sleep 1 | echo -e "\n${Bold}Enable & Start MariaDB Service..." | pv -qL 25; echo -e "\nEnable & Start MariaDB Service..." >> $logfile  2>&1
-systemctl enable mariadb.service >> $logfile  2>&1
-systemctl restart mariadb.service >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}Setting Root Password for MariaDB..." | pv -qL 25; echo -e "\nSetting Root Password for MariaDB..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Enable & Start MariaDB Service..."
+systemctl enable mariadb.service
+systemctl restart mariadb.service
+sleep 1 | s_echo "y" "${Bold}Setting Root Password for MariaDB..."
 
 # Set MariaDB/MySQL Root Password
-mysqladmin -u root password ${MYSQL_PASSWD} | tee -a $logfile || exit 1
+mysqladmin -u root password ${MYSQL_PASSWD} || exit 1
 
 # Run MariaDB/MySQL Secure Install
-sleep 1 | echo -e "${Reset}Harden MariaDB..." | pv -qL 25; echo -e "Harden MariaDB..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Reset}Harden MariaDB..."
 mysql_secure_installation <<EOF
 ${MYSQL_PASSWD}
 n
@@ -1203,22 +1227,22 @@ y
 EOF
 
 # Create Database and user
-sleep 1 | echo -e "\n${Bold}Creating Database & User for Guacamole..." | pv -qL 25; echo -e "\nCreating Database & User for Guacamole..." >> $logfile  2>&1
-mysql -u root -p${MYSQL_PASSWD} -e "CREATE DATABASE ${DB_NAME};" >> $logfile  2>&1 || exit 1
-mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWD}';" >> $logfile  2>&1 || exit 1
-mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" >> $logfile  2>&1 || exit 1
+sleep 1 | s_echo "y" "${Bold}Creating Database & User for Guacamole..."
+mysql -u root -p${MYSQL_PASSWD} -e "CREATE DATABASE ${DB_NAME};" || exit 1
+mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWD}';" || exit 1
+mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" || exit 1
 
 # Create Guacamole Table
 if [ $GUAC_SOURCE == "Git" ]; then
-	sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
-	cat guacamole-client/extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Bold}Creating Guacamole Tables..."
+	cat guacamole-client/extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME}
 else # Stable release
-	sleep 1 | echo -e "\n${Bold}Creating Guacamole Tables..." | pv -qL 25; echo -e "\nCreating Guacamole Tables..." >> $logfile  2>&1
-	cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME} >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Bold}Creating Guacamole Tables..."
+	cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME}
 fi
 
 # Setup Tomcat
-sleep 1 | echo -e "\n${Bold}Setup Tomcat Server..." | pv -qL 25; echo -e "\nSetup Tomcat Server..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Setup Tomcat Server..."
 sed -i '72i URIEncoding="UTF-8"' /etc/tomcat/server.xml
 sed -i '92i <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true" \
 							maxThreads="150" scheme="https" secure="true" \
@@ -1243,15 +1267,15 @@ sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValv
 							showServerInfo="false"/>' /etc/tomcat/server.xml
 
 # Java KeyStore Setup
-sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the Java KeyStore...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore..." >> $logfile  2>&1
-keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} ${noprompt} | tee -a $logfile
+sleep 1 | s_echo "y" "${Bold}Please complete the Wizard for the Java KeyStore...${Reset}"
+keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} ${noprompt}
 
 # Enable/Start Tomcat and Guacamole Services
-sleep 1 | echo -e "\n${Bold}Enable & Start Tomcat and Guacamole Services..." | pv -qL 25; echo -e "\nEnable & Start Tomcat and Guacamole Services..." >> $logfile  2>&1
-systemctl enable tomcat >> $logfile  2>&1
-systemctl start tomcat >> $logfile  2>&1
-systemctl enable guacd >> $logfile  2>&1
-systemctl start guacd >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Enable & Start Tomcat and Guacamole Services..."
+systemctl enable tomcat
+systemctl start tomcat
+systemctl enable guacd
+systemctl start guacd
 
 nginxinstall
 }
@@ -1259,7 +1283,7 @@ nginxinstall
 #####    NGINX INSTALL    ########################################
 nginxinstall () {
 # Install Nginx Repo
-sleep 1 | echo -e "\n${Bold}Installing Nginx repository..."; echo -e "\nInstalling Nginx repository..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Installing Nginx repository..."
 echo "[nginx]
 name=nginx repo
 baseurl=${NGINX_URL}
@@ -1267,16 +1291,16 @@ gpgcheck=0
 enabled=1" > /etc/yum.repos.d/nginx.repo
 
 # Install Nginx
-yum install -y nginx pv >> $logfile  2>&1 &
-sleep 1 | echo -ne "${Bold}Installing Nginx...    "; echo -ne "Installing Nginx...    " >> $logfile 2>&1 | spinner
-RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
+yum install -y nginx pv &
+sleep 1 | s_echo "y" "${Bold}Installing Nginx...    "; spinner
+RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL"
 
 # Backup Nginx Configuration
-sleep 1 | echo -e "${Reset}-Making Nginx Config Backup..." | pv -qL 25; echo -e "-Making Nginx Config Backup..." >> $logfile  2>&1
-mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp >> $logfile  2>&1
+sleep 1 | s_echo "n" "${Reset}-Making Nginx Config Backup..."
+mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp
 
 # Generate Nginx Conf's
-sleep 1 | echo -e "${Reset}-Generating Nginx Configurations..." | pv -qL 25; echo -e "-Generating Nginx Configurations..." >> $logfile  2>&1
+sleep 1 | s_echo "n" "${Reset}-Generating Nginx Configurations..."
 
 # HTTP Nginx Conf
 echo "server {
@@ -1347,11 +1371,11 @@ echo "	ssl_protocols TLSv1.3 TLSv1.2;
 }" >> /etc/nginx/conf.d/guacamole_ssl.conf
 
 # Enable/Start Nginx Service
-sleep 1 | echo -e "${Reset}-Enable & Start Nginx Service..." | pv -qL 25; echo -e "-Enable & Start Nginx Service..." >> $logfile  2>&1
-systemctl enable nginx >> $logfile 2>&1 || exit 1
-systemctl start nginx >> $logfile 2>&1 || exit 1
+sleep 1 | s_echo "y" "${Reset}-Enable & Start Nginx Service..."
+systemctl enable nginx || exit 1
+systemctl start nginx || exit 1
 
-sleep 1 | echo -e "${Bold}\nIf you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"; echo -e "\nIf you need to understand the Nginx configurations please go to:\n  http://nginx.org/en/docs/ \nIf you need to replace the certificate file please read first:\n  http://nginx.org/en/docs/http/configuring_https_servers.html" >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}If you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"
 
 # Call each Guac extension function for those selected
 if [ $INSTALL_LDAP = true ]; then ldapsetup; fi
@@ -1368,7 +1392,7 @@ selinuxsettings
 #####    LDAP SETUP    ########################################
 ldapsetup () {
 # Append LDAP configuration lines to guacamole.properties
-sleep 1 | echo -e "\n${Bold}Updating Guacamole configuration file for LDAP..." | pv -qL 25; echo -e "\nUpdating Guacamole configuration file for LDAP..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Updating Guacamole configuration file for LDAP..."
 echo "
 # LDAP properties
 ldap-hostname: ${LDAP_HOSTNAME}
@@ -1378,8 +1402,8 @@ ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF}
 if [ $SECURE_LDAP = true ]; then
 	KS_PATH=$(find "/usr/lib/jvm/" -name "cacerts")
 	keytool -storepasswd -new ${JKS_CACERT_PASSWD} -keystore ${KS_PATH} -storepass "changeit" 
-	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${JKS_CACERT_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt >> $logfile  2>&1 &
-	sleep 1 | echo -ne "${Reset}-Updating Guacamole configuration file for LDAPS...    " | pv -qL 25; echo -ne "-Updating Guacamole configuration file for LDAPS...    " >> $logfile  2>&1 | spinner
+	keytool -importcert -alias "ldaps" -keystore ${KS_PATH} -storepass ${JKS_CACERT_PASSWD} -file ${LDAPS_CERT_FULL} -noprompt &
+	sleep 1 | s_echo "y" "${Reset}-Updating Guacamole configuration file for LDAPS...    "; spinner
 
 	echo "ldap-encryption-method: ssl" >> /etc/guacamole/${GUAC_CONF}
 fi
@@ -1392,21 +1416,22 @@ ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
-	sleep 1 | echo -e "\n${Bold}Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
-	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Bold}Copying Guacamole LDAP Extension to Extensions Dir..."
+	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;
 else # Stable release
 	# Download LDAP Extension
-	sleep 1 | echo -e "\n${Bold}Downloading LDAP Extension..." | pv -qL 25; echo -e "\nDownloading LDAP Extension..." >> $logfile  2>&1
-	wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Bold}Downloading LDAP Extension..."
+	wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz
 
 	# Decompress LDAP Extension
-	sleep 1 | echo -e "${Reset}-Decompressing Guacamole LDAP Extension..." | pv -qL 25; echo -e "-Decompressing Guacamole LDAP Extension..." >> $logfile  2>&1
-	tar xzvf ${GUAC_LDAP}.tar.gz >> $logfile  2>&1 && rm -f ${GUAC_LDAP}.tar.gz >> $logfile  2>&1
-	mv ${GUAC_LDAP} extension >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}-Decompressing Guacamole LDAP Extension..."
+	tar xzvf ${GUAC_LDAP}.tar.gz 
+	rm -f ${GUAC_LDAP}.tar.gz
+	mv ${GUAC_LDAP} extension
 
 	# Copy LDAP Extension to Extensions Directory
-	sleep 1 | echo -e "${Reset}-Copying Guacamole LDAP Extension to Extensions Dir..." | pv -qL 25; echo -e "-Copying Guacamole LDAP Extension to Extensions Dir..." >> $logfile  2>&1
-	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
+	sleep 1 | s_echo "n" "${Reset}-Copying Guacamole LDAP Extension to Extensions Dir..."
+	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ || exit 1
 fi
 }
 
@@ -1443,128 +1468,131 @@ openidsetup () {
 #####    CUSTOM EXTENSION SETUP    ########################################
 custsetup () {
 # Copy Custom Extension to Extensions Directory
-sleep 1 | echo -e "\n${Bold}Copying Custom Guacamole Extension to Extensions Dir..." | pv -qL 25; echo -e "\nCopying Custom Guacamole Extension to Extensions Dir..." >> $logfile  2>&1
-mv -v ${CUST_FULL} ${LIB_DIR}extensions/ >> $logfile  2>&1 || exit 1
+sleep 1 | s_echo "y" "${Bold}Copying Custom Guacamole Extension to Extensions Dir..."
+mv -v ${CUST_FULL} ${LIB_DIR}extensions/ || exit 1
 }
 
 #####    SELINUX SETTINGS    ########################################
 selinuxsettings ()
 {
-sleep 1 | echo -e "\n${Bold}Setting SELinux Context..." | pv -qL 25; echo -e "\nSetting SELinux Context..." >> $logfile  2>&1
 
-# Set Booleans
-setsebool -P httpd_can_network_connect 1 >> $logfile  2>&1
-setsebool -P httpd_can_network_relay 1 >> $logfile  2>&1
-setsebool -P tomcat_can_network_connect_db 1 >> $logfile  2>&1
+	{
+		# Set Booleans
+		setsebool -P httpd_can_network_connect 1
+		setsebool -P httpd_can_network_relay 1
+		setsebool -P tomcat_can_network_connect_db 1
 
-# Guacamole Client Context
-semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}guacamole.war" >> $logfile  2>&1
-restorecon -v "${LIB_DIR}guacamole.war" >> $logfile  2>&1
+		# Guacamole Client Context
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}guacamole.war"
+		restorecon -v "${LIB_DIR}guacamole.war"
 
-# Guacamole JDBC Extension Context
-semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" >> $logfile  2>&1
-restorecon -v "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" >> $logfile  2>&1
+		# Guacamole JDBC Extension Context
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar"
+		restorecon -v "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar"
 
-# MySQL Connector Extension Context
-semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}lib/${MYSQL_CON}.jar" >> $logfile  2>&1
-restorecon -v "${LIB_DIR}lib/${MYSQL_CON}.jar" >> $logfile  2>&1
+		# MySQL Connector Extension Context
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}lib/${MYSQL_CON}.jar"
+		restorecon -v "${LIB_DIR}lib/${MYSQL_CON}.jar"
 
-# Guacamole LDAP Extension Context (If selected)
-if [ $INSTALL_LDAP = true ]; then
-	semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-	restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-fi
+		# Guacamole LDAP Extension Context (If selected)
+		if [ $INSTALL_LDAP = true ]; then
+			semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+			restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		fi
 
-# Guacamole TOTP Extension Context (If selected)
-if [ $INSTALL_TOTP = true ]; then
-	# Placehold until extension is added
-	echo "totp true"
-	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-fi
+		# Guacamole TOTP Extension Context (If selected)
+		if [ $INSTALL_TOTP = true ]; then
+			# Placehold until extension is added
+			echo "totp true"
+			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		fi
 
-# Guacamole Duo Extension Context (If selected)
-if [ $INSTALL_DUO = true ]; then
-	# Placehold until extension is added
-	echo "duo true"
-	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-fi
+		# Guacamole Duo Extension Context (If selected)
+		if [ $INSTALL_DUO = true ]; then
+			# Placehold until extension is added
+			echo "duo true"
+			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		fi
 
-# Guacamole RADIUS Extension Context (If selected)
-if [ $INSTALL_RADIUS = true ]; then
-	# Placehold until extension is added
-	echo "radius true"
-	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-fi
+		# Guacamole RADIUS Extension Context (If selected)
+		if [ $INSTALL_RADIUS = true ]; then
+			# Placehold until extension is added
+			echo "radius true"
+			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		fi
 
-# Guacamole CAS Extension Context (If selected)
-if [ $INSTALL_CAS = true ]; then
-	# Placehold until extension is added
-	echo "cas true"
-	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-fi
+		# Guacamole CAS Extension Context (If selected)
+		if [ $INSTALL_CAS = true ]; then
+			# Placehold until extension is added
+			echo "cas true"
+			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		fi
 
-# Guacamole OpenID Extension Context (If selected)
-if [ $INSTALL_OPENID = true ]; then
-	# Placehold until extension is added
-	echo "openid true"
-	#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-	#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar" >> $logfile  2>&1
-fi
+		# Guacamole OpenID Extension Context (If selected)
+		if [ $INSTALL_OPENID = true ]; then
+			# Placehold until extension is added
+			echo "openid true"
+			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		fi
 
-# Guacamole Custom Extension Context (If selected)
-if [ $INSTALL_CUST_EXT = true ]; then
-	semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${CUST_FN}" >> $logfile  2>&1
-	restorecon -v "${LIB_DIR}extensions/${CUST_FN}" >> $logfile  2>&1
-fi
+		# Guacamole Custom Extension Context (If selected)
+		if [ $INSTALL_CUST_EXT = true ]; then
+			semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${CUST_FN}"
+			restorecon -v "${LIB_DIR}extensions/${CUST_FN}"
+		fi
+	} &
 
-sestatus >> $logfile 2>&1
+sleep 1 | s_echo "y" "${Bold}Setting SELinux Context..."; spinner
+
+sestatus
 
 firewallsettings
 }
 
 #####    FIREWALL SETTINGS    ########################################
 firewallsettings () {
-sleep 1 | echo -e "\n${Bold}Setting Firewall..." | pv -qL 25; echo -e "\nSetting Firewall..." >> $logfile  2>&1
-echo -e "Take Firewall RC...\n" >> $logfile  2>&1
-echo -e "rpm -qa | grep firewalld" >> $logfile  2>&1
-rpm -qa | grep firewalld >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Setting Firewall..."
+echo -e "Take Firewall RC...\n"
+echo -e "rpm -qa | grep firewalld"
+rpm -qa | grep firewalld
 RETVALqaf=$?
-echo -e "\nservice firewalld status" >> $logfile  2>&1
-systemctl status firewalld >> $logfile  2>&1
+echo -e "\nservice firewalld status"
+systemctl status firewalld
 RETVALsf=$?
 
 if [ $RETVALsf -eq 0 ]; then
-	sleep 1 | echo -e "${Reset}-firewalld is installed and started on the system" | pv -qL 25; echo -e "...firewalld is installed and started on the system" >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}-firewalld is installed and started on the system"
 elif [ $RETVALqaf -eq 0 ]; then
-	sleep 1 | echo -e "${Reset}-firewalld is installed but not enabled or started on the system" | pv -qL 25; echo -e "-firewalld is installed but not enabled or started on the system" >> $logfile  2>&1
+	sleep 1 | s_echo "n" "${Reset}-firewalld is installed but not enabled or started on the system"
 	
 	systemctl enable firewalld
 	systemctl start firewalld
 fi
 
-echo -e "\nMaking Firewall Backup...\ncp /etc/firewalld/zones/public.xml $fwbkpfile" >> $logfile  2>&1
-cp /etc/firewalld/zones/public.xml $fwbkpfile >> $logfile 2>&1
+s_echo "y" "Making Firewall Backup of: /etc/firewalld/zones/public.xml to: $fwbkpfile"
+cp /etc/firewalld/zones/public.xml $fwbkpfile
 
 # Open HTTP and HTTPS ports
-sleep 1 | echo -e "${Reset}-Opening ports 80 and 443" | pv -qL 25; echo -e "-Opening ports 80 and 443" >> $logfile  2>&1
-echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http" >> $logfile  2>&1
-firewall-cmd --permanent --zone=public --add-service=http >> $logfile  2>&1
-echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https" >> $logfile  2>&1
-firewall-cmd --permanent --zone=public --add-service=https >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Reset}-Opening ports 80 and 443"
+echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=http"
+firewall-cmd --permanent --zone=public --add-service=http
+echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-service=https"
+firewall-cmd --permanent --zone=public --add-service=https
 
 # Open 8080 and 8443 ports. Need to review if this is required or not
-sleep 1 | echo -e "${Reset}-Opening ports 8080 and 8443" | pv -qL 25; echo -e "-Opening ports 8080 and 8443" >> $logfile  2>&1
-echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp" >> $logfile  2>&1
-firewall-cmd --permanent --zone=public --add-port=8080/tcp >> $logfile  2>&1
-echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp" >> $logfile  2>&1
-firewall-cmd --permanent --zone=public --add-port=8443/tcp >> $logfile  2>&1
+sleep 1 | s_echo "n" "${Reset}-Opening ports 8080 and 8443"
+echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp"
+firewall-cmd --permanent --zone=public --add-port=8080/tcp
+echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp"
+firewall-cmd --permanent --zone=public --add-port=8443/tcp
 
-echo -e "Reload firewall...\nfirewall-cmd --reload\n" >> $logfile  2>&1
-firewall-cmd --reload >> $logfile  2>&1
+echo -e "Reload firewall...\nfirewall-cmd --reload\n"
+firewall-cmd --reload
 
 sslcerts
 }
@@ -1576,39 +1604,39 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 	# Lets Encrypt Setup (If selected)
 	if [ $SSL_CERT_TYPE = "LetsEncrypt" ]; then
 		# Install certbot from repo
-		yum install -y certbot python2-certbot-nginx >> $logfile 2>&1 &
-		sleep 1 | echo -ne "\n${Bold}Downloading certboot tool...    " | pv -qL 25; echo -e "\nDownloading certboot tool...    " >> $logfile 2>&1 | spinner
+		yum install -y certbot python2-certbot-nginx &
+		sleep 1 | s_echo "y" "${Bold}Downloading certboot tool...    "; spinner
 		
-		sleep 1 | echo -e "\n${Bold}Generating a ${SSL_CERT_TYPE} SSL Certificate..." | pv -qL 25; echo -e "\nGenerating a ${SSL_CERT_TYPE} SSL Certificate..." >> $logfile  2>&1
+		sleep 1 | s_echo "y" "${Bold}Generating a ${SSL_CERT_TYPE} SSL Certificate..."
 		if [ $OCSP_USE = true ]; then
-			certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+			certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}"
 		else # Generate without OCSP --must-staple
-			certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}" | tee -a $logfile
+			certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}"
 		fi
 		
 		# Symlink Lets Encrypt certs so renewal does not break Nginx
-		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true >> $logfile 2>&1
-		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true >> $logfile 2>&1
-		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true >> $logfile 2>&1
+		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true
+		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true
+		ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true
 
 		#Setup automatic renewal
-		systemctl enable certbot-renew.service >> $logfile 2>&1
-		systemctl enable certbot-renew.timer >> $logfile 2>&1
-		systemctl list-timers --all | grep certbot >> $logfile 2>&1
+		systemctl enable certbot-renew.service
+		systemctl enable certbot-renew.timer
+		systemctl list-timers --all | grep certbot
 	else # Use a Self-Signed Cert
-		sleep 1 | echo -e "\n${Bold}Please complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate...${Reset}" | pv -qL 25; echo -e "\nPlease complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate..." >> $logfile  2>&1
-		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt | tee -a $logfile
+		sleep 1 | s_echo "y" "${Bold}Please complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate...${Reset}"
+		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt
 	fi
 
 	# Uncomment cert lines from Nginx guacamole_ssl.conf
-	sleep 1 | echo -e "\n${Bold}Enabling SSL Certificate in config..." | pv -qL 25; echo -e "\nEnabling SSL Certificate in config..." >> $logfile  2>&1
-	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf >> $logfile 2>&1
+	sleep 1 | s_echo "y" "${Bold}Enabling SSL Certificate in config..."
+	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf
 	HTTPS_ENABLED=true
 else # Is set to None
-	sleep 1 | echo -e "\n${Bold}Skipping SSL Certificate in config..." | pv -qL 25; echo -e "\nSkipping SSL Certificate in config..." >> $logfile  2>&1
+	sleep 1 | s_echo "y" "\n${Bold}Skipping SSL Certificate in config..."
 	
 	# Cannot force/use HTTPS without a cert, comment out redirect
-	sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf >> $logfile 2>&1
+	sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf
 	HTTPS_ENABLED=false
 fi
 
@@ -1617,17 +1645,17 @@ showmessages
 
 #####    COMPLETION MESSAGES    ########################################
 showmessages () {
-sleep 1 | echo -e "\n${Bold}Restarting all services..." | pv -qL 25; echo -e "\nRestarting all services..." >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Restarting all services..."
 
 # Restart all services
-systemctl restart tomcat >> $logfile 2>&1 || exit 1
-systemctl restart guacd >> $logfile 2>&1 || exit 1
-systemctl restart mariadb >> $logfile 2>&1 || exit 1
-systemctl restart nginx >> $logfile 2>&1 || exit 1
+systemctl restart tomcat || exit 1
+systemctl restart guacd || exit 1
+systemctl restart mariadb || exit 1
+systemctl restart nginx || exit 1
 
-sleep 1 | echo -e "\n${Bold}Finished Successfully" | pv -qL 25; echo -e "\nFinished Successfully" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}-Log file: ${logfile}" | pv -qL 25; echo -e "Log file: ${logfile}" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}-Firewall backup file: ${fwbkpfile}"; echo -e "Firewall backup file: ${fwbkpfile}" >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}Finished Successfully"
+sleep 1 | s_echo "n" "${Reset}-Log file: ${logfile}"
+sleep 1 | s_echo "n" "${Reset}-Firewall backup file: ${fwbkpfile}"
 
 # Determine Guac server URL for web GUI
 if [ ${DOMAIN_NAME} = "localhost" ]; then
@@ -1643,14 +1671,14 @@ else # HTTPS not used
 	HTTPS_MSG=". Without a cert, HTTPS is not available."
 fi
 
-sleep 1 | echo -e "\n${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}"; echo -e "\nTo manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}" >> $logfile  2>&1
-sleep 1 | echo -e "${Reset}The default username and password are: ${Bold}${Red}guacadmin${Reset}"; echo -e "The default username and password are: guacadmin" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Red}Its highly recommended to create an admin account in Guacamole and disable the default asap!${Reset}"; echo -e "\nIts highly recommended to create an admin account in Guacamole and disable the default asap!" >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}"
+sleep 1 | s_echo "y" "${Reset}The default username and password are: ${Bold}${Red}guacadmin${Reset}"
+sleep 1 | s_echo "y" "${Red}Its highly recommended to create an admin account in Guacamole and disable the default asap!${Reset}"
 if [ $SECURE_LDAP = true ]; then
-	sleep 1 | echo -e "$\n{Red}Its highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS${Reset}"; echo -e "\nIts highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS." >> $logfile  2>&1
+	sleep 1 | s_echo "y" "${Red}Its highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS${Reset}"
 fi
-sleep 1 | echo -e "\n${Green}While not required, you should consider a reboot after verifying install${Reset}" | pv -qL 25; echo -e "\nWhile not required, you should consider a reboot after verifying install" >> $logfile  2>&1
-sleep 1 | echo -e "\n${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"; echo -e "\nContact ${ADM_POC} with any questions or concerns regarding this script\n" >> $logfile  2>&1
+sleep 1 | s_echo "y" "${Green}While not required, you should consider a reboot after verifying install${Reset}"
+sleep 1 | s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"
 
 tput sgr0
 exit 1
