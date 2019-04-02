@@ -281,11 +281,11 @@ SUB_MENU_TITLE="Nginx Menu"
 menu_header
 
 # Server LAN IP
-GUAC_SERVER_IP=$(hostname -I | sed 's/ .*//')
+GUAC_LAN_IP_DEF=$(hostname -I | sed 's/ .*//')
 
-echo -n "${Green} Enter the LAN IP of this server (default ${GUAC_SERVER_IP}): ${Yellow}"
-	read GUAC_SERVER_IP
-	GUAC_SERVER_IP=${GUAC_SERVER_IP:-${GUAC_SERVER_IP}}
+echo -n "${Green} Enter the LAN IP of this server (default ${GUAC_LAN_IP}): ${Yellow}"
+	read GUAC_LAN_IP
+	GUAC_LAN_IP=${GUAC_LAN_IP:-${GUAC_LAN_IP_DEF}}
 echo -n "${Green} Enter a valid hostname or public domain such as mydomain.com (default ${DOMAIN_NAME_DEF}): ${Yellow}"
 	read DOMAIN_NAME
 	DOMAIN_NAME=${DOMAIN_NAME:-${DOMAIN_NAME_DEF}}
@@ -684,7 +684,7 @@ SUB_MENU_TITLE="Nginx Summary"
 
 menu_header
 
-echo -e "${Green} Guacamole Server LAN IP address: ${Yellow}${GUAC_SERVER_IP}"
+echo -e "${Green} Guacamole Server LAN IP address: ${Yellow}${GUAC_LAN_IP}"
 echo -e "${Green} Guacamole Server hostname or public domain: ${Yellow}${DOMAIN_NAME}"
 echo -e "${Green} URI path: ${Yellow}${GUAC_URIPATH}"
 echo -e "${Green} Using only 256-bit >= ciphers?: ${Yellow}${NGINX_SEC}\n"
@@ -1235,7 +1235,7 @@ sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.RemoteIpValve" 
 							remoteIpProxiesHeader="x-forwarded-by" \
 							protocolHeader="x-forwarded-proto" />' /etc/tomcat/server.xml
 
-sed -i "s/GUAC_SERVER_IP/${GUAC_SERVER_IP}/g" /etc/tomcat/server.xml
+sed -i "s/GUAC_SERVER_IP/${GUAC_LAN_IP}/g" /etc/tomcat/server.xml
 
 # Add ErrorReportingValve to prevent displaying tomcat info on error pages
 sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValve" \
@@ -1286,7 +1286,7 @@ echo "server {
 	return 301 https://\$host\$request_uri;
 
 	location ${GUAC_URIPATH} {
-	proxy_pass http://${GUAC_SERVER_IP}:8080/guacamole/;
+	proxy_pass http://${GUAC_LAN_IP}:8080/guacamole/;
 	proxy_buffering off;
 	proxy_http_version 1.1;
 	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -1334,7 +1334,7 @@ echo "	ssl_protocols TLSv1.3 TLSv1.2;
 	add_header X-XSS-Protection \"1; mode=block\";
 
 	location ${GUAC_URIPATH} {
-	proxy_pass http://${GUAC_SERVER_IP}:8080/guacamole/;
+	proxy_pass http://${GUAC_LAN_IP}:8080/guacamole/;
 	proxy_buffering off;
 	proxy_http_version 1.1;
 	proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -1631,7 +1631,7 @@ sleep 1 | echo -e "${Reset}-Firewall backup file: ${fwbkpfile}"; echo -e "Firewa
 
 # Determine Guac server URL for web GUI
 if [ ${DOMAIN_NAME} = "localhost" ]; then
-	GUAC_URL=${GUAC_SERVER_IP}${GUAC_URIPATH}
+	GUAC_URL=${GUAC_LAN_IP}${GUAC_URIPATH}
 else # Not localhost
 	GUAC_URL=${DOMAIN_NAME}${GUAC_URIPATH}
 fi
