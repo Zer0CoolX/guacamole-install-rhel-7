@@ -974,7 +974,7 @@ s_echo () {
 
 # Used to force all stdout and stderr to the log file
 # s_echo function will be used when echos need to be displayed and logged
-exec &> ${logfile}
+exec &> "${logfile}"
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
