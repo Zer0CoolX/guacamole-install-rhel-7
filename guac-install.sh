@@ -922,6 +922,15 @@ tput sgr0
 sum_menu
 }
 
+#####    CONTINUE EXECUTION   ################################
+db_menu
+pw_menu
+ssl_cert_type_menu
+nginx_menu
+ext_menu
+cust_ext_menu
+sum_menu
+
 # Sets file descriptor to 3 for this special echo function and spinner
 exec 3>&1
 
@@ -1688,12 +1697,3 @@ sleep 1 | s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any question
 tput sgr0
 exit 1
 }
-
-#####    CONTINUE EXECUTION   ################################
-db_menu
-pw_menu
-ssl_cert_type_menu
-nginx_menu
-ext_menu
-cust_ext_menu
-sum_menu
