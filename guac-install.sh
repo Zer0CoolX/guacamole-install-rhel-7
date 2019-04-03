@@ -982,7 +982,6 @@ exec &> "${logfile}"
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
-clear
 tput sgr0
 s_echo "n" "${Bold}   ----====Installing====----"
 
@@ -1663,11 +1662,15 @@ showmessages
 showmessages () {
 sleep 1 | s_echo "y" "${Bold}Restarting all services..."
 
-# Restart all services
+# Restart all services and log status
 systemctl restart tomcat || exit 1
+systemctl status tomcat
 systemctl restart guacd || exit 1
+systemctl status guacd
 systemctl restart mariadb || exit 1
+systemctl status mariadb
 systemctl restart nginx || exit 1
+systemctl status nginx
 
 sleep 1 | s_echo "y" "${Bold}Finished Successfully"
 sleep 1 | s_echo "n" "${Reset}-Log file: ${logfile}"
@@ -1702,5 +1705,6 @@ exit 1
 
 #####    INSTALL EXECUTION   ################################
 if [ ${RUN_INSTALL} = true ]; then
+	clear
 	reposinstall
 fi
