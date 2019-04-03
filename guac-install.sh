@@ -992,7 +992,7 @@ rpm -qa | grep epel-release
 RETVAL=${PIPESTATUS[1]}
 
 if [ $RETVAL -eq 0 ]; then
-	sleep 1 | s_echo "n" "${Reset}EPEL is installed.";
+	sleep 1 | s_echo "n" "${Reset}EPEL is installed."
 else
 	rpm -Uvh http://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm &
 	sleep 1 | s_echo "n" "${Reset}EPEL is missing. Installing...    "; spinner
@@ -1022,7 +1022,7 @@ if [ $OS_NAME == "RHEL" ] ; then
 fi
 
 # Update packages
-yum update -y
+yum update -y &
 s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
 
 baseinstall
@@ -1052,7 +1052,7 @@ RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep ffmpeg-devel RC is: $RETVAL"
 if [ $RETVAL -eq 0 ]; then
 	sleep 1 | s_echo "n" "${Reset}-ffmpeg-devel is installed";
 else
-	yum install -y ffmpeg-devel
+	yum install -y ffmpeg-devel &
 	sleep 1 | s_echo "n" "${Reset}-ffmpeg-devel is not installed, installing...    "; spinner
 	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install -y ffmpeg-devel RC is: $RETVAL"
 fi
@@ -1150,7 +1150,7 @@ else # Stable release
 fi
 
 # Continue Compiling Server
-make
+make &
 sleep 1 | s_echo "n" "${Reset}-Compiling Guacamole Server Stage 2 of 3...    "; spinner
 sleep 1 && make install &
 sleep 1 | s_echo "n" "${Reset}-Compiling Guacamole Server Stage 3 of 3...    "; spinner
