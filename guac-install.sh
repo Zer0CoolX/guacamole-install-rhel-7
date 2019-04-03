@@ -160,6 +160,11 @@ done
 tput sgr0
 }
 
+#####    START EXECUTION   ###################################
+init_vars
+src_menu
+src_vars
+
 #####      MENU HEADERS       ###################################
 # Called by each menu and summary menu to display the dynamic header
 menu_header () {
@@ -1684,10 +1689,7 @@ tput sgr0
 exit 1
 }
 
-#####    START    ########################################
-init_vars
-src_menu
-src_vars
+#####    CONTINUE EXECUTION   ################################
 db_menu
 pw_menu
 ssl_cert_type_menu
