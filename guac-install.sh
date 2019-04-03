@@ -950,12 +950,12 @@ while kill -0 $pid 2>/dev/null
 do
 	for i in "${spin[@]}"
 	do
-		echo -ne "\b\b\b${Bold}[${Green}$i${Reset}${Bold}]"
+		echo -ne "\b\b\b${Bold}[${Green}$i${Reset}${Bold}]" >&3
 		sleep .5
 	done
 done
 
-echo
+echo >&3
 tput sgr0
 }
 
