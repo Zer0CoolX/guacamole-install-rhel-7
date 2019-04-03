@@ -1702,5 +1702,5 @@ exit 1
 
 #####    INSTALL EXECUTION   ################################
 if [ ${RUN_INSTALL} = true ]; then
-	repoinstall
+	reposinstall
 fi
