@@ -952,7 +952,7 @@ s_echo () {
 			echo -e "$2" | tee -a /dev/fd/3 ;;
 		# Preceeding blank line
 		[Yy]|*)
-			echo -e "\n{$2}" | tee -a /dev/fd/3 ;;
+			echo -e "\n${2}" | tee -a /dev/fd/3 ;;
 	esac
 }
 
@@ -962,7 +962,7 @@ s_echo () {
 
 # Used to force all stdout and stderr to the log file
 # s_echo function will be used when echos need to be displayed and logged
-exec &> $logfile
+exec &> ${logfile}
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
