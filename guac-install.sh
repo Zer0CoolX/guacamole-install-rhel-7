@@ -1699,12 +1699,12 @@ fi
 sleep 1 | s_echo "y" "${Green}While not required, you should consider a reboot after verifying install${Reset}"
 sleep 1 | s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"
 
-tput sgr0
+tput sgr0 >&3
 exit 1
 }
 
 #####    INSTALL EXECUTION   ################################
 if [ ${RUN_INSTALL} = true ]; then
-	clear
+	clear >&3
 	reposinstall
 fi
