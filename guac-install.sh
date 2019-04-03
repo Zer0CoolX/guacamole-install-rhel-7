@@ -82,6 +82,18 @@ Rev=`tput smso`        #${Rev}
 Reset=`tput sgr0`      #${Reset}
 ##### END UNIVERSAL VARS   ###################################
 
+#####    START    ########################################
+init_vars
+src_menu
+src_vars
+db_menu
+pw_menu
+ssl_cert_type_menu
+nginx_menu
+ext_menu
+cust_ext_menu
+sum_menu
+
 #####    INITIALIZE COMMON VARS    ###################################
 # ONLY CHANGE IF NOT WORKING #
 init_vars () {
@@ -1683,15 +1695,3 @@ sleep 1 | s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any question
 tput sgr0
 exit 1
 }
-
-#####    START    ########################################
-init_vars
-src_menu
-src_vars
-db_menu
-pw_menu
-ssl_cert_type_menu
-nginx_menu
-ext_menu
-cust_ext_menu
-sum_menu
