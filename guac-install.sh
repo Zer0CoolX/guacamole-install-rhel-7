@@ -160,6 +160,11 @@ done
 tput sgr0
 }
 
+#####    START EXECUTION   ###################################
+init_vars
+src_menu
+src_vars
+
 #####      MENU HEADERS       ###################################
 # Called by each menu and summary menu to display the dynamic header
 menu_header () {
@@ -573,6 +578,8 @@ SUB_MENU_TITLE="Summary Menu"
 
 menu_header
 
+RUN_INSTALL=false
+
 # List categories/menus to review or change
 echo -e "${Green} Select a category to review selections: ${Yellow}"
 PS3="${Green} Enter the number of the category to review: ${Yellow}"
@@ -586,7 +593,7 @@ do
 		"Nginx") sum_nginx; break;;
 		"Standard Extensions") sum_ext; break;;
 		"Custom Extension") sum_cust_ext; break;;
-		"Accept and Run Installation") reposinstall; break;;
+		"Accept and Run Installation") RUN_INSTALL=true; break;;
 		"Cancel and Start Over") ScriptLoc=$(readlink -f "$0"); exec "$ScriptLoc"; break;;
 		"Cancel and Exit Script") tput sgr0; exit 1; break;;
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the category to review.";;
@@ -916,6 +923,15 @@ done
 tput sgr0
 sum_menu
 }
+
+#####    CONTINUE EXECUTION   ################################
+db_menu
+pw_menu
+ssl_cert_type_menu
+nginx_menu
+ext_menu
+cust_ext_menu
+sum_menu
 
 # Sets file descriptor to 3 for this special echo function and spinner
 exec 3>&1
@@ -1684,15 +1700,7 @@ tput sgr0
 exit 1
 }
 
-exec <&-
-#####    START    ########################################
-init_vars
-src_menu
-src_vars
-db_menu
-pw_menu
-ssl_cert_type_menu
-nginx_menu
-ext_menu
-cust_ext_menu
-sum_menu
+#####    INSTALL EXECUTION   ################################
+if [ ${RUN_INSTALL} = true ]; then
+	repoinstall
+fi
