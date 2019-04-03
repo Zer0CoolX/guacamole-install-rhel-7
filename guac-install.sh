@@ -11,7 +11,7 @@
 # 	-Read all documentation (wiki) prior to using this script!
 #	-Test prior to deploying on a production system!
 #
-##### CHECK FOR SUDO or ROOT ################################## 
+##### CHECK FOR SUDO or ROOT ##################################
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
 
 ##########################################################
@@ -1282,8 +1282,8 @@ sed -i '/<\/Host>/i\<Valve className="org.apache.catalina.valves.ErrorReportValv
 							showServerInfo="false"/>' /etc/tomcat/server.xml
 
 # Java KeyStore Setup
-sleep 1 | s_echo "y" "${Bold}Please complete the Wizard for the Java KeyStore...${Reset}"
-keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} ${noprompt}
+keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} -noprompt -dname "CN='', OU='', O='', L='', S='', C=''" &
+sleep 1 | s_echo "y" "${Bold}Please complete the Wizard for the Java KeyStore...${Reset}"; spinner
 
 # Enable/Start Tomcat and Guacamole Services
 sleep 1 | s_echo "y" "${Bold}Enable & Start Tomcat and Guacamole Services..."
@@ -1639,8 +1639,8 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		systemctl enable certbot-renew.timer
 		systemctl list-timers --all | grep certbot
 	else # Use a Self-Signed Cert
-		sleep 1 | s_echo "y" "${Bold}Please complete the Wizard for the ${SSL_CERT_TYPE} SSL Certificate...${Reset}"
-		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt
+		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt -subj "/C=''/ST=''/L=''/O=''/OU=''/CN=''" &
+		sleep 1 | s_echo "y" "${Bold}Generating ${SSL_CERT_TYPE} SSL Certificate...${Reset}"; spinner
 	fi
 
 	# Uncomment cert lines from Nginx guacamole_ssl.conf
