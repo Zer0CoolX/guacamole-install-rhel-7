@@ -955,7 +955,6 @@ do
 	done
 done
 
-echo >&3
 tput sgr0
 }
 
@@ -965,10 +964,10 @@ s_echo () {
 	case $1 in
 		# No preceeding blank line 
 		[Nn])
-			echo -e "$2" | tee -a /dev/fd/3 ;;
+			echo -ne "\n${2}" | tee -a /dev/fd/3 ;;
 		# Preceeding blank line
 		[Yy]|*)
-			echo -e "\n${2}" | tee -a /dev/fd/3 ;;
+			echo -ne "\n\n${2}" | tee -a /dev/fd/3 ;;
 	esac
 }
 
