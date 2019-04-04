@@ -1698,6 +1698,9 @@ fi
 s_echo "y" "${Green}While not required, you should consider a reboot after verifying install${Reset}"
 s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"
 
+# Log cleanup to remove escape sequences caused by tput for formatting text
+sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
+
 tput sgr0 >&3
 exit 1
 }
