@@ -21,7 +21,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_4_2" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_4" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -43,7 +43,7 @@ SSL_KEY_SIZE_DEF="4096" # Default Self-signed SSL key-size
 SSL_CERT_TYPE="Self-signed"
 
 # Nginx defualt security level
-NGINX_SEC="High"
+NGINX_SEC=false
 
 # Default Credentials
 MYSQL_PASSWD_DEF="guacamole" # Default MySQL/MariaDB root password
@@ -69,17 +69,18 @@ MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
 LIBJPEG_TURBO="libjpeg-turbo-official-${LIBJPEG_VER}"
 
 # Formats
-Black=`tput setaf 0`   #${Black}
-Red=`tput setaf 1`     #${Red}
-Green=`tput setaf 2`   #${Green}
-Yellow=`tput setaf 3`  #${Yellow}
-Blue=`tput setaf 4`    #${Blue}
-Magenta=`tput setaf 5` #${Magenta}
-Cyan=`tput setaf 6`    #${Cyan}
-White=`tput setaf 7`   #${White}
-Bold=`tput bold`       #${Bold}
-Rev=`tput smso`        #${Rev}
-Reset=`tput sgr0`      #${Reset}
+Black=`tput setaf 0`	#${Black}
+Red=`tput setaf 1`	#${Red}
+Green=`tput setaf 2`	#${Green}
+Yellow=`tput setaf 3`	#${Yellow}
+Blue=`tput setaf 4`	#${Blue}
+Magenta=`tput setaf 5`	#${Magenta}
+Cyan=`tput setaf 6`	#${Cyan}
+White=`tput setaf 7`	#${White}
+Bold=`tput bold`	#${Bold}
+UndrLn=`tput sgr 0 1`	#${UndrLn}
+Rev=`tput smso`		#${Rev}
+Reset=`tput sgr0`	#${Reset}
 ##### END UNIVERSAL VARS   ###################################
 
 #####    INITIALIZE COMMON VARS    ###################################
@@ -207,7 +208,7 @@ echo -n "${Green} Enter the root password for MariaDB: ${Yellow}"
 echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
 	read DB_PASSWD
 	DB_PASSWD=${DB_PASSWD:-${DB_PASSWD_DEF}}
-echo -n "${Green} Enter the Guacamole Java KeyStore password: ${Yellow}"
+echo -n "${Green} Enter the Guacamole Java KeyStore password, must be 6 or more characters: ${Yellow}"
 	read JKS_GUAC_PASSWD
 	JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
 
@@ -256,7 +257,7 @@ echo -n "${Green} Enter the Let's Encrypt key-size to use (default ${LE_KEY_SIZE
 while true; do
 	read -p "${Green} Use OCSP Stapling (default yes): ${Yellow}" yn
 	case $yn in
-		[Yy]|""* ) OCSP_USE=true; break;;
+		[Yy]*|"" ) OCSP_USE=true; break;;
 		[Nn]* ) OCSP_USE=false; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 		esac
@@ -435,7 +436,7 @@ if [ $SECURE_LDAP = true ]; then
 		fi
 	done
 
-	echo -n "${Green} Set the password for the CACert Java Keystore (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
+	echo -n "${Green} Set the password for the CACert Java Keystore, must be 6 or more characters (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
 		read JKS_CACERT_PASSWD
 		JKS_CACERT_PASSWD=${JKS_CACERT_PASSWD:-${JKS_CACERT_PASSWD_DEF}}
 else # Use LDAP not LDAPS
