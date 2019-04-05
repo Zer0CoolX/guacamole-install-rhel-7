@@ -985,7 +985,7 @@ exec &> "${logfile}"
 #####    REPOS INSTALL      ########################################
 reposinstall () {
 s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ====----"
-s_echo "y" "Installing Repos..."
+s_echo "y" "Installing Repos"
 
 # Install EPEL Repo
 rpm -qa | grep epel-release
@@ -1030,7 +1030,7 @@ baseinstall
 
 #####    INSTALL BASE PACKAGES    ########################################
 baseinstall () {
-s_echo "y" "${Bold}Installing Required Dependencies..."
+s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install libjpeg-turbo
 rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER}
@@ -1101,7 +1101,7 @@ downloadguac
 
 #####    DOWNLOAD GUAC    ########################################
 downloadguac () {
-s_echo "y" "Downloading Guacamole Packages..."
+s_echo "y" "${Bold}Downloading Guacamole Packages"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	git clone ${GUAC_URL}${GUAC_SERVER} &
@@ -1119,7 +1119,7 @@ else # Stable release
 	downloadmysqlconn
 	
 	# Decompress Guacamole Packages
-	s_echo "y" "${Bold}Decompressing Guacamole Packages..."
+	s_echo "y" "${Bold}Decompressing Guacamole Packages"
 
 	{
 		tar xzvf ${GUAC_SERVER}.tar.gz
@@ -1155,7 +1155,7 @@ installguacserver
 
 #####    INSTALL GUAC SERVER    ########################################
 installguacserver () {
-s_echo "y" "${Bold}Install Guacamole Server..."
+s_echo "y" "${Bold}Install Guacamole Server"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
@@ -1181,7 +1181,7 @@ installguacclient
 
 #####    INSTALL GUAC CLIENT    ########################################
 installguacclient () {
-s_echo "y" "${Bold}Install Guacamole Client..."
+s_echo "y" "${Bold}Install Guacamole Client"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	{
@@ -1205,7 +1205,7 @@ finishguac
 
 #####    FINALIZE GUAC    ########################################
 finishguac () {
-s_echo "y" "${Bold}Setup Guacamole..."
+s_echo "y" "${Bold}Setup Guacamole"
 
 # Generate Guacamole Configuration File
 echo "# Hostname and port of guacamole proxy
@@ -1250,7 +1250,7 @@ appconfigs
 
 #####    DATABASE/TOMCAT/JKS SETUP    ########################################
 appconfigs () {
-s_echo "y" "${Bold}Configure MariaDB..."
+s_echo "y" "${Bold}Configure MariaDB"
 
 # Enable/Start MariaDB/MySQL Service
 {
@@ -1295,7 +1295,7 @@ s_echo "n" "-Creating database & user for Guacamole...    "; spinner
 s_echo "n" "-Creating Guacamole Tables...    "; spinner
 
 # Setup Tomcat
-s_echo "y" "${Bold}Setup Tomcat Server..."
+s_echo "y" "${Bold}Setup Tomcat Server"
 
 {
 	sed -i '72i URIEncoding="UTF-8"' /etc/tomcat/server.xml
@@ -1340,14 +1340,14 @@ s_echo "y" "${Bold}Configuring the Java KeyStore...    "; spinner
 	systemctl enable guacd
 	systemctl restart guacd
 } &
-s_echo "y" "Enable & Start Tomcat and Guacamole Services...    "; spinner
+s_echo "y" "${Bold}Enable & Start Tomcat and Guacamole Services...    "; spinner
 
 nginxinstall
 }
 
 #####    NGINX INSTALL    ########################################
 nginxinstall () {
-s_echo "y" "Install Nginx..."
+s_echo "y" "${Bold}Install Nginx"
 
 # Install Nginx Repo
 echo "[nginx]
@@ -1363,7 +1363,7 @@ s_echo "n" "-Installing Nginx...    "; spinner
 RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL"
 
 # Generate Nginx Conf's
-s_echo "y" "${Bold}Nginx Configurations..."
+s_echo "y" "${Bold}Nginx Configurations"
 
 # Backup Nginx Configuration
 mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp
@@ -1464,7 +1464,7 @@ selinuxsettings
 
 #####    LDAP SETUP    ########################################
 ldapsetup () {
-s_echo "y" "${Bold}Setup the LDAP Extension..."
+s_echo "y" "${Bold}Setup the LDAP Extension"
 
 # Append LDAP configuration lines to guacamole.properties
 echo "
@@ -1634,7 +1634,7 @@ firewallsettings
 
 #####    FIREWALL SETTINGS    ########################################
 firewallsettings () {
-s_echo "y" "${Bold}Firewall Configuration..."
+s_echo "y" "${Bold}Firewall Configuration"
 
 echo -e "Take Firewall RC...\n"
 echo -e "rpm -qa | grep firewalld"
@@ -1653,7 +1653,7 @@ fi
 s_echo "n" "${Reset}-firewalld is installed and started on the system...    "; spinner
 
 cp /etc/firewalld/zones/public.xml $fwbkpfile &
-s_echo "n" "-Backing up firewall config: /etc/firewalld/zones/public.xml to: $fwbkpfile    "; spinner
+s_echo "n" "-Backing up firewall public zone to: $fwbkpfile    "; spinner
 
 # Open HTTP and HTTPS ports
 {
@@ -1682,7 +1682,7 @@ sslcerts
 
 #####    SSL CERTIFICATE        ########################################
 sslcerts () {
-s_echo "y" "${Bold}SSL Certificate Configuration..."
+s_echo "y" "${Bold}SSL Certificate Configuration"
 
 if [ $SSL_CERT_TYPE != "None" ]; then
 	# Lets Encrypt Setup (If selected)
@@ -1741,7 +1741,7 @@ showmessages
 
 #####    COMPLETION MESSAGES    ########################################
 showmessages () {
-s_echo "y" "${Bold}Services..."
+s_echo "y" "${Bold}Services"
 
 {
 # Restart all services and log status
@@ -1756,8 +1756,10 @@ systemctl status nginx
 } &
 s_echo "n" "${Reset}-Restarting all services...    "; spinner
 
+s_echo "y" "${Bold}{Green}##### Installation Complete! #####${Reset}"
+
 # s_echo "y" "${Bold}Finished Successfully"
-s_echo "y" "${Bold}Log Files..."
+s_echo "y" "${Bold}Log Files"
 s_echo "n" "${Reset}-Log file: ${logfile}"
 s_echo "n" "-firewall backup file: ${fwbkpfile}"
 
@@ -1770,12 +1772,12 @@ fi
 
 # Determine if HTTPS is used or not
 if [ ${HTTPS_ENABLED} = true ]; then
-	HTTPS_MSG=" or https://${GUAC_URL}"
+	HTTPS_MSG="${Bold} or ${Reset}https://${GUAC_URL}"
 else # HTTPS not used
-	HTTPS_MSG=". Without a cert, HTTPS is not available."
+	HTTPS_MSG="${Bold}. Without a cert, HTTPS is not available."
 fi
 
-s_echo "y" "${Bold}To manage Guacamole go to http://${GUAC_URL}${HTTPS_MSG}"
+s_echo "y" "${Bold}To manage Guacamole go to ${Reset}http://${GUAC_URL}${HTTPS_MSG}"
 s_echo "n" "${Reset}-The default username and password are: ${Red}guacadmin"
 
 if [ $INSTALL_LDAP = false ]; then
