@@ -984,7 +984,7 @@ exec &> "${logfile}"
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
-s_echo "n" "${Bold}   ----====Installing====----"
+s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ====----"
 s_echo "y" "Installing Repos..."
 
 # Install EPEL Repo
