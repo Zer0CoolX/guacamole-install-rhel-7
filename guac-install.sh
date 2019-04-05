@@ -1258,7 +1258,7 @@ s_echo "y" "${Bold}Configure MariaDB..."
 s_echo "n" "${Reset}-Enable & start MariaDB service...    "; spinner
 
 # Set MariaDB/MySQL Root Password
-mysqladmin -u root password ${MYSQL_PASSWD} & || exit 1
+mysqladmin -u root password ${MYSQL_PASSWD} &
 s_echo "n" "-Setting root password for MariaDB...    "; spinner
 
 # Run MariaDB/MySQL Secure Install
