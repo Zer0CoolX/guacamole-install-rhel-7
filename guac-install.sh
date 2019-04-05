@@ -956,7 +956,7 @@ do
 	done
 done
 
-echo -ne "\b\b\b${Bold}[${Green}$-done-${Reset}${Bold}]" >&3
+echo -ne "\b\b\b\b\b${Bold}[${Green}$-done-${Reset}${Bold}]" >&3
 }
 
 # This allows echoing to log and stdout while sending all else to log by default using exec
