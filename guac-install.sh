@@ -1508,7 +1508,7 @@ else # Stable release
 	s_echo "n" "-Decompressing Guacamole LDAP Extension...    "; spinner
 
 	# Copy LDAP Extension to Extensions Directory
-	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ & || exit 1
+	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ &
 	s_echo "n" "-Moving Guacamole LDAP extension to extensions dir...    "; spinner
 fi
 }
@@ -1546,7 +1546,7 @@ openidsetup () {
 #####    CUSTOM EXTENSION SETUP    ########################################
 custsetup () {
 # Copy Custom Extension to Extensions Directory
-mv -v ${CUST_FULL} ${LIB_DIR}extensions/ & || exit 1
+mv -v ${CUST_FULL} ${LIB_DIR}extensions/ &
 s_echo "y" "${Bold}Copying Custom Guacamole Extension to Extensions Dir...    "; spinner
 }
 
