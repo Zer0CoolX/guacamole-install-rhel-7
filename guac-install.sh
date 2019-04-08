@@ -1112,7 +1112,7 @@ s_echo "y" "${Bold}Downloading Guacamole Packages"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	git clone ${GUAC_URL}${GUAC_SERVER} &
-	s_echo "n" "-Cloning Guacamole Server package from git...    "; spinner
+	s_echo "n" "${Reset}-Cloning Guacamole Server package from git...    "; spinner
 	git clone ${GUAC_URL}${GUAC_CLIENT} &
 	s_echo "n" "-Cloning Guacamole Client package from git...    "; spinner
 	downloadmysqlconn
@@ -1296,7 +1296,7 @@ s_echo "y" "${Bold}Setup Tomcat Server"
 							URIEncoding="UTF-8" />' /etc/tomcat/server.xml
 	sed -i "s/JKS_GUAC_PASSWD/${JKS_GUAC_PASSWD}/g" /etc/tomcat/server.xml
 } &
-s_echo "n" "${Reset}-Base Tomcat configure...    "; spinner
+s_echo "n" "${Reset}-Base Tomcat configuration...    "; spinner
 
 {
 # Tomcat RemoteIpValve (to pass remote host IP's from proxy to tomcat. Allows Guacamole to log remote host IPs)
