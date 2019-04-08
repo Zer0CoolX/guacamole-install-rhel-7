@@ -1768,17 +1768,20 @@ fi
 s_echo "y" "${Bold}To manage Guacamole go to ${Reset}http://${GUAC_URL}${HTTPS_MSG}"
 s_echo "n" "${Reset}-The default username and password are: ${Red}guacadmin"
 
+s_echo "y" "Important Recommendations${Reset}"
+
 if [ $INSTALL_LDAP = false ]; then
-	s_echo "y" "${Bold}Its highly recommended to create an admin account in Guacamole and delete/disable the default asap!${Reset}"
+	s_echo "n" "-Its highly recommended to create an admin account in Guacamole and delete/disable the default asap!"
 else
-	s_echo "y" "${Bold}You should assign at least one AD/LDAP user to have full admin, see the directions on how to at:${Reset}"
-	s_echo "n" "${Green}https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/LDAP-or-LDAPS-Authentication#important-manual-steps"
-	s_echo "y" "${Bold}${Red}Afterwards, it is highly recommended to delete/disable the default admin account and create a uniquely named local admin account asap!${Reset}"
+	s_echo "n" "-You should assign at least one AD/LDAP user to have full admin, see the directions on how to at:"
+	s_echo "n" "${Green} https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/LDAP-or-LDAPS-Authentication#important-manual-steps${Reset}"
+	s_echo "n" "-Afterwards, it is highly recommended to delete/disable the default admin account and create a uniquely named local admin account asap!"
+
+	if [ $SECURE_LDAP = true ]; then
+		s_echo "n" "-Its highly recommended to remove the LDAPS certificate file: ${LDAPS_CERT_FULL}"
+	fi
 fi
 
-if [ $SECURE_LDAP = true ]; then
-	s_echo "y" "${Red}Its highly recommended to remove the LDAPS certificate file ${LDAPS_CERT_FULL} as its been imported into JKS${Reset}"
-fi
 s_echo "y" "${Green}While not typically required, you should consider a reboot after verifying installation${Reset}"
 s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or concerns regarding this script\n"
 
