@@ -1103,6 +1103,12 @@ downloadguac
 downloadguac () {
 s_echo "y" "${Bold}Downloading Guacamole Packages"
 
+	# MySQL Connector
+	downloadmysqlconn () {
+		wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz
+		s_echo "n" "-Downloading MySQL Connector package for installation...    "; spinner
+	}
+
 if [ $GUAC_SOURCE == "Git" ]; then
 	git clone ${GUAC_URL}${GUAC_SERVER} &
 	s_echo "n" "-Cloning Guacamole Server package from git...    "; spinner
@@ -1137,12 +1143,6 @@ else # Stable release
 	s_echo "n" "-Decompressing Guacamole JDBC extension...    "; spinner
 fi
 	
-	# MySQL Connector
-	downloadmysqlconn () {
-		wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz
-		s_echo "n" "-Downloading MySQL Connector package for installation...    "; spinner
-	}
-
 {
 	tar xzvf ${MYSQL_CON}.tar.gz
 	rm -f ${MYSQL_CON}.tar.gz
