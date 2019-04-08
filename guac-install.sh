@@ -1069,16 +1069,16 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC for git is: $RETVAL"
 
 	#Install Maven
+	cd /opt
 	{
-		cd /opt
 		wget ${MAVEN_URL}${MAVEN_BIN}
 		tar -xvzf ${MAVEN_BIN}
 		ln -s ${MAVEN_FN} maven
 		export PATH=/opt/maven/bin:${PATH}
 		rm -rf /opt/${MAVEN_BIN}
-		cd ~
 	} &
 	s_echo "n" "-Installing Apache Maven for git...    "; spinner
+	cd ~
 fi
 
 createdirs
@@ -1090,11 +1090,12 @@ createdirs () {
 		rm -fr ${INSTALL_DIR}
 		mkdir -v /etc/guacamole
 		mkdir -vp ${INSTALL_DIR}{client,selinux}
-		cd ${INSTALL_DIR}
 		mkdir -vp ${LIB_DIR}{extensions,lib}
 		mkdir -v /usr/share/tomcat/.guacamole/
 	} &
 	s_echo "y" "${Bold}Creating Required Directories...    "; spinner
+
+cd ${INSTALL_DIR}
 
 downloadguac
 }
@@ -1184,17 +1185,13 @@ installguacclient () {
 s_echo "y" "${Bold}Install Guacamole Client"
 
 if [ $GUAC_SOURCE == "Git" ]; then
-	{
-		cd guacamole-client/
-		mvn package
-	} &
+	cd guacamole-client/
+	mvn package &
 	s_echo "n" "${Reset}-Compiling Guacamole Client...    "; spinner
 
-	{
-		mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war
-		cd ..
-	} &
+	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war &
 	s_echo "n" "-Moving Guacamole Client...    "; spinner
+	cd ..
 else # Stable release
 	mv -v client/guacamole.war ${LIB_DIR}guacamole.war &
 	s_echo "n" "${Reset}-Moving Guacamole Client...    "; spinner
@@ -1236,15 +1233,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	# Get JDBC from compiled client
 	find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; &
 	s_echo "n" "-Moving Guacamole JDBC extension to extensions dir...    "; spinner
-#else # Stable release
-	# Copy JDBC from download
-#	mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ || exit 1
 fi
-
-# Copy MySQL Connector
-# s_echo "y" "${Bold}Copying MySQL Connector to Lib Dir..."
-# mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ || exit 1
-
 appconfigs
 }
 
