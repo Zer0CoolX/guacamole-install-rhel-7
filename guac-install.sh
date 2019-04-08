@@ -1117,7 +1117,7 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	downloadmysqlconn
 else # Stable release
 	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz &
-	s_echo "n" "-Downloading Guacamole Server package for installation...    "; spinner
+	s_echo "n" "${Reset}-Downloading Guacamole Server package for installation...    "; spinner
 	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war &
 	s_echo "n" "-Downloading Guacamole Client package for installation...    "; spinner
 	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz &
@@ -1148,7 +1148,7 @@ fi
 	rm -f ${MYSQL_CON}.tar.gz
 	mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ || exit 1
 } &
-s_echo "n" "$-Decompressing MySQL Connector...    "; spinner
+s_echo "n" "-Decompressing MySQL Connector...    "; spinner
 
 installguacserver
 }
@@ -1307,7 +1307,7 @@ s_echo "y" "${Bold}Setup Tomcat Server"
 							URIEncoding="UTF-8" />' /etc/tomcat/server.xml
 	sed -i "s/JKS_GUAC_PASSWD/${JKS_GUAC_PASSWD}/g" /etc/tomcat/server.xml
 } &
-s_echo "n" "-${Reset}-Base Tomcat configure...    "; spinner
+s_echo "n" "${Reset}-Base Tomcat configure...    "; spinner
 
 {
 # Tomcat RemoteIpValve (to pass remote host IP's from proxy to tomcat. Allows Guacamole to log remote host IPs)
@@ -1756,9 +1756,8 @@ systemctl status nginx
 } &
 s_echo "n" "${Reset}-Restarting all services...    "; spinner
 
-s_echo "y" "${Bold}{Green}##### Installation Complete! #####${Reset}"
+s_echo "y" "${Bold}${Green}##### Installation Complete! #####${Reset}"
 
-# s_echo "y" "${Bold}Finished Successfully"
 s_echo "y" "${Bold}Log Files"
 s_echo "n" "${Reset}-Log file: ${logfile}"
 s_echo "n" "-firewall backup file: ${fwbkpfile}"
