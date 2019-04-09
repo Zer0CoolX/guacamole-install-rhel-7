@@ -1071,7 +1071,7 @@ else
 	yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm &
 	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    "; spinner
 	ln -vfs /opt/libjpeg-turbo/include/* /usr/include/
-	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/
+	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/ || true # prevents issue with error trap
 fi
 
 # Install ffmpeg-devel
