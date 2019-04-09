@@ -995,6 +995,10 @@ err_handler () {
 	#	SIGINT|SIGQUIT)
 	#		s_echo "y" "%%% ERROR (Cancelled by User) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
 	#esac
+	
+	# Log cleanup to remove escape sequences caused by tput for formatting text
+	sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
+	
 	exit $EXITCODE
 }
 
