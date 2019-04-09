@@ -1196,9 +1196,9 @@ fi
 s_echo "n" "${Reset}-Compiling Guacamole Server Stage 1 of 4...    "; spinner
 make &
 s_echo "n" "-Compiling Guacamole Server Stage 2 of 4...    "; spinner
-sleep 1 && make install &
+make install &
 s_echo "n" "-Compiling Guacamole Server Stage 3 of 4...    "; spinner
-sleep 1 && ldconfig &
+ldconfig &
 s_echo "n" "-Compiling Guacamole Server Stage 4 of 4...    "; spinner
 cd ..
 
