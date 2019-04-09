@@ -989,13 +989,18 @@ exec &> "${logfile}"
 err_handler () {
 	EXITCODE=$?
 
-	case "$1" in
-		ERR)
-			s_echo "y" "%%% ERROR (Script Failed) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
-		SIGINT|SIGQUIT)
-			s_echo "y" "%%% ERROR (Cancelled by User) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
-	esac
+	#case "$1" in
+	#	ERR)
+			s_echo "y" "%%% ERROR (Script Failed) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" #;;
+	#	SIGINT|SIGQUIT)
+	#		s_echo "y" "%%% ERROR (Cancelled by User) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
+	#esac
 	exit $EXITCODE
+}
+
+# Prevents trapping grep not finding a match (returns exit 1)
+c1_grep () {
+	grep "$@" || test $? = 1; 
 }
 
 # Error handler trap to call error function to display and log error details
@@ -1007,7 +1012,7 @@ s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ====----"
 s_echo "y" "Installing Repos"
 
 # Install EPEL Repo
-rpm -qa | grep epel-release
+rpm -qa | c1_grep epel-release
 RETVAL=${PIPESTATUS[1]}
 
 if [ $RETVAL -eq 0 ]; then
@@ -1018,7 +1023,7 @@ else
 fi
 
 # Install RPMFusion Repo
-rpm -qa | grep rpmfusion
+rpm -qa | c1_grep rpmfusion
 RETVAL=${PIPESTATUS[1]}
 
 if [ $RETVAL -eq 0 ]; then
@@ -1052,7 +1057,7 @@ baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install libjpeg-turbo
-rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER}
+rpm -qa | c1_grep libjpeg-turbo-official-${LIBJPEG_VER}
 RETVAL=${PIPESTATUS[1]}; echo -e "rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} RC is: $RETVAL"
 
 if [ $RETVAL -eq 0 ]; then
@@ -1066,7 +1071,7 @@ else
 fi
 
 # Install ffmpeg-devel
-rpm -qa | grep ffmpeg-devel
+rpm -qa | c1_grep ffmpeg-devel
 RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep ffmpeg-devel RC is: $RETVAL"
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "-ffmpeg-devel is installed";
@@ -1644,16 +1649,15 @@ s_echo "y" "${Bold}Firewall Configuration"
 
 echo -e "Take Firewall RC...\n"
 echo -e "rpm -qa | grep firewalld"
-rpm -qa | grep firewalld
+rpm -qa | c1_grep firewalld
 RETVALqaf=$?
 echo -e "\nservice firewalld status"
 systemctl status firewalld
-RETVALsf=$?
 
 {
 if [ $RETVALqaf -eq 0 ]; then
 	systemctl enable firewalld
-	systemctl start firewalld
+	systemctl restart firewalld
 fi
 } &
 s_echo "n" "${Reset}-firewalld is installed and started on the system...    "; spinner
@@ -1718,7 +1722,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		#Setup automatic renewal
 		systemctl enable certbot-renew.service
 		systemctl enable certbot-renew.timer
-		systemctl list-timers --all | grep certbot
+		systemctl list-timers --all | c1_grep certbot
 		} &
 		s_echo "n" "-Setup automatic ${SSL_CERT_TYPE} SSL certificate renewals...    "; spinner
 
