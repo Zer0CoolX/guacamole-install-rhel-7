@@ -998,9 +998,13 @@ err_handler () {
 	exit $EXITCODE
 }
 
-# Prevents trapping grep not finding a match (returns exit 1)
-c1_grep () {
-	grep "$@" || test $? = 1; 
+# Query rpm for package without trigger trap when not found
+chk_installed () {
+	if rpm -q "$@"; then
+		RETVAL=$?
+	else
+		RETVAL=$?
+	fi
 }
 
 # Error handler trap to call error function to display and log error details
@@ -1012,8 +1016,7 @@ s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ====----"
 s_echo "y" "Installing Repos"
 
 # Install EPEL Repo
-rpm -qa | c1_grep epel-release
-RETVAL=${PIPESTATUS[1]}
+chk_installed "epel-release"
 
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "${Reset}-EPEL is installed."
@@ -1023,8 +1026,7 @@ else
 fi
 
 # Install RPMFusion Repo
-rpm -qa | c1_grep rpmfusion
-RETVAL=${PIPESTATUS[1]}
+chk_installed "rpmfusion"
 
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "-RPMFusion is installed."
@@ -1057,40 +1059,35 @@ baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install libjpeg-turbo
-rpm -qa | c1_grep libjpeg-turbo-official-${LIBJPEG_VER}
-RETVAL=${PIPESTATUS[1]}; echo -e "rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} RC is: $RETVAL"
+chk_installed "libjpeg-turbo-official-${LIBJPEG_VER}"
 
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is installed"
 else
 	yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm &
 	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    "; spinner
-	RETVAL=${PIPESTATUS[0]} ; echo -e "yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm RC is: $RETVAL"
 	ln -vfs /opt/libjpeg-turbo/include/* /usr/include/
 	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/
 fi
 
 # Install ffmpeg-devel
-rpm -qa | c1_grep ffmpeg-devel
-RETVAL=${PIPESTATUS[1]} ; echo -e "rpm -qa | grep ffmpeg-devel RC is: $RETVAL"
+chk_installed "ffmpeg-devel"
+
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "-ffmpeg-devel is installed";
 else
 	yum install -y ffmpeg-devel &
 	s_echo "n" "-ffmpeg-devel is not installed, installing...    "; spinner
-	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install -y ffmpeg-devel RC is: $RETVAL"
 fi
 
 # Install Required Packages
 yum install -y wget dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot &
 s_echo "n" "-Installing other required packages...    "; spinner
-RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL"
 
 # Additional packages required by git
 if [ $GUAC_SOURCE == "Git" ]; then
 	yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel &
 	s_echo "n" "-Installing packages required for git...    "; spinner
-	RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC for git is: $RETVAL"
 
 	#Install Maven
 	cd /opt
@@ -1373,7 +1370,6 @@ s_echo "n" "${Reset}-Installing Nginx repository...    "; spinner
 # Install Nginx
 yum install -y nginx &
 s_echo "n" "-Installing Nginx...    "; spinner
-RETVAL=${PIPESTATUS[0]} ; echo -e "yum install RC is: $RETVAL"
 
 # Generate Nginx Conf's
 s_echo "y" "${Bold}Nginx Configurations"
@@ -1647,15 +1643,13 @@ firewallsettings
 firewallsettings () {
 s_echo "y" "${Bold}Firewall Configuration"
 
-echo -e "Take Firewall RC...\n"
-echo -e "rpm -qa | grep firewalld"
-rpm -qa | c1_grep firewalld
-RETVALqaf=$?
+chk_installed "firewalld"
+
 echo -e "\nservice firewalld status"
 systemctl status firewalld
 
 {
-if [ $RETVALqaf -eq 0 ]; then
+if [ $RETVAL -eq 0 ]; then
 	systemctl enable firewalld
 	systemctl restart firewalld
 fi
