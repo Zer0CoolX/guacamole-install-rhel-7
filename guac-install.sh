@@ -14,6 +14,9 @@
 ##### CHECK FOR SUDO or ROOT ##################################
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
 
+# Allow trap for ERR to work in functions
+set -E
+
 ##########################################################
 #####      VARIABLEs   ###################################
 ##########################################################
@@ -982,6 +985,22 @@ s_echo () {
 # s_echo function will be used when echos need to be displayed and logged
 exec &> "${logfile}"
 
+# Error handling function called by trap to display/log error info and exit script
+err_handler () {
+	EXITCODE=$?
+
+	case "$1" in
+		ERR)
+			s_echo "y" "%%% ERROR (Script Failed) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
+		SIGINT|SIGQUIT)
+			s_echo "y" "%%% ERROR (Cancelled by User) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
+	esac
+	exit $EXITCODE
+}
+
+# Error handler trap to call error function to display and log error details
+trap err_handler ERR SIGINT SIGQUIT
+
 #####    REPOS INSTALL      ########################################
 reposinstall () {
 s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ====----"
@@ -1139,7 +1158,7 @@ else # Stable release
 		tar xzvf ${GUAC_JDBC}.tar.gz
 		rm -f ${GUAC_JDBC}.tar.gz
 		mv -v ${GUAC_JDBC} extension
-		mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/ || exit 1
+		mv -v extension/mysql/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar ${LIB_DIR}extensions/
 	} &
 	s_echo "n" "-Decompressing Guacamole JDBC extension...    "; spinner
 fi
@@ -1147,7 +1166,7 @@ fi
 {
 	tar xzvf ${MYSQL_CON}.tar.gz
 	rm -f ${MYSQL_CON}.tar.gz
-	mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/ || exit 1
+	mv -v ${MYSQL_CON}/${MYSQL_CON}.jar ${LIB_DIR}lib/
 } &
 s_echo "n" "-Decompressing MySQL Connector...    "; spinner
 
@@ -1220,11 +1239,11 @@ s_echo "n" "${Reset}-Generating Guacamole configuration file...    "; spinner
 
 # Create Required Symlinks for Guacamole
 {
-	ln -vfs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps || exit 1
-	ln -vfs /etc/guacamole/${GUAC_CONF} /usr/share/tomcat/.guacamole/ || exit 1
-	ln -vfs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ || exit 1
-	ln -vfs ${LIB_DIR}extensions/ /usr/share/tomcat/.guacamole/ || exit 1
-	ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp || exit 1
+	ln -vfs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps
+	ln -vfs /etc/guacamole/${GUAC_CONF} /usr/share/tomcat/.guacamole/
+	ln -vfs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/
+	ln -vfs ${LIB_DIR}extensions/ /usr/share/tomcat/.guacamole/
+	ln -vfs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp
 } &
 s_echo "n" "-Making required symlinks...    "; spinner
 
@@ -1267,9 +1286,9 @@ s_echo "n" "-Harden MariaDB...    "; spinner
 
 # Create Database and user
 {
-	mysql -u root -p${MYSQL_PASSWD} -e "CREATE DATABASE ${DB_NAME};" || exit 1
-	mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWD}';" || exit 1
-	mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" || exit 1
+	mysql -u root -p${MYSQL_PASSWD} -e "CREATE DATABASE ${DB_NAME};"
+	mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWD}';"
+	mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;"
 } &
 s_echo "n" "-Creating database & user for Guacamole...    "; spinner
 
@@ -1432,12 +1451,10 @@ s_echo "n" "-Generate Nginx guacamole_ssl.config...    "; spinner
 
 # Enable/Start Nginx Service
 {
-	systemctl enable nginx || exit 1
-	systemctl restart nginx || exit 1
+	systemctl enable nginx
+	systemctl restart nginx
 } &
 s_echo "n" "-Enable & Start Nginx Service...    "; spinner
-
-# s_echo "y" "${Bold}If you need to understand the Nginx configurations please go to:\n ${Green} http://nginx.org/en/docs/ \n${Reset}${Bold}If you need to replace the certificate file please read first:\n ${Green} http://nginx.org/en/docs/http/configuring_https_servers.html ${Reset}"
 
 # Call each Guac extension function for those selected
 if [ $INSTALL_LDAP = true ]; then ldapsetup; fi
@@ -1691,9 +1708,9 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		
 		{
 			# Symlink Lets Encrypt certs so renewal does not break Nginx
-			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt || true
-			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key || true
-			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem || true
+			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt
+			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key
+			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem
 		} &
 		s_echo "n" "-Creating symlinks to ${SSL_CERT_TYPE} SSL certificates...    "; spinner
 
@@ -1734,13 +1751,13 @@ s_echo "y" "${Bold}Services"
 
 {
 # Restart all services and log status
-systemctl restart tomcat || exit 1
+systemctl restart tomcat
 systemctl status tomcat
-systemctl restart guacd || exit 1
+systemctl restart guacd
 systemctl status guacd
-systemctl restart mariadb || exit 1
+systemctl restart mariadb
 systemctl status mariadb
-systemctl restart nginx || exit 1
+systemctl restart nginx
 systemctl status nginx
 } &
 s_echo "n" "${Reset}-Restarting all services...    "; spinner
@@ -1789,7 +1806,7 @@ s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or conce
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
 
 tput sgr0 >&3
-exit 1
+exit 0
 }
 
 #####    INSTALL EXECUTION   ################################
