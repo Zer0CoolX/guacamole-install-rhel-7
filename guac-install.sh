@@ -24,7 +24,7 @@ set -E
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_4_8" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_9" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1012,7 +1012,7 @@ trap err_handler ERR SIGINT SIGQUIT
 
 #####    REPOS INSTALL      ########################################
 reposinstall () {
-s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ====----"
+s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ${GUAC_SOURCE} ${GUAC_VER} ====----"
 s_echo "y" "Installing Repos"
 
 # Install EPEL Repo
