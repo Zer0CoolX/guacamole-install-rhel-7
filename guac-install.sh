@@ -59,6 +59,7 @@ JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used 
 # Misc
 GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
+F_BG=false # Default state for background process trap
 
 # ONLY CAHNGE IF NOT WORKING #
 # URLS
@@ -959,7 +960,14 @@ do
 	done
 done
 
-echo -ne "\b\b\b${Bold}[${Green}-done-${Reset}${Bold}]" >&3
+# Check if background process failed
+if wait $pid; then
+	echo -ne "\b\b\b${Bold}[${Green}-done-${Reset}${Bold}]" >&3
+else
+	echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
+	F_BG=true
+	false
+fi
 
 tput sgr0 >&3
 }
@@ -991,10 +999,16 @@ err_handler () {
 
 	#case "$1" in
 	#	ERR)
-			s_echo "y" "%%% ERROR (Script Failed) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" #;;
+	#		s_echo "y" "%%% ERROR (Script Failed) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" #;;
 	#	SIGINT|SIGQUIT)
 	#		s_echo "y" "%%% ERROR (Cancelled by User) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
 	#esac
+	
+	if [ $F_BG = true ]; then
+        	echo "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[$i+1]} - 1 )) | exit code: ${exitcode} %%%"
+        else
+        	echo "%%% ERROR (Script Failed) | Line ${BASH_LINENO[$i+1]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%"
+        fi
 	
 	# Log cleanup to remove escape sequences caused by tput for formatting text
 	sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
