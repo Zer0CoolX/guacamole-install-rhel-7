@@ -24,7 +24,7 @@ set -E
 #####    UNIVERSAL VARS    ###################################
 # USER CONFIGURABLE        #
 # Generic
-SCRIPT_BUILD="2019_4_9" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_11" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1005,9 +1005,9 @@ err_handler () {
 	#esac
 	
 	if [ $F_BG = true ]; then
-        	echo "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[$i+1]} - 1 )) | exit code: ${exitcode} %%%"
+        	s_echo "n" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[$i+1]} - 1 )) | exit code: ${exitcode} %%%\n"
         else
-        	echo "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%"
+        	s_echo "n" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%\n"
         fi
 	
 	# Log cleanup to remove escape sequences caused by tput for formatting text
