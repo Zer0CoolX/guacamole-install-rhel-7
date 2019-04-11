@@ -1007,7 +1007,7 @@ err_handler () {
 	if [ $F_BG = true ]; then
         	echo "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[$i+1]} - 1 )) | exit code: ${exitcode} %%%"
         else
-        	echo "%%% ERROR (Script Failed) | Line ${BASH_LINENO[$i+1]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%"
+        	echo "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%"
         fi
 	
 	# Log cleanup to remove escape sequences caused by tput for formatting text
