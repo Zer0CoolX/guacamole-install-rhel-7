@@ -1005,13 +1005,15 @@ err_handler () {
 	#esac
 	
 	if [ $F_BG = true ]; then
-        	s_echo "n" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[$i+1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
+        	s_echo "n" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
         else
         	s_echo "n" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${EXITCODE} %%%\n"
         fi
 	
 	# Log cleanup to remove escape sequences caused by tput for formatting text
 	sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
+	
+	tput sgr0 >&3
 	
 	exit $EXITCODE
 }
