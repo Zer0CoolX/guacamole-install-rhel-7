@@ -584,6 +584,7 @@ done
 ######  DATABASE SUMMARY  ############################################
 sum_db () {
 SUB_MENU_TITLE="Database Summary"
+RET_SUM=false
 
 menu_header
 
@@ -594,16 +595,21 @@ echo -e "${Green} Java KeyStore key-size: ${Yellow}${JKSTORE_KEY_SIZE}\n"
 while true; do
 	read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
 	case $yn in
-		[Yy]* ) db_menu; break;;
+		[Yy]* ) db_menu; RET_SUM=true; break;;
 		[Nn]*|"" ) sum_menu; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
+
+if [ ${RET_SUM} = true ]; then
+	sum_menu
+fi
 }
 
 ######  PASSWORD SUMMARY  ############################################
 sum_pw () {
 SUB_MENU_TITLE="Passwords Summary"
+RET_SUM=false
 
 menu_header
 
@@ -614,16 +620,21 @@ echo -e "${Green} Guacamole Java KeyStore password: ${Yellow}${JKS_GUAC_PASSWD}\
 while true; do
 	read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
 	case $yn in
-		[Yy]* ) pw_menu; break;;
+		[Yy]* ) pw_menu; RET_SUM=true; break;;
 		[Nn]*|"" ) sum_menu; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
+
+if [ ${RET_SUM} = true ]; then
+	sum_menu
+fi
 }
 
 ######  SSL CERTIFICATE SUMMARY  #####################################
 sum_ssl () {
 SUB_MENU_TITLE="SSL Certificate Summary"
+RET_SUM=false
 
 menu_header
 
@@ -647,16 +658,21 @@ esac
 while true; do
 	read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
 	case $yn in
-		[Yy]* ) ssl_cert_type_menu; break;;
+		[Yy]* ) ssl_cert_type_menu; RET_SUM=true; break;;
 		[Nn]*|"" ) sum_menu; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
+
+if [ ${RET_SUM} = true ]; then
+	sum_menu
+fi
 }
 
 ######  NGINX SUMMARY  ###############################################
 sum_nginx () {
 SUB_MENU_TITLE="Nginx Summary"
+RET_SUM=false
 
 menu_header
 
@@ -668,16 +684,21 @@ echo -e "${Green} Using only 256-bit >= ciphers?: ${Yellow}${NGINX_SEC}\n"
 while true; do
 	read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
 	case $yn in
-		[Yy]* ) nginx_menu; break;;
+		[Yy]* ) nginx_menu; RET_SUM=true; break;;
 		[Nn]*|"" ) sum_menu; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
+
+if [ ${RET_SUM} = true ]; then
+	sum_menu
+fi
 }
 
 ######  STANDARD EXTENSIONS SUMMARY  #################################
 sum_ext () {
 SUB_MENU_TITLE="Standard Extension Summary"
+RET_SUM=false
 
 menu_header
 
@@ -690,17 +711,22 @@ actions=("View/change selected extensions and their settings" "Change if extensi
 select a in "${actions[@]}"
 do
 	case $a in
-		"View/change selected extensions and their settings") sum_sel_ext; break;;
-		"Change if extensions are installed and if so which") ext_menu; break;;
+		"View/change selected extensions and their settings") sum_sel_ext; RET_SUM=true; break;;
+		"Change if extensions are installed and if so which") ext_menu; RET_SUM=true; break;;
 		"Return to the Summary menu") sum_menu; break;;
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the action to take.";;
 	esac
 done
+
+if [ ${RET_SUM} = true ]; then
+	sum_menu
+fi
 }
 
 ######  SELECTED EXTENSIONS SUMMARY  #################################
 sum_sel_ext () {
 SUB_MENU_TITLE="Summary of Selected Extensions"
+RET_SUM=false
 
 menu_header
 
@@ -715,12 +741,12 @@ if [ ${INSTALL_EXT} = true ]; then
 	select s in "${selections[@]}"
 	do
 		case $s in
-			"LDAP") sum_LDAP; break;;
-			"TOTP") sum_TOTP; break;;
-			"Duo") sum_Duo; break;;
-			"Radius") sum_Radius; break;;
-			"CAS") sum_CAS; break;;
-			"OpenID") sum_OpenID; break;;
+			"LDAP") sum_LDAP; RET_SUM=true; break;;
+			"TOTP") sum_TOTP; RET_SUM=true; break;;
+			"Duo") sum_Duo; RET_SUM=true; break;;
+			"Radius") sum_Radius; RET_SUM=true; break;;
+			"CAS") sum_CAS; RET_SUM=true; break;;
+			"OpenID") sum_OpenID; RET_SUM=true; break;;
 			"Return to Standard Extension Summary") sum_ext; break;;
 			* ) echo "Select a valid option.";;
 			esac
@@ -728,6 +754,10 @@ if [ ${INSTALL_EXT} = true ]; then
 else # Installing extensions was set to "no"
 	echo -e "${Green} Installation of extensions was declined.\n If you want to install extensions, change if extensions are installed from the Standard Extension Summary menu using option 2"
 	sleep 5
+fi
+
+if [ ${RET_SUM} = true ]; then
+	sum_ext
 fi
 }
 
@@ -860,6 +890,7 @@ done
 ######  CUSTOM EXTENSION SUMMARY  ####################################
 sum_cust_ext () {
 SUB_MENU_TITLE="Custom Extension Summary"
+RET_SUM=false
 
 menu_header
 
@@ -874,11 +905,15 @@ fi
 while true; do
 	read -p "${Green} Would you like to change these selections (default no)? ${Yellow}" yn
 	case $yn in
-		[Yy]* ) cust_ext_menu; break;;
+		[Yy]* ) cust_ext_menu; RET_SUM=true; break;;
 		[Nn]*|"" ) sum_menu; break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
+
+if [ ${RET_SUM} = true ]; then
+	sum_menu
+fi
 }
 
 ######  MENU EXECUTION  ##############################################
