@@ -1,28 +1,28 @@
 #!/bin/env bash
-#####    NOTES             ###################################
+######  NOTES  #######################################################
 # Project Page: https://github.com/Zer0CoolX/guacamole-install-rhel
 # Licence (GPL-3.0): https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/LICENSE
 # Report Issues: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)
 # Wiki: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki
 #
 # WARNING: For use on RHEL/CentOS 7.x and up only.
-#	-Use at your own risk!  
+#	-Use at your own risk!
 #	-Use only for new installations of Guacamole!
 # 	-Read all documentation (wiki) prior to using this script!
 #	-Test prior to deploying on a production system!
 #
-##### CHECK FOR SUDO or ROOT ##################################
+######  CHECK FOR SUDO OR ROOT  ######################################
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1 ; fi
 
 # Allow trap for ERR to work in functions
 set -E
 
-##########################################################
-#####      VARIABLEs   ###################################
-##########################################################
+######################################################################
+######  VARIABLES  ###################################################
+######################################################################
 
-#####    UNIVERSAL VARS    ###################################
-# USER CONFIGURABLE        #
+######  UNIVERSAL VARIABLES  #########################################
+# USER CONFIGURABLE #
 # Generic
 SCRIPT_BUILD="2019_4_11" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
@@ -85,9 +85,9 @@ Bold=`tput bold`	#${Bold}
 UndrLn=`tput sgr 0 1`	#${UndrLn}
 Rev=`tput smso`		#${Rev}
 Reset=`tput sgr0`	#${Reset}
-##### END UNIVERSAL VARS   ###################################
+######  END UNIVERSAL VARIABLES  #####################################
 
-#####    INITIALIZE COMMON VARS    ###################################
+######  INITIALIZE COMMON VARIABLES  #################################
 # ONLY CHANGE IF NOT WORKING #
 init_vars () {
 # Get the release version of Guacamole from/for Git
@@ -108,7 +108,7 @@ if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; th
 NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
 }
 
-#####      SOURCE VARIABLES       ###################################
+######  SOURCE VARIABLES  ############################################
 src_vars () {
 # Check if selected source is Git or stable release, set variables based on selection
 if [ $GUAC_SOURCE == "Git" ]; then
@@ -140,11 +140,11 @@ logfile="${FILENAME}.log" # Script generated log file full name
 fwbkpfile="${FILENAME}.firewall.bkp" # Firewall backup file name
 }
 
-##########################################################
-#####      MENUs       ###################################
-##########################################################
+######################################################################
+######  MENUS  #######################################################
+######################################################################
 
-#####      SOURCE MENU       ###################################
+######  SOURCE MENU  #################################################
 src_menu () {
 clear
 
@@ -165,14 +165,15 @@ done
 tput sgr0
 }
 
-#####    START EXECUTION   ###################################
+######  START EXECUTION  #############################################
 init_vars
 src_menu
 src_vars
 
-#####      MENU HEADERS       ###################################
+######  MENU HEADERS  ################################################
 # Called by each menu and summary menu to display the dynamic header
 menu_header () {
+tput sgr0
 clear
 
 echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
@@ -181,7 +182,7 @@ echo -e "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}" && tput sgr0
 echo -e "   ${Bold}Source/Version: ${Yellow}${GUAC_SOURCE} ${GUAC_VER}\n" && tput sgr0
 }
 
-#####      DATABASE and JKS MENU       ###################################
+######  DATABASE AND JKS MENU  #######################################
 db_menu () {
 SUB_MENU_TITLE="Database and JKS Menu"
 
@@ -196,11 +197,9 @@ echo -n "${Green} Enter the Guacamole DB username (default ${DB_USER_DEF}): ${Ye
 echo -n "${Green} Enter the Java KeyStore key-size to use (default ${JKSTORE_KEY_SIZE_DEF}): ${Yellow}"
 	read JKSTORE_KEY_SIZE
 	JKSTORE_KEY_SIZE=${JKSTORE_KEY_SIZE:-${JKSTORE_KEY_SIZE_DEF}}
-
-tput sgr0
 }
 
-#####      PASSWORDS MENU       ###################################
+######  PASSWORDS MENU  ##############################################
 pw_menu () {
 SUB_MENU_TITLE="Passwords Menu"
 
@@ -215,11 +214,9 @@ echo -n "${Green} Enter the Guacamole DB password: ${Yellow}"
 echo -n "${Green} Enter the Guacamole Java KeyStore password, must be 6 or more characters: ${Yellow}"
 	read JKS_GUAC_PASSWD
 	JKS_GUAC_PASSWD=${JKS_GUAC_PASSWD:-${JKS_GUAC_PASSWD_DEF}}
-
-tput sgr0
 }
 
-#####      SSL CERTIFICATE TYPE MENU       ###################################
+######  SSL CERTIFICATE TYPE MENU  ###################################
 ssl_cert_type_menu () {
 SUB_MENU_TITLE="SSL Certificate Type Menu"
 
@@ -242,11 +239,9 @@ do
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing your desired cert type.";;
 		esac
 done
-
-tput sgr0
 }
 
-#####      LETSENCRYPT MENU       ###################################
+######  LETSENCRYPT MENU  ############################################
 le_menu () {
 SUB_MENU_TITLE="LetsEncrypt Menu"
 
@@ -266,11 +261,9 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 		esac
 done
-
-tput sgr0
 }
 
-#####    SELF-SIGNED SSL CERT MENU    ########################################
+######  SELF-SIGNED SSL CERTIFICATE MENU  ############################
 ss_menu () {
 OCSP_USE=false
 SUB_MENU_TITLE="Self-signed SSL Certificate Menu"
@@ -280,11 +273,9 @@ menu_header
 echo -n "${Green} Enter the Self-Signed SSL key-size to use (default ${SSL_KEY_SIZE_DEF}): ${Yellow}"
 	read SSL_KEY_SIZE
 	SSL_KEY_SIZE=${SSL_KEY_SIZE:-${SSL_KEY_SIZE_DEF}}
-
-tput sgr0
 }
 
-#####    NGINX OPTIONS MENU    ########################################
+######  NGINX OPTIONS MENU  ##########################################
 nginx_menu () {
 SUB_MENU_TITLE="Nginx Menu"
 
@@ -311,11 +302,9 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
 }
 
-#####    EXTENSIONS MENU    ########################################
+######  EXTENSIONS MENU  #############################################
 ext_menu () {
 SUB_MENU_TITLE="Extensions Menu"
 
@@ -341,11 +330,9 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
 }
 
-#####    EXTENSIONS SELECTION MENU    ########################################
+######  EXTENSIONS SELECTION MENU  ###################################
 ext_sel_menu () {
 # All possible options (may depend on Guac version and other configuration)
 # "LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID"
@@ -361,33 +348,33 @@ INSTALL_RADIUS=false
 INSTALL_CAS=false
 INSTALL_OPENID=false
 
-# This function is used to print the extension choices menu
-ext_sub_menu() {
-	echo "${Green} Select the desired extensions to install:${Yellow}"
-	for i in ${!options[@]}; do 
-		printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+	# This function is used to print the extension choices menu
+	ext_sub_menu() {
+		echo "${Green} Select the desired extensions to install:${Yellow}"
+		for i in ${!options[@]}; do 
+			printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+		done
+		[[ "$msg" ]] && echo "$msg"; :
+	}
+
+	# This function is used to select/deselect extensions from the menu
+	ext_sub_prompt () {
+	prompt="${Green} Enter a number and press ENTER to check/uncheck an option. Selections designated by a + sign. (Press ENTER while blank when done): "
+	while ext_sub_menu && read -rp "$prompt" num && [[ "$num" ]]; do
+		[[ "$num" != *[![:digit:]]* ]] &&
+		(( num > 0 && num <= ${#options[@]} )) ||
+		{ msg="Invalid option: $num"; continue; }
+		((num--)); msg=" ${options[num]} was ${choices[num]:+un}checked"
+		[[ "${choices[num]}" ]] && unset 'choices[num]' || choices[num]="+"
 	done
-	[[ "$msg" ]] && echo "$msg"; :
-}
 
-# This function is used to select/deselect extensions from the menu
-ext_sub_prompt () {
-prompt="${Green} Enter a number and press ENTER to check/uncheck an option. Selections designated by a + sign. (Press ENTER while blank when done): "
-while ext_sub_menu && read -rp "$prompt" num && [[ "$num" ]]; do
-	[[ "$num" != *[![:digit:]]* ]] &&
-	(( num > 0 && num <= ${#options[@]} )) ||
-	{ msg="Invalid option: $num"; continue; }
-	((num--)); msg=" ${options[num]} was ${choices[num]:+un}checked"
-	[[ "${choices[num]}" ]] && unset 'choices[num]' || choices[num]="+"
-done
-
-# Ensure that at least 1 extension is selected
-if [[ ${#choices[@]} == 0 ]]; then
-	echo "${Red} At least one extension needs to be selected, please pick one."
-	msg=""
-	ext_sub_prompt
-fi
-}
+	# Ensure that at least 1 extension is selected
+	if [[ ${#choices[@]} == 0 ]]; then
+		echo "${Red} At least one extension needs to be selected, please pick one."
+		msg=""
+		ext_sub_prompt
+	fi
+	}
 
 ext_sub_prompt
 
@@ -401,7 +388,7 @@ done
 selections+=("Return to Standard Extension Summary")
 }
 
-#####    LDAP MENU    ########################################
+######  LDAP MENU  ###################################################
 LDAP_ext_menu () {
 INSTALL_LDAP=true
 SUB_MENU_TITLE="LDAP Extension Menu"
@@ -431,7 +418,7 @@ if [ $SECURE_LDAP = true ]; then
 		echo -n "${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
 			read LDAPS_CERT_FN
 			LDAPS_CERT_FN=${LDAPS_CERT_FN:-${LDAPS_CERT_FN}}
-		echo -n "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
+		echo "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
 			read LDAPS_CERT_DIR
 			LDAPS_CERT_DIR=${LDAPS_CERT_DIR:-/home/}
 			LDAPS_CERT_FULL=${LDAPS_CERT_DIR}${LDAPS_CERT_FN}
@@ -440,7 +427,7 @@ if [ $SECURE_LDAP = true ]; then
 		fi
 	done
 
-	echo -n "${Green} Set the password for the CACert Java Keystore, must be 6 or more characters (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
+	echo "${Green} Set the password for the CACert Java Keystore, must be 6 or more characters (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
 		read JKS_CACERT_PASSWD
 		JKS_CACERT_PASSWD=${JKS_CACERT_PASSWD:-${JKS_CACERT_PASSWD_DEF}}
 else # Use LDAP not LDAPS
@@ -471,7 +458,7 @@ echo -n "${Green} Enter a custom LDAP user search filter (default \"${LDAP_SEARC
 	LDAP_SEARCH_FILTER=${LDAP_SEARCH_FILTER:-${LDAP_SEARCH_FILTER_DEF}}
 }
 
-#####    TOTP MENU    ########################################
+######  TOTP MENU  ###################################################
 TOTP_ext_menu () {
 INSTALL_TOTP=false
 SUB_MENU_TITLE="TOTP Extension Menu"
@@ -480,11 +467,9 @@ menu_header
 
 echo -e "${Red} TOTP extension not currently available via this script."
 sleep 5
-
-tput sgr0
 }
 
-#####    DUO MENU    ########################################
+######  DUO MENU  ####################################################
 Duo_ext_menu () {
 INSTALL_DUO=false
 SUB_MENU_TITLE="DUO Extension Menu"
@@ -493,11 +478,9 @@ menu_header
 
 echo -e "${Red} Duo extension not currently available via this script."
 sleep 5
-
-tput sgr0
 }
 
-#####    RADIUS MENU    ########################################
+######  RADIUS MENU  #################################################
 Radius_ext_menu () {
 INSTALL_RADIUS=false
 SUB_MENU_TITLE="RADIUS Extension Menu"
@@ -506,11 +489,9 @@ menu_header
 
 echo -e "${Red} RADIUS extension not currently available via this script."
 sleep 5
-
-tput sgr0
 }
 
-#####    CAS MENU    ########################################
+######  CAS MENU  ####################################################
 CAS_ext_menu () {
 INSTALL_CAS=false
 SUB_MENU_TITLE="CAS Extension Menu"
@@ -519,11 +500,9 @@ menu_header
 
 echo -e "${Red} CAS extension not currently available via this script."
 sleep 5
-
-tput sgr0
 }
 
-#####    OpenID MENU    ########################################
+######  OPENID MENU  #################################################
 OpenID_ext_menu () {
 INSTALL_OPENID=false
 SUB_MENU_TITLE="OpenID Extension Menu"
@@ -532,11 +511,9 @@ menu_header
 
 echo -e "${Red} OpenID extension not currently available via this script."
 sleep 5
-
-tput sgr0
 }
 
-#####    CUSTOM EXTENSION MENU    ########################################
+######  CUSTOM EXTENSION MENU  #######################################
 cust_ext_menu () {
 SUB_MENU_TITLE="Custom Extension Menu"
 
@@ -569,15 +546,13 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
 }
 
-##########################################################
-#####      SUMMARY MENUs    ##############################
-##########################################################
+######################################################################
+######  SUMMARY MENUS  ###############################################
+######################################################################
 
-#####      MAIN SUMMARY MENU   ###################################
+######  MAIN SUMMARY MENU  ###########################################
 sum_menu () {
 SUB_MENU_TITLE="Summary Menu"
 
@@ -604,11 +579,9 @@ do
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the category to review.";;
 		esac
 done
-
-tput sgr0
 }
 
-#####      DATABASE SUMMARY       ###################################
+######  DATABASE SUMMARY  ############################################
 sum_db () {
 SUB_MENU_TITLE="Database Summary"
 
@@ -628,7 +601,7 @@ while true; do
 done
 }
 
-#####      PASSWORD SUMMARY       ###################################
+######  PASSWORD SUMMARY  ############################################
 sum_pw () {
 SUB_MENU_TITLE="Passwords Summary"
 
@@ -648,7 +621,7 @@ while true; do
 done
 }
 
-#####      SSL CERTIFICATE SUMMARY       ###################################
+######  SSL CERTIFICATE SUMMARY  #####################################
 sum_ssl () {
 SUB_MENU_TITLE="SSL Certificate Summary"
 
@@ -681,7 +654,7 @@ while true; do
 done
 }
 
-#####      NGINX SUMMARY       ###################################
+######  NGINX SUMMARY  ###############################################
 sum_nginx () {
 SUB_MENU_TITLE="Nginx Summary"
 
@@ -702,7 +675,7 @@ while true; do
 done
 }
 
-#####      STANDARD EXTENSION SUMMARY       ###################################
+######  STANDARD EXTENSIONS SUMMARY  #################################
 sum_ext () {
 SUB_MENU_TITLE="Standard Extension Summary"
 
@@ -725,7 +698,7 @@ do
 done
 }
 
-#####      SELECTED EXTENSIONS SUMMARY       ###################################
+######  SELECTED EXTENSIONS SUMMARY  #################################
 sum_sel_ext () {
 SUB_MENU_TITLE="Summary of Selected Extensions"
 
@@ -758,9 +731,9 @@ else # Installing extensions was set to "no"
 fi
 }
 
-#####      LDAP SUMMARY       ###################################
+######  LDAP SUMMARY  ################################################
 sum_LDAP () {
-SUB_MENU_TITLE="LDAP Extension Summary"	
+SUB_MENU_TITLE="LDAP Extension Summary"
 
 menu_header
 
@@ -789,10 +762,10 @@ while true; do
 done
 }
 
-#####      TOTP SUMMARY       ###################################
+######  TOTP SUMMARY  ################################################
 # Need to add TOTP properties
 sum_TOTP () {
-SUB_MENU_TITLE="TOTP Extension Summary"	
+SUB_MENU_TITLE="TOTP Extension Summary"
 
 menu_header
 
@@ -808,10 +781,10 @@ while true; do
 done
 }
 
-#####      DUP SUMMARY       ###################################
+######  DUO SUMMARY  #################################################
 # Need to add Duo properties
 sum_Duo () {
-SUB_MENU_TITLE="Duo Extension Summary"	
+SUB_MENU_TITLE="Duo Extension Summary"
 
 menu_header
 
@@ -827,10 +800,10 @@ while true; do
 done
 }
 
-#####      RADIUS SUMMARY       ###################################
+######  RADIUS SUMMARY  ##############################################
 # Need to add Radius properties
 sum_Radius () {
-SUB_MENU_TITLE="RADIUS Extension Summary"	
+SUB_MENU_TITLE="RADIUS Extension Summary"
 
 menu_header
 
@@ -846,10 +819,10 @@ while true; do
 done
 }
 
-#####      CAS SUMMARY       ###################################
+######  CAS SUMMARY  #################################################
 # Need to add CAS properties
 sum_CAS () {
-SUB_MENU_TITLE="CAS Extension Summary"	
+SUB_MENU_TITLE="CAS Extension Summary"
 
 menu_header
 
@@ -865,10 +838,10 @@ while true; do
 done
 }
 
-#####      OpenID SUMMARY       ###################################
+######  OpenID SUMMARY  ##############################################
 # Need to add OpenID properties
 sum_OpenID () {
-SUB_MENU_TITLE="OpenID Extension Summary"	
+SUB_MENU_TITLE="OpenID Extension Summary"
 
 menu_header
 
@@ -884,7 +857,7 @@ while true; do
 done
 }
 
-#####      CUSTOM EXTENSION SUMMARY       ###################################
+######  CUSTOM EXTENSION SUMMARY  ####################################
 sum_cust_ext () {
 SUB_MENU_TITLE="Custom Extension Summary"
 
@@ -908,7 +881,7 @@ while true; do
 done
 }
 
-#####    CONTINUE EXECUTION   ################################
+######  MENU EXECUTION  ##############################################
 db_menu
 pw_menu
 ssl_cert_type_menu
@@ -920,8 +893,11 @@ sum_menu
 # Sets file descriptor to 3 for this special echo function and spinner
 exec 3>&1
 
-#####    SPINNER      ########################################
-# Shows progress as a spinning line at the end of an outputted line for the last run command
+######################################################################
+######  UTILITY FUNCTIONS  ###########################################
+######################################################################
+
+######  PROGRESS SPINNER FUNCTION  ###################################
 spinner () {
 pid=$!
 
@@ -942,7 +918,7 @@ done
 # Check if background process failed
 if wait $pid; then
 	echo -ne "\b\b\b${Bold}[${Green}-done-${Reset}${Bold}]" >&3
-else
+else # if so force failure to trigger trap
 	echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
 	F_BG=true
 	false
@@ -951,65 +927,62 @@ fi
 tput sgr0 >&3
 }
 
+######  SPECIAL ECHO FUNCTION  #######################################
 # This allows echoing to log and stdout while sending all else to log by default using exec
 s_echo () {
-	# Use first arg to determine if echo skips a line
-	case $1 in
-		# No preceeding blank line 
-		[Nn])
-			echo -ne "\n${2}" | tee -a /dev/fd/3 ;;
-		# Preceeding blank line
-		[Yy]|*)
-			echo -ne "\n\n${2}" | tee -a /dev/fd/3 ;;
-	esac
+# Use first arg to determine if echo skips a line (yes/no)
+case $1 in
+	# No preceeding blank line 
+	[Nn])
+		echo -ne "\n${2}" | tee -a /dev/fd/3 ;;
+	# Preceeding blank line
+	[Yy]|*)
+		echo -ne "\n\n${2}" | tee -a /dev/fd/3 ;;
+esac
 }
-
-#################################################################
-#####    INSTALLATION    ########################################
-#################################################################
 
 # Used to force all stdout and stderr to the log file
 # s_echo function will be used when echos need to be displayed and logged
 exec &> "${logfile}"
 
-# Error handling function called by trap to display/log error info and exit script
+######  ERROR HANDLER FUNCTION  ######################################
+# Called by trap to display/log error info and exit script
 err_handler () {
-	EXITCODE=$?
+EXITCODE=$?
 
-	#case "$1" in
-	#	ERR)
-	#		s_echo "y" "%%% ERROR (Script Failed) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" #;;
-	#	SIGINT|SIGQUIT)
-	#		s_echo "y" "%%% ERROR (Cancelled by User) | Line: ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${exitcode} %%%" ;;
-	#esac
-	
-	if [ $F_BG = true ]; then
-        	s_echo "n" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
-        else
-        	s_echo "n" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${EXITCODE} %%%\n"
-        fi
-	
-	# Log cleanup to remove escape sequences caused by tput for formatting text
-	sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
-	
-	tput sgr0 >&3
-	
-	exit $EXITCODE
+# Check if trap was trigger by a background process
+if [ $F_BG = true ]; then
+	s_echo "n" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
+else # if not diplsay the failing command
+	s_echo "n" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${EXITCODE} %%%\n"
+fi
+
+# Log cleanup to remove escape sequences caused by tput for formatting text
+sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
+
+tput sgr0 >&3
+exit $EXITCODE
 }
 
-# Query rpm for package without trigger trap when not found
+######  CHECK INSTALLED PACKAGE FUNCTION  ############################
+# Query rpm for package without triggering trap when not found
 chk_installed () {
-	if rpm -q "$@"; then
-		RETVAL=$?
-	else
-		RETVAL=$?
-	fi
+if rpm -q "$@"; then
+	RETVAL=$?
+else
+	RETVAL=$?
+fi
 }
 
-# Error handler trap to call error function to display and log error details
+######  ERROR TRAP  ##################################################
+# Trap to call error function to display and log error details
 trap err_handler ERR SIGINT SIGQUIT
 
-#####    REPOS INSTALL      ########################################
+######################################################################
+######  INSALLATION  #################################################
+######################################################################
+
+######  REPOS INSTALLATION  ##########################################
 reposinstall () {
 s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ${GUAC_SOURCE} ${GUAC_VER} ====----"
 s_echo "y" "Installing Repos"
@@ -1043,17 +1016,17 @@ fi
 yumupdate
 }
 
-#####    YUM UPDATES    ########################################
+######  YUM UPDATES  #################################################
 yumupdate () {
 
-# Update packages
+# Update OS/packages
 yum update -y &
 s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
 
 baseinstall
 }
 
-#####    INSTALL BASE PACKAGES    ########################################
+######  INSTALL BASE PACKAGES  #######################################
 baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
@@ -1104,29 +1077,29 @@ fi
 createdirs
 }
 
-#####    CREATE DIRS    ########################################
+######  CREATE DIRECTORIES  ##########################################
 createdirs () {
-	{
-		rm -fr ${INSTALL_DIR}
-		mkdir -v /etc/guacamole
-		mkdir -vp ${INSTALL_DIR}{client,selinux}
-		mkdir -vp ${LIB_DIR}{extensions,lib}
-		mkdir -v /usr/share/tomcat/.guacamole/
-	} &
-	s_echo "y" "${Bold}Creating Required Directories...    "; spinner
+{
+	rm -fr ${INSTALL_DIR}
+	mkdir -v /etc/guacamole
+	mkdir -vp ${INSTALL_DIR}{client,selinux}
+	mkdir -vp ${LIB_DIR}{extensions,lib}
+	mkdir -v /usr/share/tomcat/.guacamole/
+} &
+s_echo "y" "${Bold}Creating Required Directories...    "; spinner
 
 cd ${INSTALL_DIR}
 
 downloadguac
 }
 
-#####    DOWNLOAD GUAC    ########################################
+######  DOWNLOAD GUACAMOLE  ##########################################
 downloadguac () {
 s_echo "y" "${Bold}Downloading Guacamole Packages"
 
 	# MySQL Connector
 	downloadmysqlconn () {
-		wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz
+		wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz &
 		s_echo "n" "-Downloading MySQL Connector package for installation...    "; spinner
 	}
 
@@ -1144,7 +1117,7 @@ else # Stable release
 	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz &
 	s_echo "n" "-Downloading Guacamole JDBC Extension package for installation...    "; spinner
 	downloadmysqlconn
-	
+
 	# Decompress Guacamole Packages
 	s_echo "y" "${Bold}Decompressing Guacamole Packages"
 
@@ -1163,7 +1136,7 @@ else # Stable release
 	} &
 	s_echo "n" "-Decompressing Guacamole JDBC extension...    "; spinner
 fi
-	
+
 {
 	tar xzvf ${MYSQL_CON}.tar.gz
 	rm -f ${MYSQL_CON}.tar.gz
@@ -1174,7 +1147,7 @@ s_echo "n" "-Decompressing MySQL Connector...    "; spinner
 installguacserver
 }
 
-#####    INSTALL GUAC SERVER    ########################################
+######  INSTALL GUACAMOLE SERVER  ####################################
 installguacserver () {
 s_echo "y" "${Bold}Install Guacamole Server"
 
@@ -1200,7 +1173,7 @@ cd ..
 installguacclient
 }
 
-#####    INSTALL GUAC CLIENT    ########################################
+######  INSTALL GUACAMOLE CLIENT  ####################################
 installguacclient () {
 s_echo "y" "${Bold}Install Guacamole Client"
 
@@ -1220,7 +1193,7 @@ fi
 finishguac
 }
 
-#####    FINALIZE GUAC    ########################################
+######  FINALIZE GUACAMOLE INSTALLATION  #############################
 finishguac () {
 s_echo "y" "${Bold}Setup Guacamole"
 
@@ -1257,7 +1230,7 @@ fi
 appconfigs
 }
 
-#####    DATABASE/TOMCAT/JKS SETUP    ########################################
+######  DATABASE/TOMCAT/JKS SETUP  ###################################
 appconfigs () {
 s_echo "y" "${Bold}Configure MariaDB"
 
@@ -1354,7 +1327,7 @@ s_echo "y" "${Bold}Enable & Start Tomcat and Guacamole Services...    "; spinner
 nginxinstall
 }
 
-#####    NGINX INSTALL    ########################################
+######  NGINX INSTALLATION  ##########################################
 nginxinstall () {
 s_echo "y" "${Bold}Install Nginx"
 
@@ -1370,7 +1343,6 @@ s_echo "n" "${Reset}-Installing Nginx repository...    "; spinner
 yum install -y nginx &
 s_echo "n" "-Installing Nginx...    "; spinner
 
-# Generate Nginx Conf's
 s_echo "y" "${Bold}Nginx Configurations"
 
 # Backup Nginx Configuration
@@ -1397,8 +1369,8 @@ echo "server {
 }" > /etc/nginx/conf.d/guacamole.conf &
 s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
+# HTTPS/SSL Nginx Conf
 {
-	# HTTPS/SSL Nginx Conf
 	echo "server {
 		listen 443 ssl http2 default_server;
 		listen [::]:443 ssl http2 default_server;
@@ -1468,7 +1440,7 @@ if [ $INSTALL_CUST_EXT = true ]; then custsetup; fi
 selinuxsettings
 }
 
-#####    LDAP SETUP    ########################################
+######  LDAP SETUP  ##################################################
 ldapsetup () {
 s_echo "y" "${Bold}Setup the LDAP Extension"
 
@@ -1521,140 +1493,140 @@ else # Stable release
 fi
 }
 
-#####    TOTP SETUP    ########################################
+######  TOTP SETUP  ##################################################
 totpsetup () {
 	# Placehold until extension is added
 	echo "totpsetup"
 }
 
-#####    DUO SETUP    ########################################
+######  DUO SETUP  ###################################################
 duosetup () {
 	# Placehold until extension is added
 	echo "duosetup"
 }
 
-#####    RADIUS SETUP    ########################################
+######  RADIUS SETUP  ################################################
 radiussetup () {
 	# Placehold until extension is added
 	echo "radiussetup"
 }
 
-#####    CAS SETUP    ########################################
+######  CAS SETUP  ###################################################
 cassetup () {
 	# Placehold until extension is added
 	echo "cassetup"
 }
 
-#####    OpenID SETUP    ########################################
+######  OpenID SETUP  ################################################
 openidsetup () {
 	# Placehold until extension is added
 	echo "openidsetup"
 }
 
-#####    CUSTOM EXTENSION SETUP    ########################################
+######  CUSTOM EXTENSION SETUP  ######################################
 custsetup () {
 # Copy Custom Extension to Extensions Directory
 mv -v ${CUST_FULL} ${LIB_DIR}extensions/ &
 s_echo "y" "${Bold}Copying Custom Guacamole Extension to Extensions Dir...    "; spinner
 }
 
-#####    SELINUX SETTINGS    ########################################
+######  SELINUX SETTINGS  ############################################
 selinuxsettings () {
-	{
-		# Set Booleans
-		setsebool -P httpd_can_network_connect 1
-		setsebool -P httpd_can_network_relay 1
-		setsebool -P tomcat_can_network_connect_db 1
+{
+	# Set Booleans
+	setsebool -P httpd_can_network_connect 1
+	setsebool -P httpd_can_network_relay 1
+	setsebool -P tomcat_can_network_connect_db 1
 
-		# Guacamole Client Context
-		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}guacamole.war"
-		restorecon -v "${LIB_DIR}guacamole.war"
+	# Guacamole Client Context
+	semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}guacamole.war"
+	restorecon -v "${LIB_DIR}guacamole.war"
 
-		# Guacamole JDBC Extension Context
-		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar"
-		restorecon -v "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar"
+	# Guacamole JDBC Extension Context
+	semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar"
+	restorecon -v "${LIB_DIR}extensions/guacamole-auth-jdbc-mysql-${GUAC_VER}.jar"
 
-		# MySQL Connector Extension Context
-		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}lib/${MYSQL_CON}.jar"
-		restorecon -v "${LIB_DIR}lib/${MYSQL_CON}.jar"
+	# MySQL Connector Extension Context
+	semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}lib/${MYSQL_CON}.jar"
+	restorecon -v "${LIB_DIR}lib/${MYSQL_CON}.jar"
 
-		# Guacamole LDAP Extension Context (If selected)
-		if [ $INSTALL_LDAP = true ]; then
-			semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-			restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		fi
+	# Guacamole LDAP Extension Context (If selected)
+	if [ $INSTALL_LDAP = true ]; then
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+	fi
 
-		# Guacamole TOTP Extension Context (If selected)
-		if [ $INSTALL_TOTP = true ]; then
-			# Placehold until extension is added
-			echo "totp true"
-			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		fi
+	# Guacamole TOTP Extension Context (If selected)
+	if [ $INSTALL_TOTP = true ]; then
+		# Placehold until extension is added
+		echo "totp true"
+		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+	fi
 
-		# Guacamole Duo Extension Context (If selected)
-		if [ $INSTALL_DUO = true ]; then
-			# Placehold until extension is added
-			echo "duo true"
-			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		fi
+	# Guacamole Duo Extension Context (If selected)
+	if [ $INSTALL_DUO = true ]; then
+		# Placehold until extension is added
+		echo "duo true"
+		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+	fi
 
-		# Guacamole RADIUS Extension Context (If selected)
-		if [ $INSTALL_RADIUS = true ]; then
-			# Placehold until extension is added
-			echo "radius true"
-			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		fi
+	# Guacamole RADIUS Extension Context (If selected)
+	if [ $INSTALL_RADIUS = true ]; then
+		# Placehold until extension is added
+		echo "radius true"
+		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+	fi
 
-		# Guacamole CAS Extension Context (If selected)
-		if [ $INSTALL_CAS = true ]; then
-			# Placehold until extension is added
-			echo "cas true"
-			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		fi
+	# Guacamole CAS Extension Context (If selected)
+	if [ $INSTALL_CAS = true ]; then
+		# Placehold until extension is added
+		echo "cas true"
+		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+	fi
 
-		# Guacamole OpenID Extension Context (If selected)
-		if [ $INSTALL_OPENID = true ]; then
-			# Placehold until extension is added
-			echo "openid true"
-			#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-			#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		fi
+	# Guacamole OpenID Extension Context (If selected)
+	if [ $INSTALL_OPENID = true ]; then
+		# Placehold until extension is added
+		echo "openid true"
+		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+	fi
 
-		# Guacamole Custom Extension Context (If selected)
-		if [ $INSTALL_CUST_EXT = true ]; then
-			semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${CUST_FN}"
-			restorecon -v "${LIB_DIR}extensions/${CUST_FN}"
-		fi
-	} &
+	# Guacamole Custom Extension Context (If selected)
+	if [ $INSTALL_CUST_EXT = true ]; then
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${CUST_FN}"
+		restorecon -v "${LIB_DIR}extensions/${CUST_FN}"
+	fi
+} &
 
 s_echo "y" "${Bold}Setting SELinux Context...    "; spinner
 
+# Log SEL status
 sestatus
 
 firewallsettings
 }
 
-#####    FIREWALL SETTINGS    ########################################
+######  FIREWALL SETTINGS  ###########################################
 firewallsettings () {
 s_echo "y" "${Bold}Firewall Configuration"
 
 chk_installed "firewalld"
 
-echo -e "\nservice firewalld status"
-systemctl status firewalld
-
+# Ensure firewalld is enabled and started
 {
-if [ $RETVAL -eq 0 ]; then
-	systemctl enable firewalld
-	systemctl restart firewalld
-fi
+	if [ $RETVAL -eq 0 ]; then
+		systemctl enable firewalld
+		systemctl restart firewalld
+	fi
 } &
 s_echo "n" "${Reset}-firewalld is installed and started on the system...    "; spinner
 
+# Backup firewall public zone config
 cp /etc/firewalld/zones/public.xml $fwbkpfile &
 s_echo "n" "-Backing up firewall public zone to: $fwbkpfile    "; spinner
 
@@ -1669,10 +1641,10 @@ s_echo "n" "-Opening HTTP and HTTPS service ports...    "; spinner
 
 # Open 8080 and 8443 ports. Need to review if this is required or not
 {
-echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp"
-firewall-cmd --permanent --zone=public --add-port=8080/tcp
-echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp"
-firewall-cmd --permanent --zone=public --add-port=8443/tcp
+	echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8080/tcp"
+	firewall-cmd --permanent --zone=public --add-port=8080/tcp
+	echo -e "Add new rule...\nfirewall-cmd --permanent --zone=public --add-port=8443/tcp"
+	firewall-cmd --permanent --zone=public --add-port=8443/tcp
 } &
 s_echo "n" "-Opening ports 8080 and 8443 on TCP...    "; spinner
 
@@ -1683,7 +1655,7 @@ s_echo "n" "-Reloading firewall...    "; spinner
 sslcerts
 }
 
-#####    SSL CERTIFICATE        ########################################
+######  SSL CERTIFICATE  #############################################
 sslcerts () {
 s_echo "y" "${Bold}SSL Certificate Configuration"
 
@@ -1693,29 +1665,30 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		# Install certbot from repo
 		yum install -y certbot python2-certbot-nginx &
 		s_echo "n" "${Reset}-Downloading certboot tool...    "; spinner
-		
+
+		# OCSP
 		{
-		if [ $OCSP_USE = true ]; then
-			certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}"
-		else # Generate without OCSP --must-staple
-			certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}"
-		fi
+			if [ $OCSP_USE = true ]; then
+				certbot certonly --nginx --must-staple -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}"
+			else # Generate without OCSP --must-staple
+				certbot certonly --nginx -n --agree-tos --rsa-key-size ${LE_KEY_SIZE} -m "${EMAIL_NAME}" -d "${DOMAIN_NAME}"
+			fi
 		} &
 		s_echo "n" "-Generating a ${SSL_CERT_TYPE} SSL Certificate...    "; spinner
-		
+
+		# Symlink Lets Encrypt certs so renewal does not break Nginx
 		{
-			# Symlink Lets Encrypt certs so renewal does not break Nginx
 			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem" /etc/nginx/guacamole.crt
 			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem" /etc/nginx/guacamole.key
 			ln -vs "/etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem" /etc/nginx/guacamole.pem
 		} &
 		s_echo "n" "-Creating symlinks to ${SSL_CERT_TYPE} SSL certificates...    "; spinner
 
+		#Setup automatic cert renewal
 		{
-		#Setup automatic renewal
-		systemctl enable certbot-renew.service
-		systemctl enable certbot-renew.timer
-		systemctl list-timers --all | c1_grep certbot
+			systemctl enable certbot-renew.service
+			systemctl enable certbot-renew.timer
+			systemctl list-timers --all | c1_grep certbot
 		} &
 		s_echo "n" "-Setup automatic ${SSL_CERT_TYPE} SSL certificate renewals...    "; spinner
 
@@ -1731,7 +1704,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 	HTTPS_ENABLED=true
 else # Is set to None
 	s_echo "n" "${Reset}-No SSL Cert selected..."
-	
+
 	# Cannot force/use HTTPS without a cert, comment out redirect
 	sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf &
 	s_echo "n" "${Reset}-Update guacamole.conf to allow HTTP connections...    "; spinner
@@ -1742,23 +1715,24 @@ fi
 showmessages
 }
 
-#####    COMPLETION MESSAGES    ########################################
+######  COMPLETION MESSAGES  #########################################
 showmessages () {
 s_echo "y" "${Bold}Services"
 
-{
 # Restart all services and log status
-systemctl restart tomcat
-systemctl status tomcat
-systemctl restart guacd
-systemctl status guacd
-systemctl restart mariadb
-systemctl status mariadb
-systemctl restart nginx
-systemctl status nginx
+{
+	systemctl restart tomcat
+	systemctl status tomcat
+	systemctl restart guacd
+	systemctl status guacd
+	systemctl restart mariadb
+	systemctl status mariadb
+	systemctl restart nginx
+	systemctl status nginx
 } &
 s_echo "n" "${Reset}-Restarting all services...    "; spinner
 
+# Completion messages
 s_echo "y" "${Bold}${Green}##### Installation Complete! #####${Reset}"
 
 s_echo "y" "${Bold}Log Files"
@@ -1774,14 +1748,17 @@ fi
 
 # Determine if HTTPS is used or not
 if [ ${HTTPS_ENABLED} = true ]; then
-	HTTPS_MSG="${Bold} or ${Reset}https://${GUAC_URL}"
+	HTTPS_MSG="${Reset} or ${Bold}https://${GUAC_URL}${Reset}"
 else # HTTPS not used
-	HTTPS_MSG="${Bold}. Without a cert, HTTPS is not available."
+	HTTPS_MSG="${Reset}. Without a cert, HTTPS is not available."
 fi
 
-s_echo "y" "${Bold}To manage Guacamole go to ${Reset}http://${GUAC_URL}${HTTPS_MSG}"
-s_echo "n" "${Reset}-The default username and password are: ${Red}guacadmin"
+# Manage Guac
+s_echo "y" "${Bold}To manage Guacamole:"
+s_echo "n" "${Reset}-go to: ${Bold}http://${GUAC_URL}${HTTPS_MSG}"
+s_echo "n" "-The default username and password are: ${Red}guacadmin"
 
+# Recommendations
 s_echo "y" "Important Recommendations${Reset}"
 
 if [ $INSTALL_LDAP = false ]; then
@@ -1806,9 +1783,11 @@ tput sgr0 >&3
 exit 0
 }
 
-#####    INSTALL EXECUTION   ################################
+######  INSTALLATION EXECUTION  ######################################
+# Runs the install if the option was selected from the summary menu
 if [ ${RUN_INSTALL} = true ]; then
 	tput sgr0 >&3
 	clear >&3
 	reposinstall
+	exit 0
 fi
