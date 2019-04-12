@@ -713,7 +713,7 @@ do
 	case $a in
 		"View/change selected extensions and their settings") sum_sel_ext; RET_SUM=true; break;;
 		"Change if extensions are installed and if so which") ext_menu; RET_SUM=true; break;;
-		"Return to the Summary menu") sum_menu; break;;
+		"Return to the Summary menu") sum_menu; RET_SUM=false; break;;
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the action to take.";;
 	esac
 done
@@ -747,7 +747,7 @@ if [ ${INSTALL_EXT} = true ]; then
 			"Radius") sum_Radius; RET_SUM=true; break;;
 			"CAS") sum_CAS; RET_SUM=true; break;;
 			"OpenID") sum_OpenID; RET_SUM=true; break;;
-			"Return to Standard Extension Summary") sum_ext; break;;
+			"Return to Standard Extension Summary") sum_ext; RET_SUM=false; break;;
 			* ) echo "Select a valid option.";;
 			esac
 		done
