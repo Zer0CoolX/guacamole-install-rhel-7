@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_4_11" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_12" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -406,7 +406,7 @@ done
 
 # Check if LDAPS was selected
 if [ $SECURE_LDAP = true ]; then
-	echo -n "${Green} Enter the LDAP Port (default 636): ${Yellow}"
+	echo -ne "\n${Green} Enter the LDAP Port (default 636): ${Yellow}"
 		read LDAP_PORT
 		LDAP_PORT=${LDAP_PORT:-636}
 
@@ -415,10 +415,10 @@ if [ $SECURE_LDAP = true ]; then
 	LDAPS_CERT_FULL="xNULLx"
 
 	while [ ! -f ${LDAPS_CERT_FULL} ]; do
-		echo -n "${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
+		echo -ne "\n${Green} Enter a valid filename of the .cer certificate file (Ex: mycert.cer): ${Yellow}"
 			read LDAPS_CERT_FN
 			LDAPS_CERT_FN=${LDAPS_CERT_FN:-${LDAPS_CERT_FN}}
-		echo "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
+		echo -n "${Green} Enter the full path of the dir containing the .cer certificate file (must end with / Ex: /home/me/): ${Yellow}"
 			read LDAPS_CERT_DIR
 			LDAPS_CERT_DIR=${LDAPS_CERT_DIR:-/home/}
 			LDAPS_CERT_FULL=${LDAPS_CERT_DIR}${LDAPS_CERT_FN}
@@ -427,16 +427,16 @@ if [ $SECURE_LDAP = true ]; then
 		fi
 	done
 
-	echo "${Green} Set the password for the CACert Java Keystore, must be 6 or more characters (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
+	echo -ne "\n${Green} Set the password for the CACert Java Keystore, must be 6 or more characters (default ${JKS_CACERT_PASSWD_DEF}): ${Yellow}"
 		read JKS_CACERT_PASSWD
 		JKS_CACERT_PASSWD=${JKS_CACERT_PASSWD:-${JKS_CACERT_PASSWD_DEF}}
 else # Use LDAP not LDAPS
-	echo -n "${Green} Enter the LDAP Port (default 389): ${Yellow}"
+	echo -ne "\n${Green} Enter the LDAP Port (default 389): ${Yellow}"
 		read LDAP_PORT
 		LDAP_PORT=${LDAP_PORT:-389}
 fi
 
-echo -n "${Green} Enter the LDAP Server Hostname (use the FQDN, Ex: ldaphost.domain.com): ${Yellow}"
+echo -ne "\n${Green} Enter the LDAP Server Hostname (use the FQDN, Ex: ldaphost.domain.com): ${Yellow}"
 	read LDAP_HOSTNAME
 	LDAP_HOSTNAME=${LDAP_HOSTNAME:-ldaphost.domain.com}
 echo -n "${Green} Enter the LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}"
