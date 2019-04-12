@@ -626,9 +626,6 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
-sum_menu
 }
 
 #####      PASSWORD SUMMARY       ###################################
@@ -649,9 +646,6 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
-sum_menu
 }
 
 #####      SSL CERTIFICATE SUMMARY       ###################################
@@ -685,9 +679,6 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
-sum_menu
 }
 
 #####      NGINX SUMMARY       ###################################
@@ -709,9 +700,6 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
-sum_menu
 }
 
 #####      STANDARD EXTENSION SUMMARY       ###################################
@@ -735,9 +723,6 @@ do
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the action to take.";;
 	esac
 done
-
-tput sgr0
-sum_menu
 }
 
 #####      SELECTED EXTENSIONS SUMMARY       ###################################
@@ -771,9 +756,6 @@ else # Installing extensions was set to "no"
 	echo -e "${Green} Installation of extensions was declined.\n If you want to install extensions, change if extensions are installed from the Standard Extension Summary menu using option 2"
 	sleep 5
 fi
-
-tpu sgr0
-sum_ext
 }
 
 #####      LDAP SUMMARY       ###################################
@@ -924,9 +906,6 @@ while true; do
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-
-tput sgr0
-sum_menu
 }
 
 #####    CONTINUE EXECUTION   ################################
