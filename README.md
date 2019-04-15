@@ -16,6 +16,7 @@ Some of the main features and benefits of using this Apache Guacamole installati
 - All SELinux contexts properly set instead of disabling SEL.
 - Firewalld configured for Guacamole.
 - Script generates a log file of what it did for review.
+- Error handling covering the installation process. On error the line that failed and exit code are displayed and logged and the script stops
 - And more...
 
 Further details on the [Script Features](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Guacamole-Install-Script-Features) page.
