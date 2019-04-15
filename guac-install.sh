@@ -1711,7 +1711,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		{
 			systemctl enable certbot-renew.service
 			systemctl enable certbot-renew.timer
-			systemctl list-timers --all | c1_grep certbot
+			systemctl list-timers --all | grep certbot
 		} &
 		s_echo "n" "-Setup automatic ${SSL_CERT_TYPE} SSL certificate renewals...    "; spinner
 
