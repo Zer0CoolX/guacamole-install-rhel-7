@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_4_12" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_15" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
