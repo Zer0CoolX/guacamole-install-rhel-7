@@ -971,12 +971,12 @@ s_echo () {
 case $1 in
 	# No preceeding blank line
 	[Nn])
-		echo -e "\n${2}" | tee -a /dev/fd/3
+		echo -ne "\n${2}" | tee -a /dev/fd/3
 		echo # add new line after in log only
 		;;
 	# Preceeding blank line
 	[Yy]|*)
-		echo -e "\n\n${2}" | tee -a /dev/fd/3
+		echo -ne "\n\n${2}" | tee -a /dev/fd/3
 		echo # add new line after in log only
 		;;
 esac
