@@ -971,10 +971,10 @@ s_echo () {
 case $1 in
 	# No preceeding blank line
 	[Nn])
-		echo -ne "\n${2}" | tee -a /dev/fd/3 ;;
+		echo -e "${2}" | tee -a /dev/fd/3 ;;
 	# Preceeding blank line
 	[Yy]|*)
-		echo -ne "\n\n${2}" | tee -a /dev/fd/3 ;;
+		echo -e "\n${2}" | tee -a /dev/fd/3 ;;
 esac
 }
 
@@ -989,9 +989,9 @@ EXITCODE=$?
 
 # Check if trap was trigger by a background process
 if [ $F_BG = true ]; then # Caused by background process
-	s_echo "n" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
+	s_echo "y" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
 else # Not caused by background process
-	s_echo "n" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${EXITCODE} %%%\n"
+	s_echo "y" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${EXITCODE} %%%\n"
 fi
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
