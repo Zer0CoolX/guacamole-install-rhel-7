@@ -71,11 +71,11 @@ I try and test the script as many ways as I can. Should you find an issue you fe
 
 Thanks
 
-As expressed on the official site for Apache Guacamole (which is free and open source):
+As expressed on the official site for [Apache Guacamole](https://guacamole.apache.org/) (which is free and open source):
 > Apache Guacamole is a clientless remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH. We call it clientless because no plugins or client software are required.
 
-Nginx is a free and open source HTTP and reverse proxy server.
+[Nginx](https://nginx.org/en/) is a free and open source HTTP and reverse proxy server.
 
-mariaDB is an open source database that is forked from MySQL.
+[MariaDB](https://mariadb.org/) is an open source database that is forked from MySQL.
 
-Let's Encrypt is a free, automated and open Certificate Authority providing SSL certificates to allow setting up more secure websites using HTTPS.
+[Let's Encrypt](https://letsencrypt.org/) is a free, automated and open Certificate Authority providing SSL certificates to allow setting up more secure websites using HTTPS.
