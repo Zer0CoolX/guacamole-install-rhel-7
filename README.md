@@ -1,6 +1,6 @@
 # Apache Guacamole Install Script for RHEL 7 & CentOS 7
 ## Introduction
-The `guac-install.sh` bash script is intended to allow for a guided, simple way to install and configure a complete Apache Guacamole server on a fresh RHEL 7 or CentOS 7 install. The Apache Guacamole installation script presents an interactive menu providing options to install Guacamole, Nginx, mariaDB and other software for a complete Apache Guacamole setup. The menu provides the means to set configuration parameters in an organized way and allows for review and making changes prior to running the installation for Guacamole.
+The `guac-install.sh` bash script is intended to allow for a guided, simple way to install Guacamole and configure a complete Apache Guacamole server on a fresh RHEL 7 or CentOS 7 install. The Apache Guacamole installation script presents an interactive menu providing options to install Guacamole, Nginx, mariaDB and other software for a complete Apache Guacamole setup. The menu provides the means to set configuration parameters in an organized way and allows for review and making changes prior to running the installation for Guacamole.
 
 The wiki will cover all aspects of the Apache Guacamole installation script for RHEL and CentOS in further detail. Before using the script read all the documentation and review the Guacamole install script (especially the variables). Test the Guacamole script in a test environment/server and ensure it functions exactly as desired before attempting to utilize it on a production system.
 
