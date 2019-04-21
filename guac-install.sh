@@ -1039,7 +1039,7 @@ else
 fi
 
 # Install RPMFusion Repo
-chk_installed "rpmfusion"
+chk_installed "rpmfusion-free-release"
 
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "-RPMFusion is installed."
