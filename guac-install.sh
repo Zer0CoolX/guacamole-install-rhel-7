@@ -29,7 +29,7 @@ ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server a
 
 # Versions
 GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
-MYSQL_CON_VER="5.1.47" # Working stable release of MySQL Connecter J
+MYSQL_CON_VER="8.0.15" # Working stable release of MySQL Connecter J
 LIBJPEG_VER="2.0.2" # Latest stable version of libjpeg-turbo
 MAVEN_VER="3.6.1" # Latest stable version of Apache Maven
 
