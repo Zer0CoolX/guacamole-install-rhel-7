@@ -31,7 +31,7 @@ ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server a
 GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
 MYSQL_CON_VER="5.1.47" # Working stable release of MySQL Connecter J
 LIBJPEG_VER="2.0.2" # Latest stable version of libjpeg-turbo
-MAVEN_VER="3.6.0" # Latest stable version of Apache Maven
+MAVEN_VER="3.6.1" # Latest stable version of Apache Maven
 
 # Ports
 GUAC_PORT="4822"
@@ -1220,7 +1220,7 @@ s_echo "y" "${Bold}Install Guacamole Client"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
-	mvn package &
+	/opt/maven/bin/mvn package &
 	s_echo "n" "${Reset}-Compiling Guacamole Client...    "; spinner
 
 	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war &
