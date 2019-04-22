@@ -1108,10 +1108,10 @@ if [ $GUAC_SOURCE == "Git" ]; then
 		wget ${MAVEN_URL}${MAVEN_BIN}
 		tar -xvzf ${MAVEN_BIN}
 		ln -s ${MAVEN_FN} maven
-		export PATH=/opt/maven/bin:${PATH}
 		rm -rf /opt/${MAVEN_BIN}
 	} &
 	s_echo "n" "-Installing Apache Maven for git...    "; spinner
+	export PATH=/opt/maven/bin:${PATH}
 	cd ~
 fi
 
@@ -1220,7 +1220,7 @@ s_echo "y" "${Bold}Install Guacamole Client"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
-	/opt/maven/bin/mvn package &
+	mvn package &
 	s_echo "n" "${Reset}-Compiling Guacamole Client...    "; spinner
 
 	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war &
