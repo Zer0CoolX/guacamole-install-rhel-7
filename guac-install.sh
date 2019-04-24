@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_4_22" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_24" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1413,8 +1413,8 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 # HTTPS/SSL Nginx Conf
 {
 	echo "server {
-		listen 443 ssl http2 default_server;
-		listen [::]:443 ssl http2 default_server;
+		#listen 443 ssl http2 default_server;
+		#listen [::]:443 ssl http2 default_server;
 		server_name ${DOMAIN_NAME};
 		server_tokens off;
 		#ssl_certificate guacamole.crt;
@@ -1739,6 +1739,8 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		s_echo "n" "${Reset}-Generating ${SSL_CERT_TYPE} SSL Certificate...    "; spinner
 	fi
 
+	# Uncomment listen lines from Nginx guacamole_ssl.conf (fixes issue introduced by Nginx 1.16.0)
+	sed -i 's/#\(listen.*443.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf
 	# Uncomment cert lines from Nginx guacamole_ssl.conf
 	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf &
 	s_echo "n" "${Reset}-Enabling SSL certificate in guacamole_ssl.conf...    "; spinner
