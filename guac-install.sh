@@ -993,9 +993,10 @@ EXITCODE=$?
 
 # Check if trap was trigger by a background process
 if [ $F_BG = true ]; then # Caused by background process
-	s_echo "y" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | exit code: ${EXITCODE} %%%\n"
+	s_echo "y" "%%% ERROR (Script Failed) | Line $(( ${BASH_LINENO[1]} - 1 )) | Exit code: ${EXITCODE} %%%\n"
 else # Not caused by background process
-	s_echo "y" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | command: ${BASH_COMMAND} | exit code: ${EXITCODE} %%%\n"
+	FAILED_COMMAND=$(eval echo "$BASH_COMMAND") # Used to expand the variables in the command returned by BASH_COMMAND
+	s_echo "y" "%%% ERROR (Script Failed) | Line ${BASH_LINENO[0]} | Command: ${FAILED_COMMAND} | Exit code: ${EXITCODE} %%%\n"
 fi
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
