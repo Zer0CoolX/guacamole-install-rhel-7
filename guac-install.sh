@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_4_24" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_26" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -996,7 +996,7 @@ if [ $F_BG = true ]; then # Caused by background process
 	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} $(( ${BASH_LINENO[1]} - 1 )) ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
 else # Not caused by background process
 	FAILED_COMMAND=$(eval echo "$BASH_COMMAND") # Used to expand the variables in the command returned by BASH_COMMAND
-	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
+	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}   \n"
 fi
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
