@@ -935,7 +935,7 @@ exec 3>&1
 # Used to show a process is making progress/running
 spinner () {
 pid=$!
-#echo "true" >/tmp/guac_bg
+#Store the group command background process in a temp file to use in err_handler
 echo $(jobs -p) >/tmp/guac_bg
 
 spin[0]="-"
@@ -947,26 +947,27 @@ spin[3]="/"
 while kill -0 $pid 2>/dev/null
 do
 	for i in "${spin[@]}"
-	do # Display the spinner in 1/4 states
-		echo -ne "\b\b\b${Bold}[${Green}$i${Reset}${Bold}]" >&3
-		sleep .5 # time between each state
+	do
+		if kill -0 $pid 2>/dev/null; then #Check that the process is running to prevent a full 4 character cycle on error
+			# Display the spinner in 1/4 states
+			echo -ne "\b\b\b${Bold}[${Green}$i${Reset}${Bold}]" >&3
+			sleep .5 # time between each state
+		else #process has ended, stop next loop from finishing iteration
+			break
+		fi
 	done
 done
 
 # Check if background process failed once complete
 if wait $pid; then # Exit 0
 	echo -ne "\b\b\b${Bold}[${Green}-done-${Reset}${Bold}]" >&3
-	#F_BG=false
 else # Any other exit
-	echo -ne "\b\b\b\n" >&3
-	echo "spinner back here"
-	#F_BG=true # flag as background process being the failure
-	#H_ERR=true
-	false # force failure to trigger trap
-	#exit 1
+	exit 1
 fi
 
+#Set command group background process value to -1 representing no background process running to err_handler
 echo "-1" >/tmp/guac_bg
+
 tput sgr0 >&3
 }
 
@@ -997,33 +998,28 @@ exec &> "${logfile}"
 # Called by trap to display/log error info and exit script
 err_handler () {
 EXITCODE=$?
-#echo "from err: $(jobs -p)"
+
+#Read values from temp file used to store cross process values
 read F_BG </tmp/guac_bg
 read H_ERR </tmp/guac_err
 
-# Check if trap was trigger by a background process
-#if [ $F_BG = true ]; then # Caused by background process
-#	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} $(( ${BASH_LINENO[1]} - 1 )) ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
-#else # Not caused by background process
-#echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
-#fi
-#echo "from err: ${F_BG}"
+#Check this is the first time the err_handler has triggered
 if [ $H_ERR = false ]; then
+	#Check if error occured with a background process running
 	if [ $F_BG -gt 0 ]; then
 		echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
-		#kill $F_BG
 	fi
 
 	FAILED_COMMAND=$(eval echo "$BASH_COMMAND") # Used to expand the variables in the command returned by BASH_COMMAND
-	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}"
+	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
 fi
 
+#If a background process was running terminate it and return exit 0 as status
 if [ $F_BG -gt 0 ]; then
-	echo -ne "\b\b\b\n" >&3
-	echo "backspace here"
+	kill $F_BG -s 9 -l 0
 fi
 
-#kill $F_BG
+#Flag as trap having been run already skipping double error messages
 echo "true" >/tmp/guac_err
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
@@ -1046,7 +1042,6 @@ fi
 ######  ERROR TRAP  ##################################################
 # Trap to call error function to display and log error details
 trap err_handler ERR SIGINT SIGQUIT
-#trap "kill 0" EXIT
 
 ######################################################################
 ######  INSALLATION  #################################################
