@@ -962,7 +962,7 @@ done
 if wait $pid; then # Exit 0
 	echo -ne "\b\b\b${Bold}[${Green}-done-${Reset}${Bold}]" >&3
 else # Any other exit
-	exit 1
+	false
 fi
 
 #Set command group background process value to -1 representing no background process running to err_handler
@@ -1011,12 +1011,7 @@ if [ $H_ERR = false ]; then
 	fi
 
 	FAILED_COMMAND=$(eval echo "$BASH_COMMAND") # Used to expand the variables in the command returned by BASH_COMMAND
-	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
-fi
-
-#If a background process was running terminate it and return exit 0 as status
-if [ $F_BG -gt 0 ]; then
-	kill $F_BG -s 9 -l 0
+	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n\n"
 fi
 
 #Flag as trap having been run already skipping double error messages
