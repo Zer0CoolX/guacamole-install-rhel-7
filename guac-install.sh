@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_4_26" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_4_30" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -53,6 +53,7 @@ JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used 
 # Misc
 GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
+H_ERR=false
 
 # ONLY CHANGE IF NOT WORKING #
 # URLS
@@ -934,6 +935,8 @@ exec 3>&1
 # Used to show a process is making progress/running
 spinner () {
 pid=$!
+#echo "true" >/tmp/guac_bg
+echo $(jobs -p) >/tmp/guac_bg
 
 spin[0]="-"
 spin[1]="\\"
@@ -953,13 +956,17 @@ done
 # Check if background process failed once complete
 if wait $pid; then # Exit 0
 	echo -ne "\b\b\b${Bold}[${Green}-done-${Reset}${Bold}]" >&3
-	F_BG=false
+	#F_BG=false
 else # Any other exit
-	echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
-	F_BG=true # flag as background process being the failure
+	echo -ne "\b\b\b\n" >&3
+	echo "spinner back here"
+	#F_BG=true # flag as background process being the failure
+	#H_ERR=true
 	false # force failure to trigger trap
+	#exit 1
 fi
 
+echo "-1" >/tmp/guac_bg
 tput sgr0 >&3
 }
 
@@ -990,14 +997,34 @@ exec &> "${logfile}"
 # Called by trap to display/log error info and exit script
 err_handler () {
 EXITCODE=$?
+#echo "from err: $(jobs -p)"
+read F_BG </tmp/guac_bg
+read H_ERR </tmp/guac_err
 
 # Check if trap was trigger by a background process
-if [ $F_BG = true ]; then # Caused by background process
-	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} $(( ${BASH_LINENO[1]} - 1 )) ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
-else # Not caused by background process
+#if [ $F_BG = true ]; then # Caused by background process
+#	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} $(( ${BASH_LINENO[1]} - 1 )) ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
+#else # Not caused by background process
+#echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
+#fi
+#echo "from err: ${F_BG}"
+if [ $H_ERR = false ]; then
+	if [ $F_BG -gt 0 ]; then
+		echo -ne "\b\b\b${Bold}[${Red}-FAILED-${Reset}${Bold}]" >&3
+		#kill $F_BG
+	fi
+
 	FAILED_COMMAND=$(eval echo "$BASH_COMMAND") # Used to expand the variables in the command returned by BASH_COMMAND
-	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n"
+	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}"
 fi
+
+if [ $F_BG -gt 0 ]; then
+	echo -ne "\b\b\b\n" >&3
+	echo "backspace here"
+fi
+
+#kill $F_BG
+echo "true" >/tmp/guac_err
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
@@ -1019,6 +1046,7 @@ fi
 ######  ERROR TRAP  ##################################################
 # Trap to call error function to display and log error details
 trap err_handler ERR SIGINT SIGQUIT
+#trap "kill 0" EXIT
 
 ######################################################################
 ######  INSALLATION  #################################################
@@ -1825,7 +1853,6 @@ s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or conce
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
 
 tput sgr0 >&3
-exit 0
 }
 
 ######  INSTALLATION EXECUTION  ######################################
