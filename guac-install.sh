@@ -1053,7 +1053,7 @@ chk_installed "epel-release"
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "${Reset}-EPEL is installed."
 else
-	rpm -Uvh http://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm &
+	{ rpm -Uvh http://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm; } &
 	s_echo "n" "${Reset}-EPEL is missing. Installing...    "; spinner
 fi
 
@@ -1063,13 +1063,13 @@ chk_installed "rpmfusion-free-release"
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "-RPMFusion is installed."
 else
-	rpm -Uvh https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${MAJOR_VER}.noarch.rpm &
+	{ rpm -Uvh https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${MAJOR_VER}.noarch.rpm; } &
 	s_echo "n" "-RPMFusion is missing. Installing...    "; spinner
 fi
 
 # Enable repos needed if using RHEL
 if [ $OS_NAME == "RHEL" ] ; then
-	subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms" &
+	{ subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"; } &
 	s_echo "n" "-Enabling ${OS_NAME} optional and extras repos...    "; spinner
 fi
 
@@ -1080,7 +1080,7 @@ yumupdate
 yumupdate () {
 
 # Update OS/packages
-yum update -y &
+{ yum update -y; } &
 s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
 
 baseinstall
@@ -1096,7 +1096,7 @@ chk_installed "libjpeg-turbo-official-${LIBJPEG_VER}"
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is installed"
 else
-	yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm &
+	{ yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm; } &
 	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    "; spinner
 	ln -vfs /opt/libjpeg-turbo/include/* /usr/include/
 	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/ || true # prevents issue with error trap
@@ -1108,17 +1108,17 @@ chk_installed "ffmpeg-devel"
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "-ffmpeg-devel is installed";
 else
-	yum install -y ffmpeg-devel &
+	{ yum install -y ffmpeg-devel; } &
 	s_echo "n" "-ffmpeg-devel is not installed, installing...    "; spinner
 fi
 
 # Install Required Packages
-yum install -y wget dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot &
+{ yum install -y wget dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot; } &
 s_echo "n" "-Installing other required packages...    "; spinner
 
 # Additional packages required by git
 if [ $GUAC_SOURCE == "Git" ]; then
-	yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel &
+	{ yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel; } &
 	s_echo "n" "-Installing packages required for git...    "; spinner
 
 	#Install Maven
@@ -1159,22 +1159,22 @@ s_echo "y" "${Bold}Downloading Guacamole Packages"
 
 	# MySQL Connector
 	downloadmysqlconn () {
-		wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz &
+		{ wget ${MYSQL_CON_URL}${MYSQL_CON}.tar.gz; } &
 		s_echo "n" "-Downloading MySQL Connector package for installation...    "; spinner
 	}
 
 if [ $GUAC_SOURCE == "Git" ]; then
-	git clone ${GUAC_URL}${GUAC_SERVER} &
+	{ git clone ${GUAC_URL}${GUAC_SERVER}; } &
 	s_echo "n" "${Reset}-Cloning Guacamole Server package from git...    "; spinner
-	git clone ${GUAC_URL}${GUAC_CLIENT} &
+	{ git clone ${GUAC_URL}${GUAC_CLIENT}; } &
 	s_echo "n" "-Cloning Guacamole Client package from git...    "; spinner
 	downloadmysqlconn
 else # Stable release
-	wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz &
+	{ wget "${GUAC_URL}source/${GUAC_SERVER}.tar.gz" -O ${GUAC_SERVER}.tar.gz; } &
 	s_echo "n" "${Reset}-Downloading Guacamole Server package for installation...    "; spinner
-	wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war &
+	{ wget "${GUAC_URL}binary/${GUAC_CLIENT}.war" -O ${INSTALL_DIR}client/guacamole.war; } &
 	s_echo "n" "-Downloading Guacamole Client package for installation...    "; spinner
-	wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz &
+	{ wget "${GUAC_URL}binary/${GUAC_JDBC}.tar.gz" -O ${GUAC_JDBC}.tar.gz; } &
 	s_echo "n" "-Downloading Guacamole JDBC Extension package for installation...    "; spinner
 	downloadmysqlconn
 
@@ -1213,20 +1213,20 @@ s_echo "y" "${Bold}Install Guacamole Server"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-server/
-	autoreconf -fi &
+	{ autoreconf -fi; } &
 	s_echo "n" "${Reset}-Guacamole Server compile prep...    "; spinner
 else # Stable release
 	cd server
 fi
 
 # Compile Guacamole Server
-./configure --with-systemd-dir=/etc/systemd/system &
+{ ./configure --with-systemd-dir=/etc/systemd/system; } &
 s_echo "n" "${Reset}-Compiling Guacamole Server Stage 1 of 4...    "; spinner
-make &
+{ make; } &
 s_echo "n" "-Compiling Guacamole Server Stage 2 of 4...    "; spinner
-make install &
+{ make install; } &
 s_echo "n" "-Compiling Guacamole Server Stage 3 of 4...    "; spinner
-ldconfig &
+{ ldconfig; } &
 s_echo "n" "-Compiling Guacamole Server Stage 4 of 4...    "; spinner
 cd ..
 
@@ -1239,14 +1239,14 @@ s_echo "y" "${Bold}Install Guacamole Client"
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	cd guacamole-client/
-	mvn package &
+	{ mvn package; } &
 	s_echo "n" "${Reset}-Compiling Guacamole Client...    "; spinner
 
-	mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war &
+	{ mv -v guacamole/target/guacamole-${GUAC_VER}.war ${LIB_DIR}guacamole.war; } &
 	s_echo "n" "-Moving Guacamole Client...    "; spinner
 	cd ..
 else # Stable release
-	mv -v client/guacamole.war ${LIB_DIR}guacamole.war &
+	{ mv -v client/guacamole.war ${LIB_DIR}guacamole.war; } &
 	s_echo "n" "${Reset}-Moving Guacamole Client...    "; spinner
 fi
 
@@ -1258,7 +1258,7 @@ finishguac () {
 s_echo "y" "${Bold}Setup Guacamole"
 
 # Generate Guacamole Configuration File
-echo "# Hostname and port of guacamole proxy
+{ echo "# Hostname and port of guacamole proxy
 guacd-hostname: localhost
 guacd-port:     ${GUAC_PORT}
 # MySQL properties
@@ -1268,7 +1268,7 @@ mysql-database: ${DB_NAME}
 mysql-username: ${DB_USER}
 mysql-password: ${DB_PASSWD}
 mysql-default-max-connections-per-user: 0
-mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUAC_CONF} &
+mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUAC_CONF}; } &
 s_echo "n" "${Reset}-Generating Guacamole configuration file...    "; spinner
 
 # Create Required Symlinks for Guacamole
@@ -1284,7 +1284,7 @@ s_echo "n" "-Making required symlinks...    "; spinner
 # Copy JDBC if using git
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Get JDBC from compiled client
-	find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; &
+	{ find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;; } &
 	s_echo "n" "-Moving Guacamole JDBC extension to extensions dir...    "; spinner
 fi
 appconfigs
@@ -1302,7 +1302,7 @@ s_echo "y" "${Bold}Configure MariaDB"
 s_echo "n" "${Reset}-Enable & start MariaDB service...    "; spinner
 
 # Set MariaDB/MySQL Root Password
-mysqladmin -u root password ${MYSQL_PASSWD} &
+{ mysqladmin -u root password ${MYSQL_PASSWD}; } &
 s_echo "n" "-Setting root password for MariaDB...    "; spinner
 
 # Run MariaDB/MySQL Secure Install
@@ -1372,7 +1372,7 @@ s_echo "n" "-Set RemoteIpValve in Tomcat configuration...    "; spinner
 s_echo "n" "-Set ErrorReportingVavle in Tomcat configuration...    "; spinner
 
 # Java KeyStore Setup
-keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} -noprompt -dname "CN='', OU='', O='', L='', S='', C=''" &
+{ keytool -genkey -alias Guacamole -keyalg RSA -keysize ${JKSTORE_KEY_SIZE} -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKS_GUAC_PASSWD} -keypass ${JKS_GUAC_PASSWD} -noprompt -dname "CN='', OU='', O='', L='', S='', C=''"; } &
 s_echo "y" "${Bold}Configuring the Java KeyStore...    "; spinner
 
 # Enable/Start Tomcat and Guacamole Services
@@ -1392,25 +1392,25 @@ nginxinstall () {
 s_echo "y" "${Bold}Install Nginx"
 
 # Install Nginx Repo
-echo "[nginx]
+{ echo "[nginx]
 name=nginx repo
 baseurl=${NGINX_URL}
 gpgcheck=0
-enabled=1" > /etc/yum.repos.d/nginx.repo &
+enabled=1" > /etc/yum.repos.d/nginx.repo; } &
 s_echo "n" "${Reset}-Installing Nginx repository...    "; spinner
 
 # Install Nginx
-yum install -y nginx &
+{ yum install -y nginx; } &
 s_echo "n" "-Installing Nginx...    "; spinner
 
 s_echo "y" "${Bold}Nginx Configurations"
 
 # Backup Nginx Configuration
-mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp
+{ mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp; } &
 s_echo "n" "${Reset}-Making Nginx config backup...    "; spinner
 
 # HTTP Nginx Conf
-echo "server {
+{ echo "server {
 	listen 80;
 	listen [::]:80;
 	server_name ${DOMAIN_NAME};
@@ -1426,7 +1426,7 @@ echo "server {
 	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
 	access_log off;
 	}
-}" > /etc/nginx/conf.d/guacamole.conf &
+}" > /etc/nginx/conf.d/guacamole.conf; } &
 s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
 # HTTPS/SSL Nginx Conf
@@ -1505,10 +1505,10 @@ ldapsetup () {
 s_echo "y" "${Bold}Setup the LDAP Extension"
 
 # Append LDAP configuration lines to guacamole.properties
-echo "
+{ echo "
 # LDAP properties
 ldap-hostname: ${LDAP_HOSTNAME}
-ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF} &
+ldap-port: ${LDAP_PORT}" >> /etc/guacamole/${GUAC_CONF}; } &
 s_echo "n" "${Reset}-Updating guacamole.properties file for LDAP...    "; spinner
 
 # LDAPS specific properties
@@ -1524,20 +1524,20 @@ if [ $SECURE_LDAP = true ]; then
 fi
 
 # Finish appending general LDAP configuration lines to guacamole.properties
-echo "ldap-user-base-dn: ${LDAP_BASE_DN}
+{ echo "ldap-user-base-dn: ${LDAP_BASE_DN}
 ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
 ldap-username-attribute: ${LDAP_UNAME_ATTR}
-ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF} &
+ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}; } &
 s_echo "n" "-Finishing updates to the guacamole.properties file for LDAPS...    "; spinner
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
-	find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \; &
+	{ find ./guacamole-client/extensions -name "${GUAC_LDAP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;; } &
 	s_echo "n" "-Moving Guacamole LDAP extension to extensions dir...    "; spinner
 else # Stable release
 	# Download LDAP Extension
-	wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz &
+	{ wget "${GUAC_URL}binary/${GUAC_LDAP}.tar.gz" -O ${GUAC_LDAP}.tar.gz; } &
 	s_echo "n" "-Downloading LDAP extension...    "; spinner
 
 	# Decompress LDAP Extension
@@ -1549,7 +1549,7 @@ else # Stable release
 	s_echo "n" "-Decompressing Guacamole LDAP Extension...    "; spinner
 
 	# Copy LDAP Extension to Extensions Directory
-	mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/ &
+	{ mv -v extension/${GUAC_LDAP}/${GUAC_LDAP}.jar ${LIB_DIR}extensions/; } &
 	s_echo "n" "-Moving Guacamole LDAP extension to extensions dir...    "; spinner
 fi
 }
@@ -1587,7 +1587,7 @@ openidsetup () {
 ######  CUSTOM EXTENSION SETUP  ######################################
 custsetup () {
 # Copy Custom Extension to Extensions Directory
-mv -v ${CUST_FULL} ${LIB_DIR}extensions/ &
+{ mv -v ${CUST_FULL} ${LIB_DIR}extensions/; } &
 s_echo "y" "${Bold}Copying Custom Guacamole Extension to Extensions Dir...    "; spinner
 }
 
@@ -1688,7 +1688,7 @@ chk_installed "firewalld"
 s_echo "n" "${Reset}-firewalld is installed and started on the system...    "; spinner
 
 # Backup firewall public zone config
-cp /etc/firewalld/zones/public.xml $fwbkpfile &
+{ cp /etc/firewalld/zones/public.xml $fwbkpfile; } &
 s_echo "n" "-Backing up firewall public zone to: $fwbkpfile    "; spinner
 
 # Open HTTP and HTTPS ports
@@ -1710,7 +1710,7 @@ s_echo "n" "-Opening HTTP and HTTPS service ports...    "; spinner
 s_echo "n" "-Opening ports 8080 and 8443 on TCP...    "; spinner
 
 #echo -e "Reload firewall...\nfirewall-cmd --reload\n"
-firewall-cmd --reload
+{ firewall-cmd --reload; } &
 s_echo "n" "-Reloading firewall...    "; spinner
 
 sslcerts
@@ -1724,7 +1724,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 	# Lets Encrypt Setup (If selected)
 	if [ $SSL_CERT_TYPE = "LetsEncrypt" ]; then
 		# Install certbot from repo
-		yum install -y certbot python2-certbot-nginx &
+		{ yum install -y certbot python2-certbot-nginx; } &
 		s_echo "n" "${Reset}-Downloading certboot tool...    "; spinner
 
 		# OCSP
@@ -1754,14 +1754,14 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		s_echo "n" "-Setup automatic ${SSL_CERT_TYPE} SSL certificate renewals...    "; spinner
 
 	else # Use a Self-Signed Cert
-		openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt -subj "/C=''/ST=''/L=''/O=''/OU=''/CN=''" &
+		{ openssl req -x509 -sha512 -nodes -days 365 -newkey rsa:${SSL_KEY_SIZE} -keyout /etc/nginx/guacamole.key -out /etc/nginx/guacamole.crt -subj "/C=''/ST=''/L=''/O=''/OU=''/CN=''"; } &
 		s_echo "n" "${Reset}-Generating ${SSL_CERT_TYPE} SSL Certificate...    "; spinner
 	fi
 
 	# Uncomment listen lines from Nginx guacamole_ssl.conf (fixes issue introduced by Nginx 1.16.0)
 	sed -i 's/#\(listen.*443.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf
 	# Uncomment cert lines from Nginx guacamole_ssl.conf
-	sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf &
+	{ sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf; } &
 	s_echo "n" "${Reset}-Enabling SSL certificate in guacamole_ssl.conf...    "; spinner
 
 	HTTPS_ENABLED=true
@@ -1769,7 +1769,7 @@ else # Cert is set to None
 	s_echo "n" "${Reset}-No SSL Cert selected..."
 
 	# Will not force/use HTTPS without a cert, comment out redirect
-	sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf &
+	{ sed -i '/\(return 301 https\)/s/^/#/' /etc/nginx/conf.d/guacamole.conf; } &
 	s_echo "n" "${Reset}-Update guacamole.conf to allow HTTP connections...    "; spinner
 
 	HTTPS_ENABLED=false
