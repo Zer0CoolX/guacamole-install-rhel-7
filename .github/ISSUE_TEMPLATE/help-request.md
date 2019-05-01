@@ -9,8 +9,8 @@ assignees: Zer0CoolX
 
 **Confirmation of Process**
 1. You have read the [How to report issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)) wiki page? Y/N
-2. Have you read the [wiki](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki), checking all pages for information that may help you? Y/N
-3. Have you read other requests to ensure this question has not already been asked and/or resolved? Y/N
+2. You read the [wiki](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki), checking all pages for information that may help you? Y/N
+3. You read other requests to ensure this question has not already been asked and/or resolved? Y/N
 4. You understand that this script comes without warranty and is provided as is without any expectation of help from myself or others? Y/N
 5. You understand that submitting a help request does not guarantee a response or solution to your issue? Y/N
 
