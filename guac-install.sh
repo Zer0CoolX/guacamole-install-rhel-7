@@ -1448,7 +1448,7 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
 	# If using >= 256-bit ciphers
 	if [ $NGINX_SEC = true ]; then
-		echo "	ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384';" >> /etc/nginx/conf.d/guacamole_ssl.conf
+		echo "	ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384';" >> /etc/nginx/conf.d/guacamole_ssl.conf
 	else
 		echo "	ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';" >> /etc/nginx/conf.d/guacamole_ssl.conf
 	fi
@@ -1460,11 +1460,12 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 		ssl_session_cache shared:SSL:10m;
 		ssl_session_timeout 1d;
 		ssl_session_tickets off;
-		add_header Referrer-Policy \"no-referrer-when-downgrade\" always;
+		add_header Referrer-Policy \"no-referrer\";
 		add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
-		add_header X-Frame-Options DENY;
-		add_header X-Content-Type-Options nosniff;
-		add_header X-XSS-Protection \"1; mode=block\";
+		#add_header Content-Security-Policy \"default-src \'none\'; script-src \'self\'; connect-src \'self\'; img-src \'self\'; style-src \'self\'; frame-ancestors \'none\';\" always;
+		add_header X-Frame-Options \"SAMEORIGIN\" always;
+		add_header X-Content-Type-Options \"nosniff\" always;
+		add_header X-XSS-Protection \"1; mode=block\" always;
 
 		location ${GUAC_URIPATH} {
 		proxy_pass http://${GUAC_LAN_IP}:8080/guacamole/;
