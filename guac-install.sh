@@ -1462,7 +1462,7 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 		ssl_session_tickets off;
 		add_header Referrer-Policy \"no-referrer\";
 		add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
-		#add_header Content-Security-Policy \"default-src \'none\'; script-src \'self\'; connect-src \'self\'; img-src \'self\'; style-src \'self\'; frame-ancestors \'none\';\" always;
+		add_header Content-Security-Policy \"default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; object-src 'self'; frame-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self';\" always;
 		add_header X-Frame-Options \"SAMEORIGIN\" always;
 		add_header X-Content-Type-Options \"nosniff\" always;
 		add_header X-XSS-Protection \"1; mode=block\" always;
@@ -1474,7 +1474,7 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
 		proxy_set_header Upgrade \$http_upgrade;
 		proxy_set_header Connection \$http_connection;
-		proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
+		proxy_cookie_path /guacamole/ \"${GUAC_URIPATH}; HTTPOnly; Secure; SameSite\";
 		access_log /var/log/nginx/guac_access.log;
 		error_log /var/log/nginx/guac_error.log;
 		}
