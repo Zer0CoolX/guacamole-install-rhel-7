@@ -1456,15 +1456,11 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 		#ssl_certificate guacamole.crt;
 		#ssl_certificate_key guacamole.key; " > /etc/nginx/conf.d/guacamole_ssl.conf
 
-	# If OCSP Stapling was selected add lines, otherwise add commented out.
+	# If OCSP Stapling was selected add lines
 	if [ $OCSP_USE = true ]; then
 		echo "	#ssl_trusted_certificate guacamole.pem;
 		ssl_stapling on;
 		ssl_stapling_verify on;" >> /etc/nginx/conf.d/guacamole_ssl.conf
-	else
-		echo "	#ssl_trusted_certificate guacamole.pem;
-		#ssl_stapling on;
-		#ssl_stapling_verify on;" >> /etc/nginx/conf.d/guacamole_ssl.conf
 	fi
 
 	# If using >= 256-bit ciphers
