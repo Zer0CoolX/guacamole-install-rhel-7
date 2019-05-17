@@ -290,15 +290,31 @@ echo -n "${Green} Enter the URI path, starting and ending with / for example /gu
 	read GUAC_URIPATH
 	GUAC_URIPATH=${GUAC_URIPATH:-${GUAC_URIPATH_DEF}}
 
-while true; do
-	echo -n "${Green} Use only >= 256-bit SSL ciphers (More secure, less compatible. default: no)?: ${Yellow}"
-	read yn
-	case $yn in
-		[Yy]* ) NGINX_SEC=true; break;;
-		[Nn]*|"" ) NGINX_SEC=false; break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
+# Only prompt if SSL will be used
+if [ $SSL_CERT_TYPE != "None" ]; then
+	while true; do
+		echo -n "${Green} Use only >= 256-bit SSL ciphers (More secure, less compatible. default: no)?: ${Yellow}"
+		read yn
+		case $yn in
+			[Yy]* ) NGINX_SEC=true; break;;
+			[Nn]*|"" ) NGINX_SEC=false; break;;
+			* ) echo "${Green} Please enter yes or no. ${Yellow}";;
+		esac
+	done
+
+	while true; do
+		echo -n "${Green} Use Content-Security-Policy [CSP] (More secure, less compatible. default: no)?: ${Yellow}"
+		read yn
+		case $yn in
+			[Yy]* ) USE_CSP=true; break;;
+			[Nn]*|"" ) USE_CSP=false; break;;
+			* ) echo "${Green} Please enter yes or no. ${Yellow}";;
+		esac
+	done
+else
+	NGINX_SEC=false
+	USE_CSP=false
+fi
 }
 
 ######  EXTENSIONS MENU  #############################################
@@ -673,7 +689,8 @@ menu_header
 echo "${Green} Guacamole Server LAN IP address: ${Yellow}${GUAC_LAN_IP}"
 echo "${Green} Guacamole Server hostname or public domain: ${Yellow}${DOMAIN_NAME}"
 echo "${Green} URI path: ${Yellow}${GUAC_URIPATH}"
-echo -e "${Green} Using only 256-bit >= ciphers?: ${Yellow}${NGINX_SEC}\n"
+echo "${Green} Using only 256-bit >= ciphers?: ${Yellow}${NGINX_SEC}"
+echo -e "${Green} Content-Security-Policy [CSP] enabled?: ${Yellow}${USE_CSP}\n"
 
 while true; do
 	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
@@ -1439,11 +1456,15 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 		#ssl_certificate guacamole.crt;
 		#ssl_certificate_key guacamole.key; " > /etc/nginx/conf.d/guacamole_ssl.conf
 
-	# If OCSP Stapling was selected
+	# If OCSP Stapling was selected add lines, otherwise add commented out.
 	if [ $OCSP_USE = true ]; then
 		echo "	#ssl_trusted_certificate guacamole.pem;
 		ssl_stapling on;
 		ssl_stapling_verify on;" >> /etc/nginx/conf.d/guacamole_ssl.conf
+	else
+		echo "	#ssl_trusted_certificate guacamole.pem;
+		#ssl_stapling on;
+		#ssl_stapling_verify on;" >> /etc/nginx/conf.d/guacamole_ssl.conf
 	fi
 
 	# If using >= 256-bit ciphers
@@ -1461,9 +1482,16 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 		ssl_session_timeout 1d;
 		ssl_session_tickets off;
 		add_header Referrer-Policy \"no-referrer\";
-		add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;
-		add_header Content-Security-Policy \"default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'self'; object-src 'self'; frame-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self';\" always;
-		add_header X-Frame-Options \"SAMEORIGIN\" always;
+		add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;" >> /etc/nginx/conf.d/guacamole_ssl.conf
+		
+	# If CSP was enabled, add line, otherwise add but comment out (to allow easily manual toggle of the feature)
+	if [ $USE_CSP = true ]; then
+		echo "	add_header Content-Security-Policy \"default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'self'; object-src 'self'; frame-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self';\" always;" >> /etc/nginx/conf.d/guacamole_ssl.conf
+	else
+		echo "	#add_header Content-Security-Policy \"default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'self'; object-src 'self'; frame-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self';\" always;" >> /etc/nginx/conf.d/guacamole_ssl.conf
+	fi
+
+	echo "	add_header X-Frame-Options \"SAMEORIGIN\" always;
 		add_header X-Content-Type-Options \"nosniff\" always;
 		add_header X-XSS-Protection \"1; mode=block\" always;
 
