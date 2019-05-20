@@ -8,6 +8,7 @@ Some of the main features and benefits of using this Apache Guacamole installati
 - In typical scenarios, once the script completes the Guacamole server should be fully ready to use
 - Use Nginx as a reverse proxy allowing for changing the URI, having SSL/HTTPS securely setup and forcing HTTPS among other benefits.
 - Nginx configuration options capable of scoring A+ and 90-100% on categories of the Qualys SSL test. Will varying based on other options selected.
+- Nginx Content-Security-Policy (CSP) option to enable/disable CSP. Scores A+, 100/100 on Mozilla Observatory test.
 - Ability to create a valid SSL certificate from LetsEncrypt AND keep it updated automatically. Also allows setting the key-size used by LetsEncrypt.
 - MariaDB is setup and configured as the database for user settings and basic authentication. It also automatically runs hardening on the database (by running mysql_secure_installation and automatically answering the prompts)
 - Ability to install and configure Guacamole extensions (currently limited to LDAP)
