@@ -1117,7 +1117,7 @@ baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
-{ yum install -y wget dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot libjpeg-turbo-official ffmpeg-devel; } &
+{ yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel wget; } &
 s_echo "n" "-Installing other required packages...    "; spinner
 
 # Additional packages required by git
