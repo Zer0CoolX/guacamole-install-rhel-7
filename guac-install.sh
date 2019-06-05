@@ -1088,7 +1088,7 @@ fi
 	wget ${LIBJPEG_REPO} -P /etc/yum.repos.d/
 
 	# Exclude beta releases
-	sed -i 's/exclude.*/${LIBJPEG_EXCLUDE}/g' /etc/yum.repos.d/libjpeg-turbo.repo
+	sed -i "s/exclude.*/${LIBJPEG_EXCLUDE}/g" /etc/yum.repos.d/libjpeg-turbo.repo
 } &
 s_echo "n" "-Installing libjpeg-turbo repo...    "; spinner
 
