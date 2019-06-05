@@ -1083,6 +1083,15 @@ else
 	s_echo "n" "-RPMFusion is missing. Installing...    "; spinner
 fi
 
+# Install Nginx Repo
+{ echo "[nginx-stable]
+name=Nginx Stable Repo
+baseurl=${NGINX_URL}
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key" > /etc/yum.repos.d/nginx.repo; } &
+s_echo "n" "${Reset}-Installing Nginx repository...    "; spinner
+
 # Install libjpeg-turbo Repo
 {
 	wget ${LIBJPEG_REPO} -P /etc/yum.repos.d/
@@ -1091,7 +1100,6 @@ fi
 	sed -i "s/exclude.*/${LIBJPEG_EXCLUDE}/g" /etc/yum.repos.d/libjpeg-turbo.repo
 } &
 s_echo "n" "-Installing libjpeg-turbo repo...    "; spinner
-
 
 # Enable repos needed if using RHEL
 if [ $OS_NAME == "RHEL" ] ; then
@@ -1117,7 +1125,7 @@ baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
-{ yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel wget; } &
+{ yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel wget; } &
 s_echo "n" "${Reset}-Installing required packages...    "; spinner
 
 # Additional packages required by git
@@ -1388,26 +1396,12 @@ s_echo "y" "${Bold}Configuring the Java KeyStore...    "; spinner
 } &
 s_echo "y" "${Bold}Enable & Start Tomcat and Guacamole Services...    "; spinner
 
-nginxinstall
+nginxcfg
 }
 
-######  NGINX INSTALLATION  ##########################################
-nginxinstall () {
-s_echo "y" "${Bold}Install Nginx"
-
-# Install Nginx Repo
-{ echo "[nginx]
-name=nginx repo
-baseurl=${NGINX_URL}
-gpgcheck=0
-enabled=1" > /etc/yum.repos.d/nginx.repo; } &
-s_echo "n" "${Reset}-Installing Nginx repository...    "; spinner
-
-# Install Nginx
-{ yum install -y nginx; } &
-s_echo "n" "-Installing Nginx...    "; spinner
-
-s_echo "y" "${Bold}Nginx Configurations"
+######  NGINX CONFIGURATION  #########################################
+nginxcfg () {
+s_echo "y" "${Bold}Nginx Configuration"
 
 # Backup Nginx Configuration
 { mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.ori.bkp; } &
