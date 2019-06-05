@@ -30,7 +30,6 @@ ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server a
 # Versions
 GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
 MYSQL_CON_VER="5.1.47" # Working stable release of MySQL Connecter J
-LIBJPEG_VER="2.0.2" # Latest stable version of libjpeg-turbo
 MAVEN_VER="3.6.1" # Latest stable version of Apache Maven
 
 # Ports
@@ -54,17 +53,17 @@ JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used 
 GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
 H_ERR=false
+LIBJPEG_EXCLUDE="exclude=libjpeg-turbo-[0-9]*,libjpeg-turbo-*.*.9[0-9]-*"
 
 # ONLY CHANGE IF NOT WORKING #
 # URLS
 MYSQL_CON_URL="https://dev.mysql.com/get/Downloads/Connector-J/" #Direct URL for download
-LIBJPEG_URL="https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_VER}/" #libjpeg download path
+LIBJPEG_REPO="https://libjpeg-turbo.org/pmwiki/uploads/Downloads/libjpeg-turbo.repo"
 
 # Dirs and File Names
 LIB_DIR="/var/lib/guacamole/"
 GUAC_CONF="guacamole.properties" # Guacamole configuration/properties file
 MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
-LIBJPEG_TURBO="libjpeg-turbo-official-${LIBJPEG_VER}"
 
 # Formats
 Black=`tput setaf 0`	#${Black}
@@ -1084,6 +1083,16 @@ else
 	s_echo "n" "-RPMFusion is missing. Installing...    "; spinner
 fi
 
+# Install libjpeg-turbo Repo
+{
+	wget ${LIBJPEG_REPO} -P /etc/yum.repos.d/
+
+	# Exclude beta releases
+	sed -i 's/exclude.*/${LIBJPEG_EXCLUDE}/g' /etc/yum.repos.d/libjpeg-turbo.repo
+} &
+s_echo "n" "-Installing libjpeg-turbo repo...    "; spinner
+
+
 # Enable repos needed if using RHEL
 if [ $OS_NAME == "RHEL" ] ; then
 	{ subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"; } &
@@ -1107,30 +1116,8 @@ baseinstall
 baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
-# Install libjpeg-turbo
-chk_installed "libjpeg-turbo-official-${LIBJPEG_VER}"
-
-if [ $RETVAL -eq 0 ]; then
-	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is installed"
-else
-	{ yum localinstall -y ${LIBJPEG_URL}${LIBJPEG_TURBO}.${MACHINE_ARCH}.rpm; } &
-	s_echo "n" "${Reset}-libjpeg-turbo-official-${LIBJPEG_VER} is not installed, installing...    "; spinner
-	ln -vfs /opt/libjpeg-turbo/include/* /usr/include/
-	ln -vfs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/ || true # prevents issue with error trap
-fi
-
-# Install ffmpeg-devel
-chk_installed "ffmpeg-devel"
-
-if [ $RETVAL -eq 0 ]; then
-	s_echo "n" "-ffmpeg-devel is installed";
-else
-	{ yum install -y ffmpeg-devel; } &
-	s_echo "n" "-ffmpeg-devel is not installed, installing...    "; spinner
-fi
-
 # Install Required Packages
-{ yum install -y wget dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot; } &
+{ yum install -y wget dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts mariadb mariadb-server policycoreutils-python setroubleshoot libjpeg-turbo-official ffmpeg-devel; } &
 s_echo "n" "-Installing other required packages...    "; spinner
 
 # Additional packages required by git
