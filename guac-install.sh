@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_5_20" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_6_6" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -52,7 +52,7 @@ JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used 
 # Misc
 GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
-H_ERR=false
+H_ERR=false # Defualt value of if an error has been triggered, should be false
 LIBJPEG_EXCLUDE="exclude=libjpeg-turbo-[0-9]*,libjpeg-turbo-*.*.9[0-9]-*"
 DEL_TMP_VAR=true # Default behavior to delete the temp var file used by error handler on completion. Set to false to keep the file to review last values
 
@@ -65,7 +65,7 @@ LIBJPEG_REPO="https://libjpeg-turbo.org/pmwiki/uploads/Downloads/libjpeg-turbo.r
 LIB_DIR="/var/lib/guacamole/"
 GUAC_CONF="guacamole.properties" # Guacamole configuration/properties file
 MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
-TMP_VAR_FILE="guac_tmp_vars"
+TMP_VAR_FILE="guac_tmp_vars" # Temp file name used to store varaibles for the error handler
 
 # Formats
 Black=`tput setaf 0`	#${Black}
@@ -957,7 +957,7 @@ exec 3>&1
 # Used to show a process is making progress/running
 spinner () {
 pid=$!
-#Store the group command background process in a temp file to use in err_handler
+#Store the background process id in a temp file to use in err_handler
 echo $(jobs -p) > "${VAR_FILE}"
 
 spin[0]="-"
@@ -987,7 +987,7 @@ else # Any other exit
 	false
 fi
 
-#Set command group background process value to -1 representing no background process running to err_handler
+#Set background process id value to -1 representing no background process running to err_handler
 echo "-1" > "${VAR_FILE}"
 
 tput sgr0 >&3
@@ -1024,9 +1024,11 @@ EXITCODE=$?
 #Read values from temp file used to store cross process values
 F_BG=$(sed -n 1p "${VAR_FILE}")
 
+# Check if the temp variable file is greater than 1 line of text
 if [ $(wc -l < "${VAR_FILE}") -gt 1 ]; then
+	# If so, set variable according to value of the 2nd line in the file.
 	H_ERR=$(sed -n 2p "${VAR_FILE}")
-else
+else # Otherwise, set to false, error was not triggered previously
 	H_ERR=false
 fi
 
