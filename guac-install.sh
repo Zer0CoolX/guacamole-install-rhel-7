@@ -1039,10 +1039,10 @@ if [ $H_ERR = false ]; then
 
 	FAILED_COMMAND=$(eval echo "$BASH_COMMAND") # Used to expand the variables in the command returned by BASH_COMMAND
 	s_echo "y" "${Reset}${Red}%%% ${Reset}${Bold}ERROR (Script Failed) | Line${Reset} ${BASH_LINENO[0]} ${Bold}| Command:${Reset} ${FAILED_COMMAND} ${Bold}| Exit code:${Reset} ${EXITCODE} ${Red}%%%${Reset}\n\n"
-fi
 
-#Flag as trap having been run already skipping double error messages
-echo "true" >> "${VAR_FILE}"
+	#Flag as trap having been run already skipping double error messages
+	echo "true" >> "${VAR_FILE}"
+fi
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
