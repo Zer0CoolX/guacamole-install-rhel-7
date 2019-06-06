@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_6_5" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_6_6" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -54,6 +54,7 @@ GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
 H_ERR=false
 LIBJPEG_EXCLUDE="exclude=libjpeg-turbo-[0-9]*,libjpeg-turbo-*.*.9[0-9]-*"
+DEL_TMP_VAR=false # Default behavior to delete the temp var file used by error handler on completion. set to false to keep the file to review last values
 
 # ONLY CHANGE IF NOT WORKING #
 # URLS
@@ -64,6 +65,7 @@ LIBJPEG_REPO="https://libjpeg-turbo.org/pmwiki/uploads/Downloads/libjpeg-turbo.r
 LIB_DIR="/var/lib/guacamole/"
 GUAC_CONF="guacamole.properties" # Guacamole configuration/properties file
 MYSQL_CON="mysql-connector-java-${MYSQL_CON_VER}"
+TMP_VAR_FILE="guac_tmp_vars"
 
 # Formats
 Black=`tput setaf 0`	#${Black}
@@ -86,6 +88,10 @@ init_vars () {
 # Get the release version of Guacamole from/for Git
 GUAC_GIT_VER=`curl -s https://raw.githubusercontent.com/apache/guacamole-server/master/configure.ac | grep 'AC_INIT([guacamole-server]*' | awk -F'[][]' -v n=2 '{ print $(2*n) }'`
 PWD=`pwd` # Current directory
+
+# Set full path/file name of file used to stored temp variables used by the error handler
+VAR_FILE="${PWD}/${TMP_VAR_FILE}"
+echo "-1" > "${VAR_FILE}" # create file with -1 to set not as background process
 
 # Determine if OS is RHEL or not (otherwise assume CentOS)
 if rpm -q subscription-manager 2>&1 > /dev/null; then OS_NAME="RHEL"; else OS_NAME="CentOS"; fi
@@ -952,7 +958,7 @@ exec 3>&1
 spinner () {
 pid=$!
 #Store the group command background process in a temp file to use in err_handler
-echo $(jobs -p) >/tmp/guac_bg
+echo $(jobs -p) > "${VAR_FILE}"
 
 spin[0]="-"
 spin[1]="\\"
@@ -982,7 +988,7 @@ else # Any other exit
 fi
 
 #Set command group background process value to -1 representing no background process running to err_handler
-echo "-1" >/tmp/guac_bg
+echo "-1" > "${VAR_FILE}"
 
 tput sgr0 >&3
 }
@@ -1016,8 +1022,13 @@ err_handler () {
 EXITCODE=$?
 
 #Read values from temp file used to store cross process values
-read F_BG </tmp/guac_bg
-read H_ERR </tmp/guac_err
+F_BG=$(sed -n 1p "${VAR_FILE}")
+
+#if [ $(wc -l < "${VAR_FILE}") -gt 1 ]; then
+	H_ERR=$(sed -n 2p "${VAR_FILE}")
+#else
+#	H_ERR=$(sed -n 1p "${VAR_FILE}")
+#fi
 
 #Check this is the first time the err_handler has triggered
 if [ $H_ERR = false ]; then
@@ -1031,7 +1042,7 @@ if [ $H_ERR = false ]; then
 fi
 
 #Flag as trap having been run already skipping double error messages
-echo "true" >/tmp/guac_err
+echo "true" >> "${VAR_FILE}"
 
 # Log cleanup to remove escape sequences caused by tput for formatting text
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
@@ -1857,5 +1868,8 @@ if [ ${RUN_INSTALL} = true ]; then
 	tput sgr0 >&3
 	clear >&3
 	reposinstall
+	if [ $DEL_TMP_VAR = true ]; then
+		rm "$VAR_FILE"
+	fi
 	exit 0
 fi
