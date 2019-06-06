@@ -54,7 +54,7 @@ GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
 H_ERR=false
 LIBJPEG_EXCLUDE="exclude=libjpeg-turbo-[0-9]*,libjpeg-turbo-*.*.9[0-9]-*"
-DEL_TMP_VAR=false # Default behavior to delete the temp var file used by error handler on completion. set to false to keep the file to review last values
+DEL_TMP_VAR=true # Default behavior to delete the temp var file used by error handler on completion. Set to false to keep the file to review last values
 
 # ONLY CHANGE IF NOT WORKING #
 # URLS
