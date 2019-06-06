@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_6_6" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_5_20" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1024,11 +1024,11 @@ EXITCODE=$?
 #Read values from temp file used to store cross process values
 F_BG=$(sed -n 1p "${VAR_FILE}")
 
-#if [ $(wc -l < "${VAR_FILE}") -gt 1 ]; then
+if [ $(wc -l < "${VAR_FILE}") -gt 1 ]; then
 	H_ERR=$(sed -n 2p "${VAR_FILE}")
-#else
-#	H_ERR=$(sed -n 1p "${VAR_FILE}")
-#fi
+else
+	H_ERR=false
+fi
 
 #Check this is the first time the err_handler has triggered
 if [ $H_ERR = false ]; then
