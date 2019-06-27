@@ -24,12 +24,12 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_6_6" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_6_27" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
 GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
-MYSQL_CON_VER="5.1.47" # Working stable release of MySQL Connecter J
+MYSQL_CON_VER="8.0.16" # Working stable release of MySQL Connecter J
 MAVEN_VER="3.6.1" # Latest stable version of Apache Maven
 
 # Ports
@@ -1103,7 +1103,7 @@ baseurl=${NGINX_URL}
 gpgcheck=1
 enabled=1
 gpgkey=https://nginx.org/keys/nginx_signing.key" > /etc/yum.repos.d/nginx.repo; } &
-s_echo "n" "${Reset}-Installing Nginx repository...    "; spinner
+s_echo "n" "${Reset}-Installing Nginx repo...    "; spinner
 
 # Install libjpeg-turbo Repo
 {
@@ -1349,7 +1349,7 @@ s_echo "n" "-Harden MariaDB...    "; spinner
 	mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWD}';"
 	mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;"
 } &
-s_echo "n" "-Creating database & user for Guacamole...    "; spinner
+s_echo "n" "-Creating Database & User for Guacamole...    "; spinner
 
 # Create Guacamole Table
 {
@@ -1360,6 +1360,18 @@ s_echo "n" "-Creating database & user for Guacamole...    "; spinner
 	fi
 } &
 s_echo "n" "-Creating Guacamole Tables...    "; spinner
+
+# Populate mysql database with time zones from system
+# Fixes timezone issues when using MySQLConnectorJ 8.x or geater
+{
+	mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p${MYSQL_PASSWD}
+	MY_CNF_LINE=`grep -n "\[mysqld\]" /etc/my.cnf | grep -o '^[0-9]*'`
+	MY_CNF_LINE=$((MY_CNF_LINE + 1 ))
+	MY_TZ=`readlink /etc/localtime | sed "s/\.\.\/usr\/share\/zoneinfo\///"`
+	sed -i "${MY_CNF_LINE}i default-time-zone='${MY_TZ}'" /etc/my.cnf
+	systemctl restart mariadb
+}
+s_echo "n" "-Setting Time Zone Database & Config...    "; spinner
 
 # Setup Tomcat
 s_echo "y" "${Bold}Setup Tomcat Server"
