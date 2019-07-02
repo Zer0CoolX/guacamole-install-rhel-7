@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_6_27" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_7_2" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -131,6 +131,9 @@ GUAC_JDBC="guacamole-auth-jdbc-${GUAC_VER}"
 
 # LDAP extension file name
 GUAC_LDAP="guacamole-auth-ldap-${GUAC_VER}"
+
+# TOTP extension file name
+GUAC_TOTP="guacamole-auth-totp-${GUAC_VER}"
 
 # Dirs and file names
 INSTALL_DIR="/usr/local/src/guacamole/${GUAC_VER}/" # Guacamole installation dir
@@ -480,13 +483,26 @@ echo -n "${Green} Enter a custom LDAP user search filter (default \"${LDAP_SEARC
 
 ######  TOTP MENU  ###################################################
 TOTP_ext_menu () {
-INSTALL_TOTP=false
+INSTALL_TOTP=true
 SUB_MENU_TITLE="TOTP Extension Menu"
 
 menu_header
 
-echo "${Red} TOTP extension not currently available via this script."
-sleep 3
+# echo "${Red} TOTP extension not currently available via this script."
+# sleep 3
+
+echo -n "${Green} Enter the TOTP issuer (default Apache Guacamole): ${Yellow}"
+	read TOTP_ISSUER
+	TOTP_ISSUER=${TOTP_ISSUER:-Apache Guacamole}
+echo -n "${Green} Enter the number of digits to use for TOTP (default 6): ${Yellow}"
+	read TOTP_DIGITS
+	TOTP_DIGITS=${TOTP_DIGITS:-6}
+echo -n "${Green} Enter the TOTP period in seconds (default 30): ${Yellow}"
+	read TOTP_PER
+	TOTP_PER=${TOTP_PER:-30}
+echo -n "${Green} Enter the TOTP mode (default sha1): ${Yellow}"
+	read TOTP_MODE
+	TOTP_MODE=${TOTP_MODE:-sha1}
 }
 
 ######  DUO MENU  ####################################################
@@ -817,7 +833,13 @@ SUB_MENU_TITLE="TOTP Extension Summary"
 
 menu_header
 
-echo "${Red} TOTP cannot currently be installed by this script."
+#echo "${Red} TOTP cannot currently be installed by this script."
+#echo -e "${Green} Install TOTP Guacamole extension: ${Yellow}${INSTALL_TOTP}\n"
+
+echo "${Green} TOTP issuer: ${Yellow}${TOTP_ISSUER}"
+echo "${Green} Number of TOTP digits: ${Yellow}${TOTP_DIGITS}"
+echo "${Green} TOTP period in seconds: ${Yellow}${TOTP_PER}"
+echo -e "${Green} TOTP mode: ${Yellow}${TOTP_MODE}\n"
 
 while true; do
 	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
@@ -1587,8 +1609,38 @@ fi
 
 ######  TOTP SETUP  ##################################################
 totpsetup () {
-	# Placehold until extension is added
-	echo "totpsetup"
+s_echo "y" "${Bold}Setup the TOTP Extension"
+
+# Append TOTP configuration lines to guacamole.properties
+{ echo "
+# TOTP properties
+totp-issuer: ${TOTP_ISSUER}
+totp-digits: ${TOTP_DIGITS}
+totp-period: ${TOTP_PER}
+totp-mode: ${TOTP_MODE}" >> /etc/guacamole/${GUAC_CONF}; } &
+s_echo "n" "${Reset}-Updating guacamole.properties file for TOTP...    "; spinner
+
+if [ $GUAC_SOURCE == "Git" ]; then
+   # Copy TOTP Extension to Extensions Directory
+   { find ./guacamole-client/extensions -name "${GUAC_TOTP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;; } &
+   s_echo "n" "-Moving Guacamole TOTP extension to extensions dir...    "; spinner
+else # Stable release
+   # Download TOTP Extension
+   { wget "${GUAC_URL}binary/${GUAC_TOTP}.tar.gz" -O ${GUAC_TOTP}.tar.gz; } &
+   s_echo "n" "-Downloading TOTP extension...    "; spinner
+
+   # Decompress TOTP Extension
+   {
+      tar xzvf ${GUAC_TOTP}.tar.gz 
+      rm -f ${GUAC_TOTP}.tar.gz
+      mv ${GUAC_TOTP} extension
+   } &
+   s_echo "n" "-Decompressing Guacamole TOTP Extension...    "; spinner
+
+   # Copy TOTP Extension to Extensions Directory
+   { mv -v extension/${GUAC_TOTP}/${GUAC_TOTP}.jar ${LIB_DIR}extensions/; } &
+   s_echo "n" "-Moving Guacamole TOTP extension to extensions dir...    "; spinner
+fi
 }
 
 ######  DUO SETUP  ###################################################
@@ -1651,9 +1703,9 @@ selinuxsettings () {
 	# Guacamole TOTP Extension Context (If selected)
 	if [ $INSTALL_TOTP = true ]; then
 		# Placehold until extension is added
-		echo "totp true"
-		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		# echo "totp true"
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_TOTP}.jar"
+		restorecon -v "${LIB_DIR}extensions/${GUAC_TOTP}.jar"
 	fi
 
 	# Guacamole Duo Extension Context (If selected)
