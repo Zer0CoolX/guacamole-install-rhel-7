@@ -24,7 +24,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_7_3" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_7_5" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -337,6 +337,8 @@ INSTALL_RADIUS=false
 INSTALL_CAS=false
 INSTALL_OPENID=false
 
+# Allows selection of an authentication method in addition to MariaDB/Database or just MariaDB
+# which is used to store connection and user meta data for all other methods
 echo "${Green} What Guacamole extension should be used as the primary user authentication method (default 1)?${Yellow}"
 PS3="${Green} Enter the number of the desired authentication method: ${Yellow}"
 options=("MariaDB Database" "LDAP(S)" "RADIUS" "OpenID" "CAS")
@@ -365,6 +367,7 @@ menu_header
 INSTALL_TOTP=false
 INSTALL_DUO=false
 
+# Allows optional selection of a Two Factor Authentication (2FA) method
 echo "${Green} What Guacamole extension should be used as the 2FA authentication method (default 1)?${Yellow}"
 PS3="${Green} Enter the number of the desired authentication method: ${Yellow}"
 options=("None" "TOTP" "DUO")
@@ -389,6 +392,7 @@ SUB_MENU_TITLE="LDAP Extension Menu"
 
 menu_header
 
+# Allow selection of LDAPS
 while true; do
 	echo -n "${Green} Use LDAPS instead of LDAP (Requires having the cert from the server copied locally, default: no): ${Yellow}"
 	read SECURE_LDAP
@@ -1439,7 +1443,7 @@ ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
 ldap-username-attribute: ${LDAP_UNAME_ATTR}
 ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}; } &
-s_echo "n" "-Finishing updates to the guacamole.properties file for LDAPS...    "; spinner
+s_echo "n" "-Finishing updates to the guacamole.properties file for LDAP...    "; spinner
 
 if [ $GUAC_SOURCE == "Git" ]; then
 	# Copy LDAP Extension to Extensions Directory
