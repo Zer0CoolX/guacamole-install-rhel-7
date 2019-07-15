@@ -342,16 +342,18 @@ INSTALL_OPENID=false
 # which is used to store connection and user meta data for all other methods
 echo "${Green} What Guacamole extension should be used as the primary user authentication method (default 1)?${Yellow}"
 PS3="${Green} Enter the number of the desired authentication method: ${Yellow}"
-options=("MariaDB Database" "LDAP(S)" "RADIUS" "OpenID" "CAS")
+# Removing non-working options from the menu until they are ready
+# "RADIUS" "OpenID" "CAS"
+options=("MariaDB Database" "LDAP(S)")
 COLUMNS=1
 select opt in "${options[@]}"
 do
 	case $opt in
 		"MariaDB Database"|"") PRIME_AUTH_TYPE="MariaDB"; break;;
 		"LDAP(S)") PRIME_AUTH_TYPE="LDAP"; LDAP_ext_menu; break;;
-		"RADIUS") PRIME_AUTH_TYPE="RADIUS"; Radius_ext_menu; break;;
-		"OpenID") PRIME_AUTH_TYPE="OpenID"; OpenID_ext_menu; break;;
-		"CAS") PRIME_AUTH_TYPE="CAS"; CAS_ext_menu; break;;
+		# "RADIUS") PRIME_AUTH_TYPE="RADIUS"; Radius_ext_menu; break;;
+		# "OpenID") PRIME_AUTH_TYPE="OpenID"; OpenID_ext_menu; break;;
+		# "CAS") PRIME_AUTH_TYPE="CAS"; CAS_ext_menu; break;;
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the desired primary authentication method.";;
 		esac
 done
@@ -371,14 +373,16 @@ INSTALL_DUO=false
 # Allows optional selection of a Two Factor Authentication (2FA) method
 echo "${Green} What Guacamole extension should be used as the 2FA authentication method (default 1)?${Yellow}"
 PS3="${Green} Enter the number of the desired authentication method: ${Yellow}"
-options=("None" "TOTP" "DUO")
+# Removing non-working options from the menu until they are ready
+# "DUO"
+options=("None" "TOTP")
 COLUMNS=1
 select opt in "${options[@]}"
 do
 	case $opt in
 		"None"|"") TFA_TYPE="None"; break;;
 		"TOTP") TFA_TYPE="TOTP"; TOTP_ext_menu; break;;
-		"DUO") TFA_TYPE="DUO"; Duo_ext_menu; break;;
+		# "DUO") TFA_TYPE="DUO"; Duo_ext_menu; break;;
 		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the desired 2FA method.";;
 		esac
 done
