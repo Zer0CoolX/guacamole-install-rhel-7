@@ -25,7 +25,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_7_10" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_7_15" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -132,6 +132,9 @@ GUAC_JDBC="guacamole-auth-jdbc-${GUAC_VER}"
 
 # LDAP extension file name
 GUAC_LDAP="guacamole-auth-ldap-${GUAC_VER}"
+
+# TOTP extension file name
+GUAC_TOTP="guacamole-auth-totp-${GUAC_VER}"
 
 # Dirs and file names
 INSTALL_DIR="/usr/local/src/guacamole/${GUAC_VER}/" # Guacamole installation dir
@@ -323,89 +326,64 @@ else
 fi
 }
 
-######  EXTENSIONS MENU  #############################################
-ext_menu () {
-SUB_MENU_TITLE="Extensions Menu"
+######  PRIMARY AUTHORIZATION EXTENSIONS MENU  #######################
+prime_auth_ext_menu () {
+SUB_MENU_TITLE="Primary Authentication Extensions Menu"
 
 menu_header
 
-while true; do
-	echo -n "${Green} Would you like to install any standard Guacamole extensions (default no)? ${Yellow}"
-	read yn
-	case $yn in
-		[Yy]* ) 
-			INSTALL_EXT=true
-			ext_sel_menu
-			break;;
-		[Nn]*|"" )
-			INSTALL_EXT=false
-			INSTALL_LDAP=false
-			SECURE_LDAP=false
-			INSTALL_TOTP=false
-			INSTALL_DUO=false
-			INSTALL_RADIUS=false
-			INSTALL_CAS=false
-			INSTALL_OPENID=false
-			break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
-}
-
-######  EXTENSIONS SELECTION MENU  ###################################
-ext_sel_menu () {
-# All possible options (may depend on Guac version and other configuration)
-# "LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID"
-# Currenlty only LDAP is woring via this script
-options=("LDAP" "TOTP" "Duo" "Radius" "CAS" "OpenID")
-choices=()
-selections=()
 INSTALL_LDAP=false
 SECURE_LDAP=false
-INSTALL_TOTP=false
-INSTALL_DUO=false
 INSTALL_RADIUS=false
 INSTALL_CAS=false
 INSTALL_OPENID=false
 
-	# Print the extension choices menu
-	ext_sub_menu() {
-		echo "${Green} Select the desired extensions to install:${Yellow}"
-		for i in ${!options[@]}; do 
-			printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
-		done
-		[[ "$msg" ]] && echo "$msg"; :
-	}
-
-	# Select/deselect extensions from the menu
-	ext_sub_prompt () {
-	prompt="${Green} Enter a number and press ENTER to check/uncheck an option. Selections designated by a + sign. (Press ENTER while blank when done): "
-	while ext_sub_menu && read -rp "$prompt" num && [[ "$num" ]]; do
-		[[ "$num" != *[![:digit:]]* ]] &&
-		(( num > 0 && num <= ${#options[@]} )) ||
-		{ msg="Invalid option: $num"; continue; }
-		((num--)); msg=" ${options[num]} was ${choices[num]:+un}checked"
-		[[ "${choices[num]}" ]] && unset 'choices[num]' || choices[num]="+"
-	done
-
-	# Ensure that at least 1 extension is selected
-	if [[ ${#choices[@]} == 0 ]]; then
-		echo "${Red} At least one extension needs to be selected, please pick one."
-		msg=""
-		ext_sub_prompt
-	fi
-	}
-
-ext_sub_prompt
-
-# Loop final extension selections and call the specific function for each
-for i in ${!options[@]}; do
-	[[ "${choices[i]}" ]] && ${options[i]}_ext_menu
-	[[ "${choices[i]}" ]] && selections+=(${options[i]}) # An array of the selections only used for the extensions summary menu
+# Allows selection of an authentication method in addition to MariaDB/Database or just MariaDB
+# which is used to store connection and user meta data for all other methods
+echo "${Green} What Guacamole extension should be used as the primary user authentication method (default 1)?${Yellow}"
+PS3="${Green} Enter the number of the desired authentication method: ${Yellow}"
+options=("MariaDB Database" "LDAP(S)" "RADIUS" "OpenID" "CAS")
+COLUMNS=1
+select opt in "${options[@]}"
+do
+	case $opt in
+		"MariaDB Database"|"") PRIME_AUTH_TYPE="MariaDB"; break;;
+		"LDAP(S)") PRIME_AUTH_TYPE="LDAP"; LDAP_ext_menu; break;;
+		"RADIUS") PRIME_AUTH_TYPE="RADIUS"; Radius_ext_menu; break;;
+		"OpenID") PRIME_AUTH_TYPE="OpenID"; OpenID_ext_menu; break;;
+		"CAS") PRIME_AUTH_TYPE="CAS"; CAS_ext_menu; break;;
+		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the desired primary authentication method.";;
+		esac
 done
 
-# Adds this entry to the array for use in the extensions summary menu
-selections+=("Return to Standard Extension Summary")
+unset COLUMNS
+}
+
+######  2FA EXTENSIONS MENU  #########################################
+secondary_auth_ext_menu () {
+SUB_MENU_TITLE="2FA Extensions Menu"
+
+menu_header
+
+INSTALL_TOTP=false
+INSTALL_DUO=false
+
+# Allows optional selection of a Two Factor Authentication (2FA) method
+echo "${Green} What Guacamole extension should be used as the 2FA authentication method (default 1)?${Yellow}"
+PS3="${Green} Enter the number of the desired authentication method: ${Yellow}"
+options=("None" "TOTP" "DUO")
+COLUMNS=1
+select opt in "${options[@]}"
+do
+	case $opt in
+		"None"|"") TFA_TYPE="None"; break;;
+		"TOTP") TFA_TYPE="TOTP"; TOTP_ext_menu; break;;
+		"DUO") TFA_TYPE="DUO"; Duo_ext_menu; break;;
+		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the desired 2FA method.";;
+		esac
+done
+
+unset COLUMNS
 }
 
 ######  LDAP MENU  ###################################################
@@ -415,6 +393,7 @@ SUB_MENU_TITLE="LDAP Extension Menu"
 
 menu_header
 
+# Allow selection of LDAPS
 while true; do
 	echo -n "${Green} Use LDAPS instead of LDAP (Requires having the cert from the server copied locally, default: no): ${Yellow}"
 	read SECURE_LDAP
@@ -481,13 +460,23 @@ echo -n "${Green} Enter a custom LDAP user search filter (default \"${LDAP_SEARC
 
 ######  TOTP MENU  ###################################################
 TOTP_ext_menu () {
-INSTALL_TOTP=false
+INSTALL_TOTP=true
 SUB_MENU_TITLE="TOTP Extension Menu"
 
 menu_header
 
-echo "${Red} TOTP extension not currently available via this script."
-sleep 3
+echo -n "${Green} Enter the TOTP issuer (default Apache Guacamole): ${Yellow}"
+	read TOTP_ISSUER
+	TOTP_ISSUER=${TOTP_ISSUER:-Apache Guacamole}
+echo -n "${Green} Enter the number of digits to use for TOTP (default 6): ${Yellow}"
+	read TOTP_DIGITS
+	TOTP_DIGITS=${TOTP_DIGITS:-6}
+echo -n "${Green} Enter the TOTP period in seconds (default 30): ${Yellow}"
+	read TOTP_PER
+	TOTP_PER=${TOTP_PER:-30}
+echo -n "${Green} Enter the TOTP mode (default sha1): ${Yellow}"
+	read TOTP_MODE
+	TOTP_MODE=${TOTP_MODE:-sha1}
 }
 
 ######  DUO MENU  ####################################################
@@ -586,7 +575,7 @@ RET_SUM=false
 # List categories/menus to review or change
 echo "${Green} Select a category to review selections: ${Yellow}"
 PS3="${Green} Enter the number of the category to review: ${Yellow}"
-options=("Database" "Passwords" "SSL Cert Type" "Nginx" "Standard Extensions" "Custom Extension" "Accept and Run Installation" "Cancel and Start Over" "Cancel and Exit Script")
+options=("Database" "Passwords" "SSL Cert Type" "Nginx" "Primary Authentication Extension" "2FA Extension" "Custom Extension" "Accept and Run Installation" "Cancel and Start Over" "Cancel and Exit Script")
 select opt in "${options[@]}"
 do
 	case $opt in
@@ -594,7 +583,8 @@ do
 		"Passwords") sum_pw; break;;
 		"SSL Cert Type") sum_ssl; break;;
 		"Nginx") sum_nginx; break;;
-		"Standard Extensions") sum_ext; break;;
+		"Primary Authentication Extension") sum_prime_auth_ext; break;;
+		"2FA Extension") sum_secondary_auth_ext; break;;
 		"Custom Extension") sum_cust_ext; break;;
 		"Accept and Run Installation") RUN_INSTALL=true; break;;
 		"Cancel and Start Over") ScriptLoc=$(readlink -f "$0"); exec "$ScriptLoc"; break;;
@@ -712,203 +702,95 @@ sum_menu
 }
 
 ######  STANDARD EXTENSIONS SUMMARY  #################################
-sum_ext () {
-SUB_MENU_TITLE="Standard Extension Summary"
-RET_EXT=false
+sum_prime_auth_ext () {
+SUB_MENU_TITLE="Primary Authentication Extension Summary"
 
 menu_header
 
-echo -e "${Green} Install standard Guacamole extensions: ${Yellow}${INSTALL_EXT}\n"
+echo -e "${Green} Primary Authentication type: ${Yellow}${PRIME_AUTH_TYPE}\n"
 
-echo "${Green} Do you want to: ${Yellow}"
-PS3="${Green} Enter the number of the action to take: ${Yellow}"
-actions=("View/change selected extensions and their settings" "Change if extensions are installed and if so which" "Return to the Summary menu")
+echo "${Yellow}${Bold} -- MariaDB is used with all authentication implementations --${Reset}"
+echo "${Green} Default Guacamole username: ${Yellow}guacadmin"
+echo -e "${Green} Default Guacamole password: ${Yellow}guacadmin\n"
 
-select a in "${actions[@]}"
-do
-	case $a in
-		"View/change selected extensions and their settings") sum_sel_ext; break;;
-		"Change if extensions are installed and if so which") RET_SUM=true; ext_menu; break;;
-		"Return to the Summary menu") RET_SUM=true; break;;
-		* ) echo "${Green} ${REPLY} is not a valid option, enter the number representing the action to take.";;
-	esac
-done
+# Check the authentication selection to display proper information for the selection
+case $PRIME_AUTH_TYPE in
+	"LDAP")
+		echo -e "${Reset}${Bold} -- LDAP Specific Parameters --${Reset}\n"
+		echo "${Green} Use LDAPS instead of LDAP: ${Yellow}${SECURE_LDAP}"
+		echo -e "${Green} LDAP(S) port: ${Yellow}${LDAP_PORT}\n"
 
-if [ ${RET_SUM} = true ]; then
-	sum_menu
-fi
-}
+		if [ $SECURE_LDAP = true ]; then
+			echo "${Green} LDAPS full filename and path: ${Yellow}${LDAPS_CERT_FULL}"
+			echo -e "${Green} CACert Java Keystroe password: ${Yellow}${JKS_CACERT_PASSWD}\n"
+		fi
 
-######  SELECTED EXTENSIONS SUMMARY  #################################
-sum_sel_ext () {
-SUB_MENU_TITLE="Summary of Selected Extensions"
-
-menu_header
-
-# Check if installing extensions was selected
-if [ ${INSTALL_EXT} = true ]; then
-	ext_selections=$(( ${#selections[@]} - 1 ))
-	echo -e "${Green} Number of extensions selected: ${Yellow}${ext_selections}\n"
-
-	# Lists only the selected extensions to review the settings of
-	PS3="${Green} Select the number of the extension to view: ${Yellow}"
-
-	select s in "${selections[@]}"
-	do
-		case $s in
-			"LDAP") sum_LDAP; break;;
-			"TOTP") sum_TOTP; break;;
-			"Duo") sum_Duo; break;;
-			"Radius") sum_Radius; break;;
-			"CAS") sum_CAS; break;;
-			"OpenID") sum_OpenID; break;;
-			"Return to Standard Extension Summary") RET_EXT=true; break;;
-			* ) echo "Select a valid option.";;
-			esac
-	done
-else # Installing extensions was set to "no"
-	echo -e "${Green} Installation of extensions was declined.\n\n If you want to install extensions, change if extensions are installed from the Standard Extension Summary menu using option 2"
-	sleep 3
-	RET_EXT=true
-fi
-
-if [ ${RET_EXT} = true ]; then
-	sum_ext
-fi
-}
-
-######  LDAP SUMMARY  ################################################
-sum_LDAP () {
-SUB_MENU_TITLE="LDAP Extension Summary"
-
-menu_header
-
-echo "${Green} Use LDAPS instead of LDAP: ${Yellow}${SECURE_LDAP}"
-echo -e "${Green} LDAP(S) port: ${Yellow}${LDAP_PORT}\n"
-
-if [ $SECURE_LDAP = true ]; then
-	echo "${Green} LDAPS full filename and path: ${Yellow}${LDAPS_CERT_FULL}"
-	echo -e "${Green} CACert Java Keystroe password: ${Yellow}${JKS_CACERT_PASSWD}\n"
-fi
-
-echo "${Green} LDAP Server Hostname (should be FQDN, Ex: ldaphost.domain.com): ${Yellow}${LDAP_HOSTNAME}"
-echo "${Green} LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}${LDAP_BASE_DN}"
-echo "${Green} LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=doamin,dc=com): ${Yellow}${LDAP_BIND_DN}"
-echo "${Green} LDAP Search-Bind-Password: ${Yellow}${LDAP_BIND_PW}"
-echo "${Green} LDAP Username-Attribute: ${Yellow}${LDAP_UNAME_ATTR}"
-echo -e "${Green} LDAP user search filter: ${Yellow}${LDAP_SEARCH_FILTER}\n"
+		echo "${Green} LDAP Server Hostname (should be FQDN, Ex: ldaphost.domain.com): ${Yellow}${LDAP_HOSTNAME}"
+		echo "${Green} LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}${LDAP_BASE_DN}"
+		echo "${Green} LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=doamin,dc=com): ${Yellow}${LDAP_BIND_DN}"
+		echo "${Green} LDAP Search-Bind-Password: ${Yellow}${LDAP_BIND_PW}"
+		echo "${Green} LDAP Username-Attribute: ${Yellow}${LDAP_UNAME_ATTR}"
+		echo -e "${Green} LDAP user search filter: ${Yellow}${LDAP_SEARCH_FILTER}\n"
+		;;
+	"RADIUS")
+		echo -e "${Red} RADIUS cannot currently be installed by this script.\n"
+		;;
+	"OpenID")
+		echo -e "${Red} OpenID cannot currently be installed by this script.\n"
+		;;
+	"CAS")
+		echo -e "${Red} CAS cannot currently be installed by this script.\n"
+		;;
+esac
 
 while true; do
-	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
+	echo -n "${Green} Would you like to change the authentication method and properties (default no)? ${Yellow}"
 	read yn
 	case $yn in
-		[Yy]* ) LDAP_ext_menu; break;;
+		[Yy]* ) prime_auth_ext_menu; break;;
 		[Nn]*|"" ) break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
 
-sum_sel_ext
+sum_menu
 }
 
-######  TOTP SUMMARY  ################################################
-# Need to add TOTP properties
-sum_TOTP () {
-SUB_MENU_TITLE="TOTP Extension Summary"
+######  SELECTED EXTENSIONS SUMMARY  #################################
+sum_secondary_auth_ext () {
+SUB_MENU_TITLE="2FA Extension Summary"
 
 menu_header
 
-echo "${Red} TOTP cannot currently be installed by this script."
+echo -e "${Green} 2FA selection: ${Yellow}${TFA_TYPE}\n"
+
+# Check the authentication selection to display proper information for the selection
+case $TFA_TYPE in
+	"None")
+		echo -e "${Yellow}${Bold} -- No form of 2FA will be implemented by this script --${Reset}\n"
+		;;
+	"TOTP")
+		echo "${Green} TOTP issuer: ${Yellow}${TOTP_ISSUER}"
+		echo "${Green} Number of TOTP digits: ${Yellow}${TOTP_DIGITS}"
+		echo "${Green} TOTP period in seconds: ${Yellow}${TOTP_PER}"
+		echo -e "${Green} TOTP mode: ${Yellow}${TOTP_MODE}\n"
+		;;
+	"DUO")
+		echo -e "${Red} DUO cannot currently be installed by this script.\n"
+		;;
+esac
 
 while true; do
-	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
+	echo -n "${Green} Would you like to change the 2FA method and properties (default no)? ${Yellow}"
 	read yn
 	case $yn in
-		[Yy]* ) TOTP_ext_menu; break;;
-		[Nn]*|"" ) sum_sel_ext; break;;
+		[Yy]* ) secondary_auth_ext_menu; break;;
+		[Nn]*|"" ) break;;
 		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 	esac
 done
-}
 
-######  DUO SUMMARY  #################################################
-# Need to add Duo properties
-sum_Duo () {
-SUB_MENU_TITLE="Duo Extension Summary"
-
-menu_header
-
-echo "${Red} Duo cannot currently be installed by this script."
-
-while true; do
-	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
-	read yn
-	case $yn in
-		[Yy]* ) Duo_ext_menu; break;;
-		[Nn]*|"" ) sum_sel_ext; break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
-}
-
-######  RADIUS SUMMARY  ##############################################
-# Need to add Radius properties
-sum_Radius () {
-SUB_MENU_TITLE="RADIUS Extension Summary"
-
-menu_header
-
-echo "${Red} RADIUS cannot currently be installed by this script."
-
-while true; do
-	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
-	read yn
-	case $yn in
-		[Yy]* ) Radius_ext_menu; break;;
-		[Nn]*|"" ) sum_sel_ext; break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
-}
-
-######  CAS SUMMARY  #################################################
-# Need to add CAS properties
-sum_CAS () {
-SUB_MENU_TITLE="CAS Extension Summary"
-
-menu_header
-
-echo "${Red} CAS cannot currently be installed by this script."
-
-while true; do
-	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
-	read yn
-	case $yn in
-		[Yy]* ) CAS_ext_menu; break;;
-		[Nn]*|"" ) sum_sel_ext; break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
-}
-
-######  OpenID SUMMARY  ##############################################
-# Need to add OpenID properties
-sum_OpenID () {
-SUB_MENU_TITLE="OpenID Extension Summary"
-
-menu_header
-
-echo "${Red} OpenID cannot currently be installed by this script."
-
-while true; do
-	echo -n "${Green} Would you like to change these selections (default no)? ${Yellow}"
-	read yn
-	case $yn in
-		[Yy]* ) OpenID_ext_menu; break;;
-		[Nn]*|"" ) sum_sel_ext; break;;
-		* ) echo "${Green} Please enter yes or no. ${Yellow}";;
-	esac
-done
+sum_menu
 }
 
 ######  CUSTOM EXTENSION SUMMARY  ####################################
@@ -943,7 +825,8 @@ db_menu
 pw_menu
 ssl_cert_type_menu
 nginx_menu
-ext_menu
+prime_auth_ext_menu
+secondary_auth_ext_menu
 cust_ext_menu
 sum_menu
 
@@ -1588,8 +1471,38 @@ fi
 
 ######  TOTP SETUP  ##################################################
 totpsetup () {
-	# Placehold until extension is added
-	echo "totpsetup"
+s_echo "y" "${Bold}Setup the TOTP Extension"
+
+# Append TOTP configuration lines to guacamole.properties
+{ echo "
+# TOTP properties
+totp-issuer: ${TOTP_ISSUER}
+totp-digits: ${TOTP_DIGITS}
+totp-period: ${TOTP_PER}
+totp-mode: ${TOTP_MODE}" >> /etc/guacamole/${GUAC_CONF}; } &
+s_echo "n" "${Reset}-Updating guacamole.properties file for TOTP...    "; spinner
+
+if [ $GUAC_SOURCE == "Git" ]; then
+   # Copy TOTP Extension to Extensions Directory
+   { find ./guacamole-client/extensions -name "${GUAC_TOTP}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;; } &
+   s_echo "n" "-Moving Guacamole TOTP extension to extensions dir...    "; spinner
+else # Stable release
+   # Download TOTP Extension
+   { wget "${GUAC_URL}binary/${GUAC_TOTP}.tar.gz" -O ${GUAC_TOTP}.tar.gz; } &
+   s_echo "n" "-Downloading TOTP extension...    "; spinner
+
+   # Decompress TOTP Extension
+   {
+      tar xzvf ${GUAC_TOTP}.tar.gz 
+      rm -f ${GUAC_TOTP}.tar.gz
+      mv ${GUAC_TOTP} extension
+   } &
+   s_echo "n" "-Decompressing Guacamole TOTP Extension...    "; spinner
+
+   # Copy TOTP Extension to Extensions Directory
+   { mv -v extension/${GUAC_TOTP}/${GUAC_TOTP}.jar ${LIB_DIR}extensions/; } &
+   s_echo "n" "-Moving Guacamole TOTP extension to extensions dir...    "; spinner
+fi
 }
 
 ######  DUO SETUP  ###################################################
@@ -1652,9 +1565,9 @@ selinuxsettings () {
 	# Guacamole TOTP Extension Context (If selected)
 	if [ $INSTALL_TOTP = true ]; then
 		# Placehold until extension is added
-		echo "totp true"
-		#semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
-		#restorecon -v "${LIB_DIR}extensions/${GUAC_LDAP}.jar"
+		# echo "totp true"
+		semanage fcontext -a -t tomcat_exec_t "${LIB_DIR}extensions/${GUAC_TOTP}.jar"
+		restorecon -v "${LIB_DIR}extensions/${GUAC_TOTP}.jar"
 	fi
 
 	# Guacamole Duo Extension Context (If selected)
