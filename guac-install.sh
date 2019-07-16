@@ -25,7 +25,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_7_15" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_7_16" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -959,6 +959,45 @@ trap err_handler ERR SIGINT SIGQUIT
 ######  INSALLATION  #################################################
 ######################################################################
 
+######  YUM UPDATES  #################################################
+yumupdate () {
+
+# Update OS/packages
+{ yum update -y; } &
+s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
+
+baseinstall
+}
+
+######  INSTALL BASE PACKAGES  #######################################
+baseinstall () {
+s_echo "y" "${Bold}Installing Required Dependencies"
+
+# Install Required Packages
+{ yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel wget; } &
+s_echo "n" "${Reset}-Installing required packages...    "; spinner
+
+# Additional packages required by git
+if [ $GUAC_SOURCE == "Git" ]; then
+	{ yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel; } &
+	s_echo "n" "-Installing packages required for git...    "; spinner
+
+	#Install Maven
+	cd /opt
+	{
+		wget ${MAVEN_URL}${MAVEN_BIN}
+		tar -xvzf ${MAVEN_BIN}
+		ln -s ${MAVEN_FN} maven
+		rm -rf /opt/${MAVEN_BIN}
+	} &
+	s_echo "n" "-Installing Apache Maven for git...    "; spinner
+	export PATH=/opt/maven/bin:${PATH}
+	cd ~
+fi
+
+reposinstall
+}
+
 ######  REPOS INSTALLATION  ##########################################
 reposinstall () {
 s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ${GUAC_SOURCE} ${GUAC_VER} ====----"
@@ -1006,45 +1045,6 @@ s_echo "n" "-Installing libjpeg-turbo repo...    "; spinner
 if [ $OS_NAME == "RHEL" ] ; then
 	{ subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"; } &
 	s_echo "n" "-Enabling ${OS_NAME} optional and extras repos...    "; spinner
-fi
-
-yumupdate
-}
-
-######  YUM UPDATES  #################################################
-yumupdate () {
-
-# Update OS/packages
-{ yum update -y; } &
-s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
-
-baseinstall
-}
-
-######  INSTALL BASE PACKAGES  #######################################
-baseinstall () {
-s_echo "y" "${Bold}Installing Required Dependencies"
-
-# Install Required Packages
-{ yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel wget; } &
-s_echo "n" "${Reset}-Installing required packages...    "; spinner
-
-# Additional packages required by git
-if [ $GUAC_SOURCE == "Git" ]; then
-	{ yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel; } &
-	s_echo "n" "-Installing packages required for git...    "; spinner
-
-	#Install Maven
-	cd /opt
-	{
-		wget ${MAVEN_URL}${MAVEN_BIN}
-		tar -xvzf ${MAVEN_BIN}
-		ln -s ${MAVEN_FN} maven
-		rm -rf /opt/${MAVEN_BIN}
-	} &
-	s_echo "n" "-Installing Apache Maven for git...    "; spinner
-	export PATH=/opt/maven/bin:${PATH}
-	cd ~
 fi
 
 createdirs
@@ -1799,7 +1799,7 @@ tput sgr0 >&3
 if [ ${RUN_INSTALL} = true ]; then
 	tput sgr0 >&3
 	clear >&3
-	reposinstall
+	yumupdate
 	if [ $DEL_TMP_VAR = true ]; then
 		rm "$VAR_FILE"
 	fi
