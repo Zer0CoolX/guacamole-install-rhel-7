@@ -1001,7 +1001,7 @@ reposinstall
 
 ######  REPOS INSTALLATION  ##########################################
 reposinstall () {
-s_echo "y" "Installing Repos"
+s_echo "y" "{Bold}Installing Repos"
 
 # Install EPEL Repo
 chk_installed "epel-release"
