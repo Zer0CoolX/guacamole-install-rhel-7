@@ -961,6 +961,7 @@ trap err_handler ERR SIGINT SIGQUIT
 
 ######  YUM UPDATES  #################################################
 yumupdate () {
+s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ${GUAC_SOURCE} ${GUAC_VER} ====----"
 
 # Update OS/packages
 { yum update -y; } &
@@ -1000,7 +1001,6 @@ reposinstall
 
 ######  REPOS INSTALLATION  ##########################################
 reposinstall () {
-s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ${GUAC_SOURCE} ${GUAC_VER} ====----"
 s_echo "y" "Installing Repos"
 
 # Install EPEL Repo
