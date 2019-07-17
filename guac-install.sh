@@ -1256,7 +1256,7 @@ s_echo "n" "-Creating Guacamole Tables...    "; spinner
 	mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p${MYSQL_PASSWD}
 	MY_CNF_LINE=`grep -n "\[mysqld\]" /etc/my.cnf | grep -o '^[0-9]*'`
 	MY_CNF_LINE=$((MY_CNF_LINE + 1 ))
-	MY_TZ=`readlink /etc/localtime | sed "s/\.\.\/usr\/share\/zoneinfo\///"`
+	MY_TZ=`readlink /etc/localtime | sed "s/.*\/usr\/share\/zoneinfo\///"`
 	sed -i "${MY_CNF_LINE}i default-time-zone='${MY_TZ}'" /etc/my.cnf
 	systemctl restart mariadb
 }
