@@ -1,47 +1,49 @@
-# Apache Guacamole Install Script for RHEL 7 & CentOS 7
-## Introduction
-The `guac-install.sh` bash script is intended to allow for a guided, simple way to install Guacamole and configure a complete Apache Guacamole server on a fresh RHEL 7 or CentOS 7 install. The Apache Guacamole installation script presents an interactive menu providing options to install Guacamole, Nginx, mariaDB and other software for a complete Apache Guacamole setup. The menu provides the means to set configuration parameters in an organized way and allows for review and making changes prior to running the installation for Guacamole.
+# Apache Guacamole Install Script for RHEL 7 and CentOS 7
+The Guacamole install script `guac-install.sh` is intended to allow for a guided, simple way to install and configure a complete Apache Guacamole server on a fresh CentOS 7 or RHEL 7 installation. This Apache Guacamole installation script presents an interactive menu providing options to install Guacamole, Nginx, MariaDB and other software for a complete Guacamole setup. The menu provides the means to set configuration parameters in an organized way, allows for review and making changes prior to running the installation for Guacamole.
 
-The wiki will cover all aspects of the Apache Guacamole installation script for RHEL and CentOS in further detail. Before using the script read all the documentation and review the Guacamole install script (especially the variables). Test the Guacamole script in a test environment/server and ensure it functions exactly as desired before attempting to utilize it on a production system.
+The [wiki](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki) will cover all aspects of the Apache Guacamole installation script for RHEL and CentOS in further detail. Before using the script read all the documentation and review the Guacamole install script (especially the variables). Test the Guacamole script in a test environment/server and ensure it functions exactly as desired before attempting to utilize it on a production system.
 
-Some of the main features and benefits of using this Apache Guacamole installation script are:
-- In typical scenarios, once the script completes the Guacamole server should be fully ready to use
-- Use Nginx as a reverse proxy allowing for changing the URI, having SSL/HTTPS securely setup and forcing HTTPS among other benefits.
-- Nginx configuration options capable of scoring A+ and 90-100% on categories of the Qualys SSL test. Will varying based on other options selected.
-- Nginx Content-Security-Policy (CSP) option to enable/disable CSP. Scores A+, 100/100 on Mozilla Observatory test.
+Some of the main features and benefits of using this installation script for Apache Guacamole are:
+- Simplifies the process of installing Apache Guacamole and other software required for a complete implementation.
+- Use of Nginx as a reverse proxy allows for changing the URI, having SSL/HTTPS securely setup and forcing HTTPS among other benefits.
+- Nginx configuration options capable of scoring A+ and 90-100% on the categories of the Qualys SSL test. Will varying based on other options selected.
+- Nginx Content-Security-Policy (CSP) option to enable CSP. Scores A+, 100/100 on Mozilla Observatory test.
 - Ability to create a valid SSL certificate from LetsEncrypt AND keep it updated automatically. Also allows setting the key-size used by LetsEncrypt.
-- MariaDB is setup and configured as the database for user settings and basic authentication. It also automatically runs hardening on the database (by running mysql_secure_installation and automatically answering the prompts)
-- Ability to install and configure Guacamole extensions (currently limited to LDAP)
+- MariaDB is setup and configured as the database for user settings and metadata. MariaDB is the default primary authentication method.
+- MariaDB is also automatically hardened (by running mysql_secure_installation and automatically answering the prompts)
+- Ability to install and configure Guacamole extensions for primary and secondary authentication. (Currently limited to LDAP(s) and/or TOTP)
 - Ability to install a custom Guacamole extension, like my [Guacamole Customize Login Page extension](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) to change the appearance of the login page.
-- LDAP/LDAPS authentication via Guacamole LDAP extension and configuration prompts.
+- LDAP/LDAPS as primary authentication via Guacamole LDAP extension and configuration prompts.
 - All SELinux contexts properly set instead of disabling SEL.
 - Firewalld configured for Guacamole.
 - Script generates a log file of what it did for review.
-- Error handling covering the installation process. On error the line that failed and exit code are displayed, logged and the script stops
+- Error handling covering the installation process. On error the line number, line that failed and exit code are displayed, logged and the script stops
 - And more...
 
-Further details on the [Script Features](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Guacamole-Install-Script-Features) page.
+Further details see the [Script Features](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Guacamole-Install-Script-Features) page.
 
 ## Requirements to Run the Guacamole Install Script Successfully
 - Install RHEL 7.x or CentOS 7.x and up using either minimal install or Server with GUI.
 - `wget` installed to download the Guacamole install script `guac-install.sh` from this repo.
 - The server must have internet access to download the script and files required by Apache Guacamole that are acquired and installed by this script.
-- Sudo or root access on the RHEL or CentOS server
+- Sudo or root access on the RHEL or CentOS server, script requires being run as sudo/root.
 - If using RHEL, an activated subscription for access to its repos.
-- No prior Guacamole installation or configuration including for its major dependent packages like Nginx, Tomcat, mariaDB, etc.
+- No prior Guacamole installation or configuration including for its major dependent packages like Nginx, Tomcat, mariaDB, etc. IE: if the script fails, you cannot simply re-run it!
+- SELinux must be enabled and in "Enforcing mode" or the script will not run.
+
+Full requirements listed on the [Requirements](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Requirements) page
 
 ## "Required" Reading
-I recommend reading the entire README page AND the entire Wiki in this repo prior to attempting to use the Apache Guacamole installation script. It is essential to understand what the script does as you will be prompted to enter parameters of its setup when running the script. It is important to be prepared to answer these prompts with accurate and desired parameters.
+I recommend reading this entire README page AND the entire [Wiki](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki) prior to attempting to use the Apache Guacamole installation script. It is essential to understand what the script does as you will be prompted to enter parameters during setup when running the script. It is important to be prepared to answer these prompts with accurate and desired parameters.
 
 Of special importance to starting with this Guacamole install script are:
 - [Warnings](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Warnings)
-- [Known Issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Known-Issues-and-Common-Mistakes)
-- [Variables](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Variables)
-- [Step-by-Step Directions](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Step-by-Step-Installation-Guide)
+- [Logs & Error Handling](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Logs-&-Error-Handling)
+- [Testing Procedure](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Testing-Procedure)
 - [Troubleshooting](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Troubleshooting)
 - [How to Report an Issue](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help))
 
-## Download/Run the Apache Guacamole Script for RHEL 7 & CentOS 7
+## Download/Run the Apache Guacamole Script for RHEL 7 and CentOS 7
 **WARNING: It is highly recommended to test this script in a dev environment prior to using it in a production setting!**
 
 Download the `guac-install.sh` script from this repo:
@@ -64,7 +66,7 @@ Proceed with the prompts provided by the installer, see [Step-by-Step Installati
 See this wiki post regarding [Customizing the Apache Guacamole Login Screen](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) for details on another repo of mine to accomplish this.
 
 ## Apache Guacamole Install Script Information
-I have based this Apache Guacamole install script on multiple other projects with similar goals. There are too many sources to provide credit to.
+I have based this Apache Guacamole install script on multiple other projects and my own work with similar goals. There are too many sources to provide credit to.
 
 The script versioning, for now, will be based on the date of the last commit in the format "yyyy_mm_dd".
 
