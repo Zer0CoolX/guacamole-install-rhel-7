@@ -13,7 +13,8 @@ Some of the main features and benefits of using this installation script for Apa
 - MariaDB is also automatically hardened (by running mysql_secure_installation and automatically answering the prompts)
 - Ability to install and configure Guacamole extensions for primary and secondary authentication. (Currently limited to LDAP(s) and/or TOTP)
 - Ability to install a custom Guacamole extension, like my [Guacamole Customize Login Page extension](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Customizing-the-Apache-Guacamole-Login-Screen) to change the appearance of the login page.
-- LDAP/LDAPS as primary authentication via Guacamole LDAP extension and configuration prompts.
+- Optionally, LDAP/LDAPS as primary authentication via Guacamole LDAP extension and configuration prompts.
+- Optionally, TOTP as a 2FA method via Guacamole TOTP extension and configuration prompts.
 - All SELinux contexts properly set instead of disabling SEL.
 - Firewalld configured for Guacamole.
 - Script generates a log file of what it did for review.
