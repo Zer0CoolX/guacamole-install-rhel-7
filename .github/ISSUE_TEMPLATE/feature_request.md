@@ -15,9 +15,6 @@ assignees: Zer0CoolX
 **In a sentence or 2, describe briefly what the idea is**
 IE: Adding a completion message that says "Complete!"
 
-**Is your feature request something that would help the majority of people using this script in typical environments or use cases?
-Y/N
-
 **Is your feature request related to a problem?**
 Y/N
 

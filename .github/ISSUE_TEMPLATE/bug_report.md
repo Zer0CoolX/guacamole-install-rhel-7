@@ -9,9 +9,12 @@ assignees: Zer0CoolX
 
 **Confirmation of Process**
 1. You have read the [How to report issues](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)) wiki page? Y/N
-2. You have read the wiki and followed its guidelines? Y/N
-3. You have checked the wiki and existing issues for the same problem? Y/N
-4. You are sure this issue is not specific to you personally and would affect others under similar circumstances? Y/N
+2. You have read the wiki and followed its guidelines including requirements, troubleshooting, etc.? Y/N
+
+**Details**
+OS/Version: RHEL 7.6
+Guacamole Source: Stable/Git?
+Any other options selected from the script prompts:
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -20,29 +23,11 @@ A clear and concise description of what the bug is.
 If an error occurred include the exact message from the display/log.
 
 **To Reproduce**
-Steps to reproduce the behavior:
+Steps to reproduce the behavior (example):
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
-
-**NOTE**
-The more information you provide the easier it is to help!
-
-**Screenshots (be sure not to include sensitive/personal information!)**
-If applicable, add screenshots to help explain your problem.
-
-**Environment (please complete the following information):**
- - OS: [e.g. CentOS 7.6, RHEL 7.5, etc.]
- - OS Details: Installation method, Desktop Environment, etc. [e.g. minimal install, Server with GUI, Gnome, etc.]
- - Browser: Browser used from another machine other than the server to access Guacamole [e.g. chrome, safari]
-
-**Guacamole Options Selected (This is very important, without knowing selections made its very hard to help.)**
- - Extensions: [e.g. LDAP, custo, etc.]
- - Nginx: [e.g. security level, DHE, URI, etc.]
- - LetsEncrypt/Self-signed cert?
- - Circumstantial Settings: [e.g. LDAP info, LDAPS info, Key strengths, etc.]
- - Other:
 
 **Have You Found a Solution to the Issue?**
 Either by manually doing something before/after the script has run or by editing the script prior to running.
