@@ -1042,7 +1042,7 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 name=CentOS-7.6.1810 - Base
 baseurl=http://vault.centos.org/7.6.1810/os/\$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+gpgkey=http://vault.centos.org/RPM-GPG-KEY-CentOS-7
 enabled=0" > /etc/yum.repos.d/CentOS-Vault.repo
 		fi	
 				
