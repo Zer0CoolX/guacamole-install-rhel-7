@@ -101,8 +101,8 @@ OS_NAME_L="$(echo $OS_NAME | tr '[:upper:]' '[:lower:]')" # Set lower case rhel 
 # Outputs the major.minor.release number of the OS, Ex: 7.6.1810 and splits the 3 parts.
 MAJOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 1p` # Return the leftmost digit representing major version
 MINOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 2p` # Returns the middle digit representing minor version
-# Will need to check that RHEL returns the same results. Need to test on RHEL.
-RELEASE_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 3p` # Returns the rightmost digits representing release number
+# Placeholder in case this info is ever needed. RHEL does not have release number, only major.minor
+# RELEASE_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 3p` # Returns the rightmost digits representing release number
 
 #Set arch used in some paths
 MACHINE_ARCH=`uname -m`
@@ -156,7 +156,7 @@ clear
 
 echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
 echo -e "   ${Bold}***        Source Menu     ***\n"
-echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}${Reset}"
+echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER}.${MINOR_VER} ${MACHINE_ARCH}${Reset}"
 echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}${Reset}\n"
 
 while true; do
@@ -1039,11 +1039,11 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 		if [ $OS_NAME == "RHEL" ]; then
 			# Create repo to CentOS-Vault 7.6 for freerdp-devel 1.0.2
 			echo "[C7.6.1810-base]
-			name=CentOS-7.6.1810 - Base
-			baseurl=http://vault.centos.org/7.6.1810/os/$basearch/
-			gpgcheck=1
-			gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-			enabled=0" > /etc/yum.repos.d/CentOS-Vault.repo
+name=CentOS-7.6.1810 - Base
+baseurl=http://vault.centos.org/7.6.1810/os/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=0" > /etc/yum.repos.d/CentOS-Vault.repo
 		fi	
 				
 		# Install freerdp 1.x from CentOS-Vault repo
