@@ -185,7 +185,7 @@ clear
 
 echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
 echo -e "   ${Bold}***     ${SUB_MENU_TITLE}     ***\n"
-echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}${Reset}"
+echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER}.${MINOR_VER} ${MACHINE_ARCH}${Reset}"
 echo -e "   ${Bold}Source/Version: ${Yellow}${GUAC_SOURCE} ${GUAC_VER}${Reset}\n"
 }
 
