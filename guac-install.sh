@@ -25,7 +25,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_9_23" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_10_17" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -98,8 +98,11 @@ echo "-1" > "${VAR_FILE}" # create file with -1 to set not as background process
 if rpm -q subscription-manager 2>&1 > /dev/null; then OS_NAME="RHEL"; else OS_NAME="CentOS"; fi
 OS_NAME_L="$(echo $OS_NAME | tr '[:upper:]' '[:lower:]')" # Set lower case rhel or centos for use in some URLs
 
-# Get OS major version, used in some paths/vars that require it
-MAJOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | head -1` # Return 5, 6 or 7 when OS is 5.x, 6.x or 7.x
+# Outputs the major.minor.release number of the OS, Ex: 7.6.1810 and splits the 3 parts.
+MAJOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 1p` # Return the leftmost digit representing major version
+MINOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 2p` # Returns the middle digit representing minor version
+# Placeholder in case this info is ever needed. RHEL does not have release number, only major.minor
+# RELEASE_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 3p` # Returns the rightmost digits representing release number
 
 #Set arch used in some paths
 MACHINE_ARCH=`uname -m`
@@ -153,7 +156,7 @@ clear
 
 echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
 echo -e "   ${Bold}***        Source Menu     ***\n"
-echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}${Reset}"
+echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER}.${MINOR_VER} ${MACHINE_ARCH}${Reset}"
 echo -e "   ${Bold}Stable Version: ${Yellow}${GUAC_STBL_VER}${Reset} || ${Bold}Git Version: ${Yellow}${GUAC_GIT_VER}${Reset}\n"
 
 while true; do
@@ -182,7 +185,7 @@ clear
 
 echo -e "   ${Reset}${Bold}----====Gucamole Installation Script====----\n       ${Reset}Guacamole Remote Desktop Gateway\n"
 echo -e "   ${Bold}***     ${SUB_MENU_TITLE}     ***\n"
-echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER} ${MACHINE_ARCH}${Reset}"
+echo "   OS: ${Yellow}${OS_NAME} ${MAJOR_VER}.${MINOR_VER} ${MACHINE_ARCH}${Reset}"
 echo -e "   ${Bold}Source/Version: ${Yellow}${GUAC_SOURCE} ${GUAC_VER}${Reset}\n"
 }
 
@@ -1027,7 +1030,31 @@ baseinstall () {
 s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
-{ yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel; } &
+{
+	# check if OS is major version 7 AND minor version is less than 7, IE: 7.6 or lower.
+	if [[ $MAJOR_VER == "7" && $MINOR_VER -lt "7" ]]; then
+		yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
+	else # assume 7.7 or a higher 7.x, is not a solution for 8.x
+		# If OS is RHEL, create required repo file
+		if [ $OS_NAME == "RHEL" ]; then
+			# Create repo to CentOS-Vault 7.6 for freerdp-devel 1.0.2
+			echo "[C7.6.1810-base]
+name=CentOS-7.6.1810 - Base
+baseurl=http://vault.centos.org/7.6.1810/os/\$basearch/
+gpgcheck=1
+gpgkey=http://vault.centos.org/RPM-GPG-KEY-CentOS-7
+enabled=0" > /etc/yum.repos.d/CentOS-Vault.repo
+		fi	
+				
+		# Install freerdp 1.x from CentOS-Vault repo
+		yum install -y freerdp-devel freerdp-plugins --disablerepo="*" --enablerepo=C7.6.1810-base
+		# Prevent updating freerdp in the future
+		sed -i "\$aexclude=freerdp*" /etc/yum.conf
+		# Install other packages as required
+		yum install -y cairo-devel dialog ffmpeg-devel gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
+	fi
+} &
+
 s_echo "n" "${Reset}-Installing required packages...    "; spinner
 
 # Additional packages required by git
@@ -1338,7 +1365,8 @@ s_echo "n" "${Reset}-Making Nginx config backup...    "; spinner
 	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
 	access_log off;
 	}
-}" > /etc/nginx/conf.d/guacamole.conf; } &
+}" > /etc/nginx/conf.d/guacamole.conf 
+} &
 s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
 # HTTPS/SSL Nginx Conf
