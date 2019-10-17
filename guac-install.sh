@@ -25,7 +25,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_9_23" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_10_17" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1035,8 +1035,19 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 	if [[ $MAJOR_VER == "7" && $MINOR_VER -lt "7" ]]; then
 		yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
 	else # assume 7.7 or a higher 7.x, is not a solution for 8.x
+		# If OS is RHEL, create required repo file
+		if [ $OS_NAME == "RHEL" ]; then
+			# Create repo to CentOS-Vault 7.6 for freerdp-devel 1.0.2
+			echo "[C7.6.1810-base]
+			name=CentOS-7.6.1810 - Base
+			baseurl=http://vault.centos.org/7.6.1810/os/$basearch/
+			gpgcheck=1
+			gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+			enabled=0" > /etc/yum.repos.d/CentOS-Vault.repo
+		fi	
+				
 		# Install freerdp 1.x from CentOS-Vault repo
-		yum install -y freerdp-devel freerdp-plugins --enablerepo=C7.6.1810-base --disablerepo=base --disablerepo=updates
+		yum install -y freerdp-devel freerdp-plugins --disablerepo="*" --enablerepo=C7.6.1810-base
 		# Prevent updating freerdp in the future
 		sed -i "\$aexclude=freerdp*" /etc/yum.conf
 		# Install other packages as required
@@ -1354,7 +1365,8 @@ s_echo "n" "${Reset}-Making Nginx config backup...    "; spinner
 	proxy_cookie_path /guacamole/ ${GUAC_URIPATH};
 	access_log off;
 	}
-}" > /etc/nginx/conf.d/guacamole.conf; } &
+}" > /etc/nginx/conf.d/guacamole.conf 
+} &
 s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
 # HTTPS/SSL Nginx Conf
