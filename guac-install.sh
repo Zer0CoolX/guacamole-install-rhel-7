@@ -1045,7 +1045,7 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 
 			yum install -y freerdp-devel-1.0.2-15.el7 freerdp-plugins-1.0.2-15.el7
 		else
-			yum install yum-utils
+			yum install -y yum-utils
 			yum-config-manager --enable C7.6.1810-base
 
 			# Prevent updating freerdp in the future
