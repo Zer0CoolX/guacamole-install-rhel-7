@@ -25,7 +25,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_10_18" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_10_29" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1035,18 +1035,25 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 	if [[ $MAJOR_VER == "7" && $MINOR_VER -lt "7" ]]; then
 		yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
 	else # assume 7.7 or a higher 7.x, is not a solution for 8.x
-		# Prevent updating freerdp in the future
+		# Install yum-versionlock
 		yum install -y yum-versionlock
-		yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
-		
+
 		# If OS is RHEL, create required repo file
 		if [ $OS_NAME == "RHEL" ]; then
+			# Prevent updating freerdp in the future
+			yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
+
 			yum install -y freerdp-devel-1.0.2-15.el7 freerdp-plugins-1.0.2-15.el7
 		else
+			yum install -y yum-utils
+			yum-config-manager --enable C7.6.1810-base
+
+			# Prevent updating freerdp in the future
+			yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
+
 			# Install freerdp 1.x from CentOS-Vault repo
 			yum install -y freerdp-devel freerdp-plugins --disablerepo="*" --enablerepo=C7.6.1810-base
 		fi
-
 		# Install other packages as required
 		yum install -y cairo-devel dialog ffmpeg-devel gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
 	fi
