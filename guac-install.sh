@@ -973,7 +973,7 @@ chk_installed "epel-release"
 if [ $RETVAL -eq 0 ]; then
 	s_echo "n" "${Reset}-EPEL is installed."
 else
-	{ rpm -Uvh http://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm; } &
+	{ rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${MAJOR_VER}.noarch.rpm; } &
 	s_echo "n" "${Reset}-EPEL is missing. Installing...    "; spinner
 fi
 
