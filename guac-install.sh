@@ -1448,15 +1448,18 @@ s_echo "n" "-Generate Nginx guacamole_ssl.config...    "; spinner
 	# sed -i '/send_timeout/c\send_timeout 10\;' /etc/nginx/nginx.conf
 
 	# 2.5.2 Reoving mentions of Nginx from index and error pages
-	# for index.html
-	sed -i '/\<p\>/,/\<\\p\>/d' /usr/share/nginx/html/index.html
-	sed -i '/\<style\>/,/\<\\style\>/d' /usr/share/nginx/html/index.html
-	sed -i '/nginx/d' /usr/share/nginx/html/index.html
+	read -r -d '' BLANK_HTML <<"EOF"
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+</body>
+</html>
+EOF
 
-	# for 50x.html
-	sed -i '/\<p\>/,/\<\\p\>/d' /usr/share/nginx/html/50x.html
-	sed -i '/\<style\>/,/\<\\style\>/d' /usr/share/nginx/html/50x.html
-	sed -i '/nginx/d' /usr/share/nginx/html/50x.html
+	echo "${BLANK_HTML}" > /usr/share/nginx/html/index.html
+	echo "${BLANK_HTML}" > /usr/share/nginx/html/50x.html
 
 	# 3.4 Ensure logs are rotated (may set this as a user defined parameter)
 	sed -i "s/daily/weekly/" /etc/logrotate.d/nginx
