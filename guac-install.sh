@@ -1448,7 +1448,7 @@ s_echo "n" "-Generate Nginx guacamole_ssl.config...    "; spinner
 	# sed -i '/send_timeout/c\send_timeout 10\;' /etc/nginx/nginx.conf
 
 	# 2.5.2 Reoving mentions of Nginx from index and error pages
-	read -r -d '' BLANK_HTML <<"EOF"
+	! read -r -d '' BLANK_HTML <<"EOF"
 <!DOCTYPE html>
 <html>
 <head>
