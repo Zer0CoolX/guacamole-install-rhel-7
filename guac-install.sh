@@ -25,7 +25,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_10_29" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2019_11_15" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -305,21 +305,21 @@ echo -n "${Green} Enter the URI path, starting and ending with / for example /gu
 # Only prompt if SSL will be used
 if [ $SSL_CERT_TYPE != "None" ]; then
 	while true; do
-		echo -n "${Green} Use only >= 256-bit SSL ciphers (More secure, less compatible. default: no)?: ${Yellow}"
+		echo -n "${Green} Use only >= 256-bit SSL ciphers (More secure, less compatible. default: yes)?: ${Yellow}"
 		read yn
 		case $yn in
-			[Yy]* ) NGINX_SEC=true; break;;
-			[Nn]*|"" ) NGINX_SEC=false; break;;
+			[Yy]*|"" ) NGINX_SEC=true; break;;
+			[Nn]* ) NGINX_SEC=false; break;;
 			* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 		esac
 	done
 
 	while true; do
-		echo -n "${Green} Use Content-Security-Policy [CSP] (More secure, less compatible. default: no)?: ${Yellow}"
+		echo -n "${Green} Use Content-Security-Policy [CSP] (More secure, less compatible. default: yes)?: ${Yellow}"
 		read yn
 		case $yn in
-			[Yy]* ) USE_CSP=true; break;;
-			[Nn]*|"" ) USE_CSP=false; break;;
+			[Yy]*|"" ) USE_CSP=true; break;;
+			[Nn]* ) USE_CSP=false; break;;
 			* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 		esac
 	done
