@@ -25,13 +25,13 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2019_10_29" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_1_7" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
 GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
 MYSQL_CON_VER="8.0.18" # Working stable release of MySQL Connecter J
-MAVEN_VER="3.6.2" # Latest stable version of Apache Maven
+MAVEN_VER="3.6.3" # Latest stable version of Apache Maven
 
 # Ports
 GUAC_PORT="4822"
