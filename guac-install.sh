@@ -305,21 +305,21 @@ echo -n "${Green} Enter the URI path, starting and ending with / for example /gu
 # Only prompt if SSL will be used
 if [ $SSL_CERT_TYPE != "None" ]; then
 	while true; do
-		echo -n "${Green} Use only >= 256-bit SSL ciphers (More secure, less compatible. default: no)?: ${Yellow}"
+		echo -n "${Green} Use only >= 256-bit SSL ciphers (More secure, less compatible. default: yes)?: ${Yellow}"
 		read yn
 		case $yn in
-			[Yy]* ) NGINX_SEC=true; break;;
-			[Nn]*|"" ) NGINX_SEC=false; break;;
+			[Yy]*|"" ) NGINX_SEC=true; break;;
+			[Nn]* ) NGINX_SEC=false; break;;
 			* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 		esac
 	done
 
 	while true; do
-		echo -n "${Green} Use Content-Security-Policy [CSP] (More secure, less compatible. default: no)?: ${Yellow}"
+		echo -n "${Green} Use Content-Security-Policy [CSP] (More secure, less compatible. default: yes)?: ${Yellow}"
 		read yn
 		case $yn in
-			[Yy]* ) USE_CSP=true; break;;
-			[Nn]*|"" ) USE_CSP=false; break;;
+			[Yy]*|"" ) USE_CSP=true; break;;
+			[Nn]* ) USE_CSP=false; break;;
 			* ) echo "${Green} Please enter yes or no. ${Yellow}";;
 		esac
 	done
@@ -1417,6 +1417,10 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 	echo "	add_header X-Frame-Options \"SAMEORIGIN\" always;
 		add_header X-Content-Type-Options \"nosniff\" always;
 		add_header X-XSS-Protection \"1; mode=block\" always;
+		proxy_hide_header Server;
+		proxy_hide_header X-Powered-By;
+		client_body_timeout 10;
+		client_header_timeout 10;
 
 		location ${GUAC_URIPATH} {
 		proxy_pass http://${GUAC_LAN_IP}:8080/guacamole/;
@@ -1432,6 +1436,36 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 	}" >> /etc/nginx/conf.d/guacamole_ssl.conf
 } &
 s_echo "n" "-Generate Nginx guacamole_ssl.config...    "; spinner
+
+# Nginx CIS hardening v1.0.0
+{
+	# 2.3.2 Restrict access to Nginx files
+	find /etc/nginx -type d | xargs chmod 750
+	find /etc/nginx -type f | xargs chmod 640
+
+	# 2.4.3 & 2.4.4 set keepalive_timeout and send_timeout to 1-10 seconds, default 65/60.
+	sed -i '/keepalive_timeout/c\keepalive_timeout 10\;' /etc/nginx/nginx.conf
+	# sed -i '/send_timeout/c\send_timeout 10\;' /etc/nginx/nginx.conf
+
+	# 2.5.2 Reoving mentions of Nginx from index and error pages
+	! read -r -d '' BLANK_HTML <<"EOF"
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+</body>
+</html>
+EOF
+
+	echo "${BLANK_HTML}" > /usr/share/nginx/html/index.html
+	echo "${BLANK_HTML}" > /usr/share/nginx/html/50x.html
+
+	# 3.4 Ensure logs are rotated (may set this as a user defined parameter)
+	sed -i "s/daily/weekly/" /etc/logrotate.d/nginx
+	sed -i "s/rotate 52/rotate 13/" /etc/logrotate.d/nginx
+} &
+s_echo "n" "-Hardening Nginx config...    "; spinner
 
 # Enable/Start Nginx Service
 {
@@ -1740,10 +1774,19 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 		s_echo "n" "${Reset}-Generating ${SSL_CERT_TYPE} SSL Certificate...    "; spinner
 	fi
 
-	# Uncomment listen lines from Nginx guacamole_ssl.conf (fixes issue introduced by Nginx 1.16.0)
-	sed -i 's/#\(listen.*443.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf
-	# Uncomment cert lines from Nginx guacamole_ssl.conf
-	{ sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf; } &
+	# Nginx CIS v1.0.0 - 4.1.3 ensure private key permissions are restricted
+	{
+		ls -l /etc/nginx/guacamole.key
+		chmod 400 /etc/nginx/guacamole.key
+	}
+	s_echo "n" "${Reset}-Changing permissions on SSL private key...    "; spinner
+
+	{
+		# Uncomment listen lines from Nginx guacamole_ssl.conf (fixes issue introduced by Nginx 1.16.0)
+		sed -i 's/#\(listen.*443.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf
+		# Uncomment cert lines from Nginx guacamole_ssl.conf
+		sed -i 's/#\(.*ssl_.*certificate.*\)/\1/' /etc/nginx/conf.d/guacamole_ssl.conf
+	} &
 	s_echo "n" "${Reset}-Enabling SSL certificate in guacamole_ssl.conf...    "; spinner
 
 	HTTPS_ENABLED=true
