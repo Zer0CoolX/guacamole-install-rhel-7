@@ -14,6 +14,7 @@
 ######  PRE-RUN CHECKS  ##############################################
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1; fi
 if ! [ $(getenforce) = "Enforcing" ]; then echo "This script requires SELinux to be active and in \"Enforcing mode\""; exit 1; fi
+if ! [ $(uname -m) = "x86_64" ]; then echo "This script will only run on 64 bit versions of RHEL/CentOS"; exit 1; fi
 
 # Allow trap to work in functions
 set -E
@@ -51,7 +52,7 @@ JKS_GUAC_PASSWD_DEF="guacamole" # Default Java Keystore password
 JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used with LDAPS
 
 # Misc
-GUACD_USER="guacd"
+GUACD_USER="guacd" # The user name and group of the user running the guacd service
 GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
 H_ERR=false # Defualt value of if an error has been triggered, should be false
@@ -107,9 +108,10 @@ MINOR_VER=`cat /etc/redhat-release | grep -oP "[0-9]+" | sed -n 2p` # Returns th
 
 #Set arch used in some paths
 MACHINE_ARCH=`uname -m`
-if [ $MACHINE_ARCH="x86_64" ]; then ARCH="64"; elif [ $MACHINE_ARCH="i686" ]; then MACHINE_ARCH="i386"; else ARCH=""; fi
+ARCH="64"
 
-NGINX_URL=https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/ # Set nginx url for RHEL or CentOS
+# Set nginx url for RHEL or CentOS
+NGINX_URL="https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/"
 }
 
 ######  SOURCE VARIABLES  ############################################
@@ -1032,34 +1034,8 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
 {
-	# check if OS is major version 7 AND minor version is less than 7, IE: 7.6 or lower.
-	#if [[ $MAJOR_VER == "7" && $MINOR_VER -lt "7" ]]; then
-		yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
-	#else # assume 7.7 or a higher 7.x, is not a solution for 8.x
-		# Install yum-versionlock
-		#yum install -y yum-versionlock
-
-		# If OS is RHEL, create required repo file
-		#if [ $OS_NAME == "RHEL" ]; then
-			# Prevent updating freerdp in the future
-			#yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
-
-			#yum install -y freerdp-devel-1.0.2-15.el7_6.1 freerdp-plugins-1.0.2-15.el7_6.1
-		#else
-			#yum install -y yum-utils
-			#yum-config-manager --enable C7.6.1810-base
-
-			# Prevent updating freerdp in the future
-			#yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
-
-			# Install freerdp 1.x from CentOS-Vault repo
-			#yum install -y freerdp-devel freerdp-plugins --disablerepo="*" --enablerepo=C7.6.1810-base
-		#fi
-		# Install other packages as required
-		#yum install -y cairo-devel dialog ffmpeg-devel gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
-	#fi
+	yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
 } &
-
 s_echo "n" "${Reset}-Installing required packages...    "; spinner
 
 # Additional packages required by git
@@ -1238,9 +1214,10 @@ fi
 {
 	# Create a user and group for guacd with a home folder but no login
 	groupadd ${GUACD_USER}
+	# The guacd user is created as a service account, no login but does get a home dir as needed by freerdp
 	useradd -r ${GUACD_USER} -m -s "/bin/nologin" -g ${GUACD_USER} -c ${GUACD_USER}
 
-	# Set the user that runs guacd
+	# Set the user that runs the guacd service
 	sed -i "s/User=daemon/User=${GUACD_USER}/g" /etc/systemd/system/guacd.service
 } &
 s_echo "n" "-Setup guacd user...    "; spinner
@@ -1830,6 +1807,10 @@ s_echo "y" "${Bold}Services"
 	systemctl status mariadb
 	systemctl restart nginx
 	systemctl status nginx
+
+	# Verify that the guacd user is running guacd
+	ps aux | grep ${GUACD_USER}
+	ps -U ${GUACD_USER}
 } &
 s_echo "n" "${Reset}-Restarting all services...    "; spinner
 
