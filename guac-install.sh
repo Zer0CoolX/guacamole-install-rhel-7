@@ -25,11 +25,11 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2020_1_21" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_02_04" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
-GUAC_STBL_VER="1.0.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
+GUAC_STBL_VER="1.1.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
 MYSQL_CON_VER="8.0.19" # Working stable release of MySQL Connecter J
 MAVEN_VER="3.6.3" # Latest stable version of Apache Maven
 
@@ -1032,38 +1032,38 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 # Install Required Packages
 {
 	# check if OS is major version 7 AND minor version is less than 7, IE: 7.6 or lower.
-	if [[ $MAJOR_VER == "7" && $MINOR_VER -lt "7" ]]; then
-		yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
-	else # assume 7.7 or a higher 7.x, is not a solution for 8.x
+	#if [[ $MAJOR_VER == "7" && $MINOR_VER -lt "7" ]]; then
+		yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
+	#else # assume 7.7 or a higher 7.x, is not a solution for 8.x
 		# Install yum-versionlock
-		yum install -y yum-versionlock
+		#yum install -y yum-versionlock
 
 		# If OS is RHEL, create required repo file
-		if [ $OS_NAME == "RHEL" ]; then
+		#if [ $OS_NAME == "RHEL" ]; then
 			# Prevent updating freerdp in the future
-			yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
+			#yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
 
-			yum install -y freerdp-devel-1.0.2-15.el7_6.1 freerdp-plugins-1.0.2-15.el7_6.1
-		else
-			yum install -y yum-utils
-			yum-config-manager --enable C7.6.1810-base
+			#yum install -y freerdp-devel-1.0.2-15.el7_6.1 freerdp-plugins-1.0.2-15.el7_6.1
+		#else
+			#yum install -y yum-utils
+			#yum-config-manager --enable C7.6.1810-base
 
 			# Prevent updating freerdp in the future
-			yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
+			#yum versionlock add freerdp-*-1.0.2-15* freerdp-1.0.2-15*
 
 			# Install freerdp 1.x from CentOS-Vault repo
-			yum install -y freerdp-devel freerdp-plugins --disablerepo="*" --enablerepo=C7.6.1810-base
-		fi
+			#yum install -y freerdp-devel freerdp-plugins --disablerepo="*" --enablerepo=C7.6.1810-base
+		#fi
 		# Install other packages as required
-		yum install -y cairo-devel dialog ffmpeg-devel gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
-	fi
+		#yum install -y cairo-devel dialog ffmpeg-devel gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
+	#fi
 } &
 
 s_echo "n" "${Reset}-Installing required packages...    "; spinner
 
 # Additional packages required by git
 if [ $GUAC_SOURCE == "Git" ]; then
-	{ yum install -y git libtool libwebsockets java-1.8.0-openjdk-devel; } &
+	{ yum install -y git libtool java-1.8.0-openjdk-devel; } &
 	s_echo "n" "-Installing packages required for git...    "; spinner
 
 	#Install Maven
