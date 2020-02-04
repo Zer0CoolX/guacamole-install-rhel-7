@@ -51,6 +51,7 @@ JKS_GUAC_PASSWD_DEF="guacamole" # Default Java Keystore password
 JKS_CACERT_PASSWD_DEF="guacamole" # Default CACert Java Keystore password, used with LDAPS
 
 # Misc
+GUACD_USER="guacd"
 GUAC_URIPATH_DEF="/" # Default URI for Guacamole
 DOMAIN_NAME_DEF="localhost" # Default domain name of server
 H_ERR=false # Defualt value of if an error has been triggered, should be false
@@ -1232,6 +1233,18 @@ if [ $GUAC_SOURCE == "Git" ]; then
 	{ find ./guacamole-client/extensions -name "guacamole-auth-jdbc-mysql-${GUAC_VER}.jar" -exec mv -v {} ${LIB_DIR}extensions/ \;; } &
 	s_echo "n" "-Moving Guacamole JDBC extension to extensions dir...    "; spinner
 fi
+
+# Setup guacd user, group and permissions
+{
+	# Create a user and group for guacd with a home folder but no login
+	groupadd ${GUACD_USER}
+	useradd -r ${GUACD_USER} -m -s "/bin/nologin" -g ${GUACD_USER} -c ${GUACD_USER}
+
+	# Set the user that runs guacd
+	sed -i "s/User=daemon/User=${GUACD_USER}/g" /etc/systemd/system/guacd.service
+} &
+s_echo "n" "-Setup guacd user...    "; spinner
+
 appconfigs
 }
 
