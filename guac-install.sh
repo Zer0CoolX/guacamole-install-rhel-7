@@ -96,8 +96,15 @@ PWD=`pwd` # Current directory
 VAR_FILE="${PWD}/${TMP_VAR_FILE}"
 echo "-1" > "${VAR_FILE}" # create file with -1 to set not as background process
 
-# Determine if OS is RHEL or not (otherwise assume CentOS)
-if rpm -q subscription-manager 2>&1 > /dev/null; then OS_NAME="RHEL"; else OS_NAME="CentOS"; fi
+# Determine if OS is RHEL, CentOS or something else
+if grep -q "CentOS" /etc/redhat-release; then
+	OS_NAME="CentOS"
+elif grep -q "Red Hat Enterprise" /etc/redhat-release; then
+	OS_NAME="RHEL"
+else
+	echo "Unable to verify OS from /etc/redhat-release as CentOS or RHEL, this script is intended only for those distro's, exiting."
+	exit 1
+fi
 OS_NAME_L="$(echo $OS_NAME | tr '[:upper:]' '[:lower:]')" # Set lower case rhel or centos for use in some URLs
 
 # Outputs the major.minor.release number of the OS, Ex: 7.6.1810 and splits the 3 parts.
