@@ -26,7 +26,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2020_02_04" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_03_04" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -1287,7 +1287,7 @@ s_echo "n" "-Creating Guacamole Tables...    "; spinner
 	MY_TZ=`readlink /etc/localtime | sed "s/.*\/usr\/share\/zoneinfo\///"`
 	sed -i "${MY_CNF_LINE}i default-time-zone='${MY_TZ}'" /etc/my.cnf
 	systemctl restart mariadb
-}
+} &
 s_echo "n" "-Setting Time Zone Database & Config...    "; spinner
 
 # Setup Tomcat
@@ -1775,7 +1775,7 @@ if [ $SSL_CERT_TYPE != "None" ]; then
 	{
 		ls -l /etc/nginx/guacamole.key
 		chmod 400 /etc/nginx/guacamole.key
-	}
+	} &
 	s_echo "n" "${Reset}-Changing permissions on SSL private key...    "; spinner
 
 	{
