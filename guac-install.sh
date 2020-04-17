@@ -1383,9 +1383,12 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
 	# If OCSP Stapling was selected add lines
 	if [ $OCSP_USE = true ]; then
-		NAME_SERVERS=$(awk '/^nameserver/{print $2}' /etc/resolv.conf | xargs)
+		if [[ -r /etc/resolv.conf ]]; then
+	            NAME_SERVERS=$(awk '/^nameserver/{print $2}' /etc/resolv.conf | xargs)
+	        fi
+		    
 		if [[ -z $NAME_SERVERS ]]; then
-			NAME_SERVERS=$NAME_SERVERS_DEF
+		    NAME_SERVERS=$NAME_SERVERS_DEF
 		fi
 		
 		echo "	#ssl_trusted_certificate guacamole.pem;
