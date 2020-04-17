@@ -26,7 +26,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2020_03_04" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_04_16" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
@@ -58,6 +58,7 @@ DOMAIN_NAME_DEF="localhost" # Default domain name of server
 H_ERR=false # Defualt value of if an error has been triggered, should be false
 LIBJPEG_EXCLUDE="exclude=libjpeg-turbo-[0-9]*,libjpeg-turbo-*.*.9[0-9]-*"
 DEL_TMP_VAR=true # Default behavior to delete the temp var file used by error handler on completion. Set to false to keep the file to review last values
+NAME_SERVERS_DEF="1.1.1.1 1.0.0.1 2606:4700:4700::1111 2606:4700:4700::1001" # OCSP reolver DNS name servers defaults !!Only used if the host does not have name servers in resolv.conf!!
 
 # ONLY CHANGE IF NOT WORKING #
 # URLS
@@ -1382,9 +1383,16 @@ s_echo "n" "${Reset}-Generate Nginx guacamole.config...    "; spinner
 
 	# If OCSP Stapling was selected add lines
 	if [ $OCSP_USE = true ]; then
+		NAME_SERVERS=$(grep ^nameserver < /etc/resolv.conf | awk '{print $2}' | xargs)
+		if [[ -z $NAME_SERVERS ]]; then
+			NAME_SERVERS=$NAME_SERVERS_DEF
+		fi
+		
 		echo "	#ssl_trusted_certificate guacamole.pem;
 		ssl_stapling on;
-		ssl_stapling_verify on;" >> /etc/nginx/conf.d/guacamole_ssl.conf
+		ssl_stapling_verify on;
+		resolver ${NAME_SERVERS} valid=30s;
+		resolver_timeout 30s;" >> /etc/nginx/conf.d/guacamole_ssl.conf
 	fi
 
 	# If using >= 256-bit ciphers
