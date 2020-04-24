@@ -15,6 +15,8 @@
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1; fi
 if ! [ $(getenforce) = "Enforcing" ]; then echo "This script requires SELinux to be active and in \"Enforcing mode\""; exit 1; fi
 if ! [ $(uname -m) = "x86_64" ]; then echo "This script will only run on 64 bit versions of RHEL/CentOS"; exit 1; fi
+# Check that firewalld is installed
+if ! [ -x "$(rpm -q firewalld)" ]; then echo "This script requires firewalld to be installed on the system"; exit 1; fi
 
 # Allow trap to work in functions
 set -E
