@@ -16,7 +16,7 @@ if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try a
 if ! [ $(getenforce) = "Enforcing" ]; then echo "This script requires SELinux to be active and in \"Enforcing mode\""; exit 1; fi
 if ! [ $(uname -m) = "x86_64" ]; then echo "This script will only run on 64 bit versions of RHEL/CentOS"; exit 1; fi
 # Check that firewalld is installed
-if ! [ -x "$(rpm -q firewalld)" ]; then echo "This script requires firewalld to be installed on the system"; exit 1; fi
+if ! rpm -q --quiet "firewalld"; then echo "This script requires firewalld to be installed on the system"; exit 1; fi
 
 # Allow trap to work in functions
 set -E
@@ -28,7 +28,7 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2020_04_17" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_04_24" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
