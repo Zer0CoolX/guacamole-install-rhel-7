@@ -28,12 +28,12 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2020_04_24" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_05_01" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
 GUAC_STBL_VER="1.1.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
-MYSQL_CON_VER="8.0.19" # Working stable release of MySQL Connecter J
+MYSQL_CON_VER="8.0.20" # Working stable release of MySQL Connecter J
 MAVEN_VER="3.6.3" # Latest stable version of Apache Maven
 
 # Ports
@@ -1006,7 +1006,8 @@ name=Nginx Stable Repo
 baseurl=${NGINX_URL}
 gpgcheck=1
 enabled=1
-gpgkey=https://nginx.org/keys/nginx_signing.key" > /etc/yum.repos.d/nginx.repo; } &
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true" > /etc/yum.repos.d/nginx.repo; } &
 s_echo "n" "${Reset}-Installing Nginx repo...    "; spinner
 
 # Install libjpeg-turbo Repo
@@ -1044,7 +1045,7 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
 {
-	yum install -y cairo-devel dialog ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
+	yum install -y cairo-devel ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
 } &
 s_echo "n" "${Reset}-Installing required packages...    "; spinner
 
