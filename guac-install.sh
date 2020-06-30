@@ -1,9 +1,9 @@
 #!/bin/env bash
 ######  NOTES  #######################################################
-# Project Page: https://github.com/Zer0CoolX/guacamole-install-rhel
-# Licence (GPL-3.0): https://github.com/Zer0CoolX/guacamole-install-rhel/blob/master/LICENSE
-# Report Issues: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)
-# Wiki: https://github.com/Zer0CoolX/guacamole-install-rhel/wiki
+# Project Page: https://github.com/Zer0CoolX/guacamole-install-rhel-7
+# Licence (GPL-3.0): https://github.com/Zer0CoolX/guacamole-install-rhel-7/blob/master/LICENSE
+# Report Issues: https://github.com/Zer0CoolX/guacamole-install-rhel-7/wiki/How-to-Report-Issues-(Bugs,-Feature-Request-and-Help)
+# Wiki: https://github.com/Zer0CoolX/guacamole-install-rhel-7/wiki
 #
 # WARNING: For use on RHEL/CentOS 7.x and up only.
 #	-Use at your own risk!
@@ -1868,7 +1868,7 @@ if [ $INSTALL_LDAP = false ]; then
 	s_echo "n" "-It is highly recommended to create an admin account in Guacamole and delete/disable the default asap!"
 else
 	s_echo "n" "-You should assign at least one AD/LDAP user to have full admin, see the directions on how-to at:"
-	s_echo "n" "${Green} https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/LDAP-or-LDAPS-Authentication#important-manual-steps${Reset}"
+	s_echo "n" "${Green} https://github.com/Zer0CoolX/guacamole-install-rhel-7/wiki/LDAP-or-LDAPS-Authentication#important-manual-steps${Reset}"
 	s_echo "n" "-Afterwards, it is highly recommended to delete/disable the default admin account and/or create a uniquely named local admin account asap!"
 
 	if [ $SECURE_LDAP = true ]; then
