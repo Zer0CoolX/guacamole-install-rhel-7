@@ -29,7 +29,7 @@ Further details see the [Script Features](https://github.com/Zer0CoolX/guacamole
 - The server must have internet access to download the script and files required by Apache Guacamole that are acquired and installed by this script.
 - Sudo or root access on the RHEL or CentOS server, script requires being run as sudo/root.
 - If using RHEL, an activated subscription for access to its repos.
-- No prior Guacamole installation or configuration including for its major dependent packages like Nginx, Tomcat, mariaDB, etc. IE: if the script fails, you cannot simply re-run it!
+- **No prior Guacamole installation or configuration including for its major dependent packages like Nginx, Tomcat, mariaDB, etc. IE: if the script fails, you cannot simply re-run it! Also, this script cannot be used to update a previous Guacamole install!!**
 - SELinux must be enabled and in "Enforcing mode" or the script will not run.
 
 Full requirements listed on the [Requirements](https://github.com/Zer0CoolX/guacamole-install-rhel/wiki/Requirements) page
