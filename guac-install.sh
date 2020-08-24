@@ -28,12 +28,12 @@ set -E
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
-SCRIPT_BUILD="2020_06_30" # Scripts Date for last modified as "yyyy_mm_dd"
+SCRIPT_BUILD="2020_07_16" # Scripts Date for last modified as "yyyy_mm_dd"
 ADM_POC="Local Admin, admin@admin.com"  # Point of contact for the Guac server admin
 
 # Versions
 GUAC_STBL_VER="1.2.0" # Latest stable version of Guac from https://guacamole.apache.org/releases/
-MYSQL_CON_VER="8.0.20" # Working stable release of MySQL Connecter J
+MYSQL_CON_VER="8.0.21" # Working stable release of MySQL Connecter J
 MAVEN_VER="3.6.3" # Latest stable version of Apache Maven
 
 # Ports
@@ -1525,7 +1525,8 @@ fi
 ldap-search-bind-dn: ${LDAP_BIND_DN}
 ldap-search-bind-password: ${LDAP_BIND_PW}
 ldap-username-attribute: ${LDAP_UNAME_ATTR}
-ldap-user-search-filter: ${LDAP_SEARCH_FILTER}" >> /etc/guacamole/${GUAC_CONF}; } &
+ldap-user-search-filter: ${LDAP_SEARCH_FILTER}
+mysql-auto-create-accounts: true" >> /etc/guacamole/${GUAC_CONF}; } &
 s_echo "n" "-Finishing updates to the guacamole.properties file for LDAP...    "; spinner
 
 if [ $GUAC_SOURCE == "Git" ]; then
