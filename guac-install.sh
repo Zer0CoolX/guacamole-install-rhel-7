@@ -462,9 +462,9 @@ echo -ne "\n${Green} Enter the LDAP Server Hostname (use the FQDN, Ex: ldaphost.
 echo -n "${Green} Enter the LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}"
 	read LDAP_BASE_DN
 	LDAP_BASE_DN=${LDAP_BASE_DN:-dc=domain,dc=com}
-echo -n "${Green} Enter the LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=doamin,dc=com): ${Yellow}"
+echo -n "${Green} Enter the LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=domain,dc=com): ${Yellow}"
 	read LDAP_BIND_DN
-	LDAP_BIND_DN=${LDAP_BIND_DN:-cn=user,ou=Admins,dc=doamin,dc=com}
+	LDAP_BIND_DN=${LDAP_BIND_DN:-cn=user,ou=Admins,dc=domain,dc=com}
 echo -n "${Green} Enter the LDAP Search-Bind-Password: ${Yellow}"
 	read LDAP_BIND_PW
 	LDAP_BIND_PW=${LDAP_BIND_PW:-password}
@@ -747,7 +747,7 @@ case $PRIME_AUTH_TYPE in
 
 		echo "${Green} LDAP Server Hostname (should be FQDN, Ex: ldaphost.domain.com): ${Yellow}${LDAP_HOSTNAME}"
 		echo "${Green} LDAP User-Base-DN (Ex: dc=domain,dc=com): ${Yellow}${LDAP_BASE_DN}"
-		echo "${Green} LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=doamin,dc=com): ${Yellow}${LDAP_BIND_DN}"
+		echo "${Green} LDAP Search-Bind-DN (Ex: cn=user,ou=Admins,dc=domain,dc=com): ${Yellow}${LDAP_BIND_DN}"
 		echo "${Green} LDAP Search-Bind-Password: ${Yellow}${LDAP_BIND_PW}"
 		echo "${Green} LDAP Username-Attribute: ${Yellow}${LDAP_UNAME_ATTR}"
 		echo -e "${Green} LDAP user search filter: ${Yellow}${LDAP_SEARCH_FILTER}\n"
