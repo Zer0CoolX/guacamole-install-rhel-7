@@ -100,7 +100,7 @@ VAR_FILE="${PWD}/${TMP_VAR_FILE}"
 echo "-1" > "${VAR_FILE}" # create file with -1 to set not as background process
 
 # Determine if OS is RHEL, CentOS or something else
-if grep -q "CentOS\|Rock\|Alma" /etc/redhat-release; then
+if grep -q "CentOS" /etc/redhat-release; then
 	OS_NAME="CentOS"
 elif grep -q "Red Hat Enterprise" /etc/redhat-release; then
 	OS_NAME="RHEL"
