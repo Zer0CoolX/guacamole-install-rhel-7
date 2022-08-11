@@ -1045,7 +1045,7 @@ s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
 {
-	yum install -y cairo-devel ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel
+	yum install -y cairo-devel ffmpeg-devel freerdp-devel freerdp-plugins gcc gnu-free-mono-fonts libjpeg-turbo-devel libjpeg-turbo-official libpng-devel libssh2-devel libtelnet-devel libvncserver-devel libvorbis-devel libwebp-devel libwebsockets-devel mariadb mariadb-server nginx openssl-devel pango-devel policycoreutils-python pulseaudio-libs-devel setroubleshoot tomcat uuid-devel libgcrypt-devel
 } &
 s_echo "n" "${Reset}-Installing required packages...    "; spinner
 
